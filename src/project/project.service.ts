@@ -19,10 +19,9 @@ export class ProjectService {
         },
       });
 
+      await this.createWebhook(authorization, res.data.id);
       return res.data;
     } catch (e) {
-      console.log(e.message);
-
       throw new BadRequestException(e.response.data);
     }
   }
@@ -109,5 +108,26 @@ export class ProjectService {
     } catch (e) {
       throw new BadRequestException(e.response.data);
     }
+  }
+
+  private async createWebhook(authorization: string, id: number) {
+    const res = await this.signIn(authorization, id);
+
+    const url = this.configService.get<string>('MESSAGING_URL');
+    await axios.post(
+      url.concat('/webhooks'),
+      {
+        name: 'system',
+        url: this.configService
+          .get<string>('BACKEND_URL')
+          .concat(`/projects/${id}/events`),
+        eventType: 'All',
+      },
+      {
+        headers: {
+          authorization: 'Bearer '.concat(res.token),
+        },
+      },
+    );
   }
 }
