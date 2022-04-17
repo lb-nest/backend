@@ -6,7 +6,7 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Post('api/projects/:id/events')
-  handler(@Param('id') id: string, @Body() events: any) {
+  handleEvents(@Param('id') id: string, @Body() events: any) {
     this.appService.handleEvents(Number(id), events);
   }
 }
