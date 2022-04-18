@@ -6,18 +6,21 @@ import {
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { CreateMessageInput } from './dto/create-message.input';
+import { RemoveChatInput } from './dto/remove-chat.input';
 import { UpdateMessageInput } from './dto/update-message.input';
 
 @Injectable()
 export class MessageService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly messagingUrl: string;
+
+  constructor(configService: ConfigService) {
+    this.messagingUrl = configService.get<string>('MESSAGING_URL');
+  }
 
   async create(authorization: string, input: CreateMessageInput) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
       const res = await axios.post(
-        url.concat(`/chats/${input.chatId}/messages`),
+        this.messagingUrl.concat(`/chats/${input.chatId}/messages`),
         input,
         {
           headers: {
@@ -32,15 +35,28 @@ export class MessageService {
     }
   }
 
-  findAll(authorization: string) {
+  async findAll(authorization: string, chatId: number) {
+    try {
+      const res = await axios.get(
+        this.messagingUrl.concat(`/chats/${chatId}/messages`),
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
+
+      return res.data;
+    } catch (e) {
+      throw new BadRequestException(e.response.data);
+    }
+  }
+
+  async update(authorization: string, input: UpdateMessageInput) {
     throw new NotImplementedException();
   }
 
-  update(authorization: string, input: UpdateMessageInput) {
-    throw new NotImplementedException();
-  }
-
-  remove(authorization: string, id: number) {
+  async remove(authorization: string, input: RemoveChatInput) {
     throw new NotImplementedException();
   }
 }

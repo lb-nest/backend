@@ -1,4 +1,5 @@
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Headers } from '@nestjs/common';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Project } from 'src/project/entities/project.entity';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
@@ -9,22 +10,25 @@ export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
   @Query(() => User)
-  user(@Context() context: any) {
-    return this.userService.getByToken(context.req.headers.authorization);
+  user(@Headers('authorization') authorization: string) {
+    return this.userService.getByToken(authorization);
   }
 
   @Query(() => [Project])
-  userProjects(@Context() context: any) {
-    return this.userService.getProjects(context.req.headers.authorization);
+  userProjects(@Headers('authorization') authorization: string) {
+    return this.userService.getProjects(authorization);
   }
 
   @Mutation(() => User)
-  updateUser(@Context() context: any, @Args() input: UpdateUserInput) {
-    return this.userService.update(context.req.headers.authorization, input);
+  updateUser(
+    @Headers('authorization') authorization: string,
+    @Args() input: UpdateUserInput,
+  ) {
+    return this.userService.update(authorization, input);
   }
 
   @Mutation(() => User)
-  removeUser(@Context() context: any) {
-    return this.userService.remove(context.req.headers.authorization);
+  removeUser(@Headers('authorization') authorization: string) {
+    return this.userService.remove(authorization);
   }
 }

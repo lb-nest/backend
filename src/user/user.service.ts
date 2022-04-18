@@ -5,13 +5,15 @@ import { UpdateUserInput } from './dto/update-user.input';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly authUrl: string;
+
+  constructor(configService: ConfigService) {
+    this.authUrl = configService.get<string>('AUTH_URL');
+  }
 
   async getByToken(authorization: string) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      const res = await axios.get(url.concat('/users/@me'), {
+      const res = await axios.get(this.authUrl.concat('/users/@me'), {
         headers: {
           authorization,
         },
@@ -24,10 +26,8 @@ export class UserService {
   }
 
   async getProjects(authorization: string) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      const res = await axios.get(url.concat('/users/@me/projects'), {
+      const res = await axios.get(this.authUrl.concat('/users/@me/projects'), {
         headers: {
           authorization,
         },
@@ -40,10 +40,8 @@ export class UserService {
   }
 
   async update(authorization: string, input: UpdateUserInput) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      const res = await axios.patch(url.concat('/users/@me'), input, {
+      const res = await axios.patch(this.authUrl.concat('/users/@me'), input, {
         headers: {
           authorization,
         },
@@ -56,10 +54,8 @@ export class UserService {
   }
 
   async remove(authorization: string) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      const res = await axios.delete(url.concat('/users/@me'), {
+      const res = await axios.delete(this.authUrl.concat('/users/@me'), {
         headers: {
           authorization,
         },

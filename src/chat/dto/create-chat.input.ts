@@ -1,4 +1,9 @@
-import { InputType } from '@nestjs/graphql';
+import { ArgsType, Field } from '@nestjs/graphql';
+import { IsString } from 'class-validator';
 
-@InputType()
-export class CreateChatInput {}
+@ArgsType()
+export class CreateChatInput {
+  @Field(() => String)
+  @IsString()
+  test: string;
+}

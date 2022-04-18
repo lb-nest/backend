@@ -1,4 +1,5 @@
-import { Args, Context, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Headers } from '@nestjs/common';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ChannelService } from './channel.service';
 import { CreateChannelInput } from './dto/create-channel.input';
 import { UpdateChannelInput } from './dto/update-channel.input';
@@ -9,33 +10,39 @@ export class ChannelResolver {
   constructor(private readonly channelService: ChannelService) {}
 
   @Mutation(() => Channel)
-  createChannel(@Context() context: any, @Args() input: CreateChannelInput) {
-    return this.channelService.create(context.req.headers.authorization, input);
+  createChannel(
+    @Headers('authorization') authorization: string,
+    @Args() input: CreateChannelInput,
+  ) {
+    return this.channelService.create(authorization, input);
   }
 
   @Query(() => [Channel])
-  channels(@Context() context: any) {
-    return this.channelService.findAll(context.req.headers.authorization);
+  channels(@Headers('authorization') authorization: string) {
+    return this.channelService.findAll(authorization);
   }
 
   @Query(() => Channel)
   channelById(
-    @Context() context: any,
+    @Headers('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    return this.channelService.findOne(context.req.headers.authorization, id);
+    return this.channelService.findOne(authorization, id);
   }
 
   @Mutation(() => Channel)
-  updateChannel(@Context() context: any, @Args() input: UpdateChannelInput) {
-    return this.channelService.update(context.req.headers.authorization, input);
+  updateChannel(
+    @Headers('authorization') authorization: string,
+    @Args() input: UpdateChannelInput,
+  ) {
+    return this.channelService.update(authorization, input);
   }
 
   @Mutation(() => Channel)
   removeChannel(
-    @Context() context: any,
+    @Headers('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    return this.channelService.remove(context.req.headers.authorization, id);
+    return this.channelService.remove(authorization, id);
   }
 }

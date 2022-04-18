@@ -1,4 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { ChannelStatus } from '../enums/channel-status.enum';
+import { ChannelType } from '../enums/channel-type.enum';
 
 @ObjectType()
 export class Channel {
@@ -8,9 +10,9 @@ export class Channel {
   @Field(() => String)
   name: string;
 
-  @Field(() => String)
-  type: string;
+  @Field(() => ChannelType)
+  type: ChannelType;
 
-  @Field(() => String)
-  status: string;
+  @Field(() => ChannelStatus)
+  status: ChannelStatus;
 }

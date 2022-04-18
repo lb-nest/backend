@@ -1,4 +1,5 @@
 import { ArgsType, Field } from '@nestjs/graphql';
+import { Transform, TransformFnParams } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
@@ -11,6 +12,7 @@ import {
 export class SignupInput {
   @Field(() => String)
   @IsNotEmpty()
+  @Transform(({ value }): TransformFnParams => value.trim())
   name: string;
 
   @Field(() => String, { nullable: true })

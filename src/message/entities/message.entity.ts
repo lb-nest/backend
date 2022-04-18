@@ -1,9 +1,11 @@
-import { Field, Int, ObjectType, PickType } from '@nestjs/graphql';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Chat } from 'src/chat/entities/chat.entity';
 
 @ObjectType()
-class ChatId extends PickType(Chat, ['id']) {}
+class ChatId {
+  @Field(() => Int)
+  id: number;
+}
 
 @ObjectType()
 class Attachment {
@@ -25,8 +27,8 @@ class Content {
   @Field(() => [Attachment])
   attachments: Attachment[];
 
-  @Field(() => GraphQLJSON, { nullable: true })
-  buttons: any;
+  @Field(() => [GraphQLJSON], { nullable: true })
+  buttons: any[];
 }
 
 @ObjectType()

@@ -1,4 +1,5 @@
-import { Args, Context, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Headers } from '@nestjs/common';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Token } from 'src/auth/entities/token.entity';
 import { CreateProjectInput } from './dto/create-project.input';
 import { UpdateProjectInput } from './dto/update-project.input';
@@ -10,30 +11,36 @@ export class ProjectResolver {
   constructor(private readonly projectService: ProjectService) {}
 
   @Mutation(() => Project)
-  createProject(@Context() context: any, @Args() input: CreateProjectInput) {
-    return this.projectService.create(context.req.headers.authorization, input);
+  createProject(
+    @Headers('authorization') authorization: string,
+    @Args() input: CreateProjectInput,
+  ) {
+    return this.projectService.create(authorization, input);
   }
 
   @Mutation(() => Token)
   signInProject(
-    @Context() context: any,
+    @Headers('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    return this.projectService.signIn(context.req.headers.authorization, id);
+    return this.projectService.signIn(authorization, id);
   }
 
   @Query(() => Project)
-  project(@Context() context: any) {
-    return this.projectService.getByToken(context.req.headers.authorization);
+  project(@Headers('authorization') authorization: string) {
+    return this.projectService.getByToken(authorization);
   }
 
   @Mutation(() => Project)
-  updateProject(@Context() context: any, @Args() input: UpdateProjectInput) {
-    return this.projectService.update(context.req.headers.authorization, input);
+  updateProject(
+    @Headers('authorization') authorization: string,
+    @Args() input: UpdateProjectInput,
+  ) {
+    return this.projectService.update(authorization, input);
   }
 
   @Mutation(() => Project)
-  removeProject(@Context() context: any) {
-    return this.projectService.remove(context.req.headers.authorization);
+  removeProject(@Headers('authorization') authorization: string) {
+    return this.projectService.remove(authorization);
   }
 }

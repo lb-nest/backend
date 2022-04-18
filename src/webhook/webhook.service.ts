@@ -6,17 +6,23 @@ import { UpdateWebhookInput } from './dto/update-webhook.input';
 
 @Injectable()
 export class WebhookService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly messagingUrl: string;
+
+  constructor(configService: ConfigService) {
+    this.messagingUrl = configService.get<string>('MESSAGING_URL');
+  }
 
   async create(authorization: string, input: CreateWebhookInput) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.post(url.concat('/webhooks'), input, {
-        headers: {
-          authorization,
+      const res = await axios.post(
+        this.messagingUrl.concat('/webhooks'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -25,10 +31,8 @@ export class WebhookService {
   }
 
   async findAll(authorization: string) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.get(url.concat('/webhooks'), {
+      const res = await axios.get(this.messagingUrl.concat('/webhooks'), {
         headers: {
           authorization,
         },
@@ -41,10 +45,8 @@ export class WebhookService {
   }
 
   async findOne(authorization: string, id: number) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.get(url.concat(`/webhooks/${id}`), {
+      const res = await axios.get(this.messagingUrl.concat(`/webhooks/${id}`), {
         headers: {
           authorization,
         },
@@ -57,14 +59,16 @@ export class WebhookService {
   }
 
   async update(authorization: string, input: UpdateWebhookInput) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.patch(url.concat('/webhooks'), input, {
-        headers: {
-          authorization,
+      const res = await axios.patch(
+        this.messagingUrl.concat('/webhooks'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -73,14 +77,15 @@ export class WebhookService {
   }
 
   async remove(authorization: string, id: number) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.delete(url.concat(`/webhooks/${id}`), {
-        headers: {
-          authorization,
+      const res = await axios.delete(
+        this.messagingUrl.concat(`/webhooks/${id}`),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {

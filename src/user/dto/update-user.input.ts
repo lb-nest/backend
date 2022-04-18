@@ -1,4 +1,10 @@
-import { ArgsType } from '@nestjs/graphql';
+import { ArgsType, Field } from '@nestjs/graphql';
 
 @ArgsType()
-export class UpdateUserInput {}
+export class UpdateUserInput {
+  @Field(() => String, { nullable: true })
+  name?: string;
+
+  @Field(() => String, { nullable: true })
+  avatarUrl?: string;
+}

@@ -6,12 +6,15 @@ import { UpdateHsmInput } from './dto/update-hsm.input';
 
 @Injectable()
 export class HsmService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly messagingUrl: string;
+
+  constructor(configService: ConfigService) {
+    this.messagingUrl = configService.get<string>('MESSAGING_URL');
+  }
 
   async create(authorization: string, input: CreateHsmInput) {
-    const url = this.configService.get<string>('MESSAGING_URL');
     try {
-      const res = await axios.post(url.concat('/hsm'), input, {
+      const res = await axios.post(this.messagingUrl.concat('/hsm'), input, {
         headers: {
           authorization,
         },
@@ -24,9 +27,8 @@ export class HsmService {
   }
 
   async findAll(authorization: string) {
-    const url = this.configService.get<string>('MESSAGING_URL');
     try {
-      const res = await axios.get(url.concat('/hsm'), {
+      const res = await axios.get(this.messagingUrl.concat('/hsm'), {
         headers: {
           authorization,
         },
@@ -39,9 +41,8 @@ export class HsmService {
   }
 
   async findOne(authorization: string, id: number) {
-    const url = this.configService.get<string>('MESSAGING_URL');
     try {
-      const res = await axios.get(url.concat(`/hsm/${id}`), {
+      const res = await axios.get(this.messagingUrl.concat(`/hsm/${id}`), {
         headers: {
           authorization,
         },
@@ -54,13 +55,16 @@ export class HsmService {
   }
 
   async update(authorization: string, input: UpdateHsmInput) {
-    const url = this.configService.get<string>('MESSAGING_URL');
     try {
-      const res = await axios.patch(url.concat(`/hsm/${input.id}`), input, {
-        headers: {
-          authorization,
+      const res = await axios.patch(
+        this.messagingUrl.concat(`/hsm/${input.id}`),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -69,9 +73,8 @@ export class HsmService {
   }
 
   async remove(authorization: string, id: number) {
-    const url = this.configService.get<string>('MESSAGING_URL');
     try {
-      const res = await axios.delete(url.concat(`/hsm/${id}`), {
+      const res = await axios.delete(this.messagingUrl.concat(`/hsm/${id}`), {
         headers: {
           authorization,
         },

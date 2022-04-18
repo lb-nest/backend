@@ -6,17 +6,23 @@ import { UpdateChannelInput } from './dto/update-channel.input';
 
 @Injectable()
 export class ChannelService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly messagingUrl: string;
+
+  constructor(configService: ConfigService) {
+    this.messagingUrl = configService.get<string>('MESSAGING_URL');
+  }
 
   async create(authorization: string, input: CreateChannelInput) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.post(url.concat('/channels'), input, {
-        headers: {
-          authorization,
+      const res = await axios.post(
+        this.messagingUrl.concat('/channels'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -25,10 +31,8 @@ export class ChannelService {
   }
 
   async findAll(authorization: string) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.get(url.concat('/channels'), {
+      const res = await axios.get(this.messagingUrl.concat('/channels'), {
         headers: {
           authorization,
         },
@@ -41,10 +45,8 @@ export class ChannelService {
   }
 
   async findOne(authorization: string, id: number) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.get(url.concat(`/channels/${id}`), {
+      const res = await axios.get(this.messagingUrl.concat(`/channels/${id}`), {
         headers: {
           authorization,
         },
@@ -57,14 +59,15 @@ export class ChannelService {
   }
 
   async update(authorization: string, input: UpdateChannelInput) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.patch(url.concat(`/channels/${input.id}`), {
-        headers: {
-          authorization,
+      const res = await axios.patch(
+        this.messagingUrl.concat(`/channels/${input.id}`),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -73,10 +76,8 @@ export class ChannelService {
   }
 
   async remove(authorization: string, id: number) {
-    const url = this.configService.get<string>('MESSAGING_URL');
-
     try {
-      const res = await axios.get(url.concat(`/channels/${id}`), {
+      const res = await axios.get(this.messagingUrl.concat(`/channels/${id}`), {
         headers: {
           authorization,
         },

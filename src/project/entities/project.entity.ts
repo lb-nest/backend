@@ -1,6 +1,17 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { Billing } from './billing.entity';
-import { Role } from './role.entity';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { BillingType } from '../enums/billing-type.enum';
+
+@ObjectType()
+class Billing {
+  @Field(() => BillingType)
+  type: BillingType;
+}
+
+@ObjectType()
+class Role {
+  @Field(() => String)
+  role: string;
+}
 
 @ObjectType()
 export class Project {
@@ -17,7 +28,7 @@ export class Project {
   billing: Billing;
 
   @Field(() => [Role])
-  roles: Role;
+  roles: Role[];
 
   @Field(() => String)
   createdAt: string;

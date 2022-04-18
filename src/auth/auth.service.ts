@@ -6,15 +6,17 @@ import { SignupInput } from './dto/signup.input';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly authUrl: string;
+
+  constructor(configService: ConfigService) {
+    this.authUrl = configService.get<string>('AUTH_URL');
+  }
 
   async signUp(input: SignupInput) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      await axios.post(url.concat('/users'), input);
+      await axios.post(this.authUrl.concat('/users'), input);
 
-      const res = await axios.post(url.concat('/auth/login'), input);
+      const res = await axios.post(this.authUrl.concat('/auth/login'), input);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -22,10 +24,8 @@ export class AuthService {
   }
 
   async signIn(input: SigninInput) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      const res = await axios.post(url.concat('/auth/login'), input);
+      const res = await axios.post(this.authUrl.concat('/auth/login'), input);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);

@@ -1,4 +1,5 @@
-import { Args, Context, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Headers } from '@nestjs/common';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CreateWebhookInput } from './dto/create-webhook.input';
 import { UpdateWebhookInput } from './dto/update-webhook.input';
 import { Webhook } from './entities/webhook.entity';
@@ -9,33 +10,39 @@ export class WebhookResolver {
   constructor(private readonly webhookService: WebhookService) {}
 
   @Mutation(() => Webhook)
-  createWebhook(@Context() context: any, @Args() input: CreateWebhookInput) {
-    this.webhookService.create(context.req.headers.authorization, input);
+  createWebhook(
+    @Headers('authorization') authorization: string,
+    @Args() input: CreateWebhookInput,
+  ) {
+    this.webhookService.create(authorization, input);
   }
 
   @Query(() => [Webhook])
-  webhooks(@Context() context: any) {
-    this.webhookService.findAll(context.req.headers.authorization);
+  webhooks(@Headers('authorization') authorization: string) {
+    this.webhookService.findAll(authorization);
   }
 
   @Query(() => Webhook)
   webhookById(
-    @Context() context: any,
+    @Headers('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    this.webhookService.findOne(context.req.headers.authorization, id);
+    this.webhookService.findOne(authorization, id);
   }
 
   @Mutation(() => Webhook)
-  updateWebhook(@Context() context: any, @Args() input: UpdateWebhookInput) {
-    this.webhookService.update(context.req.headers.authorization, input);
+  updateWebhook(
+    @Headers('authorization') authorization: string,
+    @Args() input: UpdateWebhookInput,
+  ) {
+    this.webhookService.update(authorization, input);
   }
 
   @Mutation(() => Webhook)
   removeWebhook(
-    @Context() context: any,
+    @Headers('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    this.webhookService.remove(context.req.headers.authorization, id);
+    this.webhookService.remove(authorization, id);
   }
 }

@@ -1,4 +1,5 @@
-import { Args, Context, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Headers } from '@nestjs/common';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { CreateHsmInput } from './dto/create-hsm.input';
 import { UpdateHsmInput } from './dto/update-hsm.input';
 import { Hsm } from './entities/hsm.entity';
@@ -9,33 +10,39 @@ export class HsmResolver {
   constructor(private readonly hsmService: HsmService) {}
 
   @Mutation(() => Hsm)
-  createHsm(@Context() context: any, @Args() input: CreateHsmInput) {
-    return this.hsmService.create(context.req.headers.authorization, input);
+  createHsm(
+    @Headers('authorization') authorization: string,
+    @Args() input: CreateHsmInput,
+  ) {
+    return this.hsmService.create(authorization, input);
   }
 
   @Query(() => [Hsm])
-  hsm(@Context() context: any) {
-    return this.hsmService.findAll(context.req.headers.authorization);
+  hsm(@Headers('authorization') authorization: string) {
+    return this.hsmService.findAll(authorization);
   }
 
   @Query(() => Hsm)
   hsmById(
-    @Context() context: any,
+    @Headers('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    return this.hsmService.findOne(context.req.headers.authorization, id);
+    return this.hsmService.findOne(authorization, id);
   }
 
   @Mutation(() => Hsm)
-  updateHsm(@Context() context: any, @Args() input: UpdateHsmInput) {
-    return this.hsmService.update(context.req.headers.authorization, input);
+  updateHsm(
+    @Headers('authorization') authorization: string,
+    @Args() input: UpdateHsmInput,
+  ) {
+    return this.hsmService.update(authorization, input);
   }
 
   @Mutation(() => Hsm)
   removeHsm(
-    @Context() context: any,
+    @Headers('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    return this.hsmService.remove(context.req.headers.authorization, id);
+    return this.hsmService.remove(authorization, id);
   }
 }
