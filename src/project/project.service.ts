@@ -66,13 +66,13 @@ export class ProjectService {
     const url = this.configService.get<string>('AUTH_URL');
 
     try {
-      const res = await axios.post(url.concat('/projects/@me/invite'), input, {
+      await axios.post(url.concat('/projects/@me/invites'), input, {
         headers: {
           authorization,
         },
       });
 
-      return res.data;
+      return true;
     } catch (e) {
       throw new BadRequestException(e.response.data);
     }

@@ -9,7 +9,7 @@ export class ContactService {
 
   constructor(configService: ConfigService) {
     this.messagingUrl = configService.get<string>('MESSAGING_URL');
-    this.contactsUrl = configService.get<string>('CONTACTS_URLs');
+    this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
 
   findAll(authorization: string) {

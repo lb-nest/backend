@@ -1,4 +1,4 @@
-import { Headers, UseGuards } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import {
   Args,
   Context,
@@ -9,6 +9,7 @@ import {
   Subscription,
 } from '@nestjs/graphql';
 import { pubSub } from 'src/app.service';
+import { Auth } from 'src/auth/auth.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateMessageInput } from './dto/create-message.input';
 import { RemoveChatInput } from './dto/remove-chat.input';
@@ -22,7 +23,7 @@ export class MessageResolver {
 
   @Mutation(() => [Message])
   createMessage(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args() input: CreateMessageInput,
   ) {
     return this.messageService.create(authorization, input);
@@ -30,7 +31,7 @@ export class MessageResolver {
 
   @Query(() => [Message])
   messages(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
     return this.messageService.findAll(authorization, chatId);
@@ -48,17 +49,14 @@ export class MessageResolver {
 
   @Mutation(() => Message)
   updateMessage(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args() input: UpdateMessageInput,
   ) {
     return this.messageService.update(authorization, input);
   }
 
   @Mutation(() => Message)
-  removeMessage(
-    @Headers('authorization') authorization: string,
-    @Args() input: RemoveChatInput,
-  ) {
+  removeMessage(@Auth() authorization: string, @Args() input: RemoveChatInput) {
     return this.messageService.remove(authorization, input);
   }
 }

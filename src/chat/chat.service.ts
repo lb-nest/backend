@@ -13,13 +13,23 @@ export class ChatService {
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
 
-  async create(authorization: string, input: CreateChatInput) {}
+  async create(authorization: string, input: CreateChatInput) {
+    return;
+  }
 
-  async findAll(authorization: string) {}
+  async findAll(authorization: string) {
+    return;
+  }
 
-  async findOne(authorization: string, id: number) {}
+  async findOne(authorization: string, id: number) {
+    return;
+  }
 
-  async update(authorization: string, input: UpdateChatInput) {}
+  async update(authorization: string, input: UpdateChatInput) {
+    return;
+  }
 
-  async remove(authorization: string, id: number) {}
+  async remove(authorization: string, id: number) {
+    return;
+  }
 }

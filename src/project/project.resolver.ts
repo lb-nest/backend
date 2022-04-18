@@ -1,7 +1,8 @@
-import { Headers } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Auth } from 'src/auth/auth.decorator';
 import { Token } from 'src/auth/entities/token.entity';
 import { CreateProjectInput } from './dto/create-project.input';
+import { InviteInput } from './dto/invite.input';
 import { UpdateProjectInput } from './dto/update-project.input';
 import { Project } from './entities/project.entity';
 import { ProjectService } from './project.service';
@@ -12,7 +13,7 @@ export class ProjectResolver {
 
   @Mutation(() => Project)
   createProject(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args() input: CreateProjectInput,
   ) {
     return this.projectService.create(authorization, input);
@@ -20,27 +21,32 @@ export class ProjectResolver {
 
   @Mutation(() => Token)
   signInProject(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
     return this.projectService.signIn(authorization, id);
   }
 
   @Query(() => Project)
-  project(@Headers('authorization') authorization: string) {
+  project(@Auth() authorization: string) {
     return this.projectService.getByToken(authorization);
+  }
+
+  @Mutation(() => Boolean)
+  invite(@Auth() authorization: string, @Args() input: InviteInput) {
+    return this.projectService.invite(authorization, input);
   }
 
   @Mutation(() => Project)
   updateProject(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args() input: UpdateProjectInput,
   ) {
     return this.projectService.update(authorization, input);
   }
 
   @Mutation(() => Project)
-  removeProject(@Headers('authorization') authorization: string) {
+  removeProject(@Auth() authorization: string) {
     return this.projectService.remove(authorization);
   }
 }

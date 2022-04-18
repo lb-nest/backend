@@ -1,5 +1,5 @@
-import { Headers } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Auth } from 'src/auth/auth.decorator';
 import { CreateWebhookInput } from './dto/create-webhook.input';
 import { UpdateWebhookInput } from './dto/update-webhook.input';
 import { Webhook } from './entities/webhook.entity';
@@ -11,20 +11,20 @@ export class WebhookResolver {
 
   @Mutation(() => Webhook)
   createWebhook(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args() input: CreateWebhookInput,
   ) {
     this.webhookService.create(authorization, input);
   }
 
   @Query(() => [Webhook])
-  webhooks(@Headers('authorization') authorization: string) {
+  webhooks(@Auth() authorization: string) {
     this.webhookService.findAll(authorization);
   }
 
   @Query(() => Webhook)
   webhookById(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
     this.webhookService.findOne(authorization, id);
@@ -32,7 +32,7 @@ export class WebhookResolver {
 
   @Mutation(() => Webhook)
   updateWebhook(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args() input: UpdateWebhookInput,
   ) {
     this.webhookService.update(authorization, input);
@@ -40,7 +40,7 @@ export class WebhookResolver {
 
   @Mutation(() => Webhook)
   removeWebhook(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
     this.webhookService.remove(authorization, id);

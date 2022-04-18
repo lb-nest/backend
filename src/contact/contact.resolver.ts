@@ -1,5 +1,5 @@
-import { Headers } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Auth } from 'src/auth/auth.decorator';
 import { ContactService } from './contact.service';
 import { UpdateContactInput } from './dto/update-contact.input';
 import { Contact } from './entities/contact.entity';
@@ -9,13 +9,13 @@ export class ContactResolver {
   constructor(private readonly contactService: ContactService) {}
 
   @Query(() => [Contact])
-  contacts(@Headers('authorization') authorization: string) {
+  contacts(@Auth() authorization: string) {
     return this.contactService.findAll(authorization);
   }
 
   @Query(() => Contact)
   contactById(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
     return this.contactService.findOne(authorization, id);
@@ -23,7 +23,7 @@ export class ContactResolver {
 
   @Mutation(() => Contact)
   updateContact(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args() input: UpdateContactInput,
   ) {
     return this.contactService.update(authorization, input);
@@ -31,7 +31,7 @@ export class ContactResolver {
 
   @Mutation(() => Contact)
   removeContact(
-    @Headers('authorization') authorization: string,
+    @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ) {
     return this.contactService.remove(authorization, id);
