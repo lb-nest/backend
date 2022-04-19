@@ -10,7 +10,7 @@ export class CreateHsmInput {
   @Transform(({ value }: TransformFnParams) => value.trim())
   code: string;
 
-  @Field(() => String, { nullable: true })
+  @Field(() => String)
   @IsNotEmpty()
   @Transform(({ value }: TransformFnParams) => value.trim())
   text: string;

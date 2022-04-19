@@ -1,4 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { WebhookEventType } from '../enums/webhook-event-type.enum';
 
 @ObjectType()
 export class Webhook {
@@ -11,6 +12,6 @@ export class Webhook {
   @Field(() => String)
   url: string;
 
-  @Field(() => String)
-  type: string;
+  @Field(() => WebhookEventType)
+  eventType: WebhookEventType;
 }

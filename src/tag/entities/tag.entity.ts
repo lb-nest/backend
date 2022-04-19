@@ -1,7 +1,7 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-class TagWithoutParentAndChildren {
+export class TagWithoutParentAndChildren {
   @Field(() => Int)
   id: number;
 
@@ -13,11 +13,17 @@ class TagWithoutParentAndChildren {
 
   @Field(() => String)
   color: string;
+
+  @Field(() => String)
+  createdAt: string;
+
+  @Field(() => String)
+  updatedAt: string;
 }
 
 @ObjectType()
 export class Tag extends TagWithoutParentAndChildren {
-  @Field(() => TagWithoutParentAndChildren)
+  @Field(() => TagWithoutParentAndChildren, { nullable: true })
   parent: TagWithoutParentAndChildren;
 
   @Field(() => [TagWithoutParentAndChildren])

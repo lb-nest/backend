@@ -9,7 +9,7 @@ export class CreateTagInput {
   @Transform(({ value }: TransformFnParams) => value.trim())
   name: string;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   @IsOptional()
   description?: string;
 
@@ -17,7 +17,7 @@ export class CreateTagInput {
   @IsHexColor()
   color: string;
 
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true })
   @IsOptional()
   @IsInt()
   parentId?: number;

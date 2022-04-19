@@ -32,11 +32,6 @@ export class ProjectResolver {
     return this.projectService.getByToken(authorization);
   }
 
-  @Mutation(() => Boolean)
-  invite(@Auth() authorization: string, @Args() input: InviteInput) {
-    return this.projectService.invite(authorization, input);
-  }
-
   @Mutation(() => Project)
   updateProject(
     @Auth() authorization: string,
@@ -48,5 +43,10 @@ export class ProjectResolver {
   @Mutation(() => Project)
   removeProject(@Auth() authorization: string) {
     return this.projectService.remove(authorization);
+  }
+
+  @Mutation(() => Boolean)
+  invite(@Auth() authorization: string, @Args() input: InviteInput) {
+    return this.projectService.invite(authorization, input);
   }
 }

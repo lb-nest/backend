@@ -61,7 +61,7 @@ export class WebhookService {
   async update(authorization: string, input: UpdateWebhookInput) {
     try {
       const res = await axios.patch(
-        this.messagingUrl.concat('/webhooks'),
+        this.messagingUrl.concat(`/webhooks/${input.id}`),
         input,
         {
           headers: {

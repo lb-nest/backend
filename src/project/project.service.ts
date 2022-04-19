@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { CreateProjectInput } from './dto/create-project.input';
@@ -95,19 +99,7 @@ export class ProjectService {
   }
 
   async remove(authorization: string) {
-    const url = this.configService.get<string>('AUTH_URL');
-
-    try {
-      const res = await axios.delete(url.concat('/projects/@me'), {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+    throw new NotImplementedException();
   }
 
   private async createWebhooks(authorization: string, id: number) {

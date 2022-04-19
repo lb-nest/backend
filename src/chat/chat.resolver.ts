@@ -1,8 +1,18 @@
-import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+import {
+  Args,
+  Context,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  Subscription,
+} from '@nestjs/graphql';
+import { pubSub } from 'src/app.service';
 import { Auth } from 'src/auth/auth.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ChatService } from './chat.service';
 import { CreateChatInput } from './dto/create-chat.input';
-import { UpdateChatInput } from './dto/update-chat.input';
 import { Chat } from './entities/chat.entity';
 
 @Resolver(() => Chat)
@@ -27,16 +37,10 @@ export class ChatResolver {
     return this.chatService.findOne(authorization, id);
   }
 
-  @Mutation(() => Chat)
-  updateChat(@Auth() authorization: string, @Args() input: UpdateChatInput) {
-    return this.chatService.update(authorization, input);
-  }
-
-  @Mutation(() => Chat)
-  removeChat(
-    @Auth() authorization: string,
-    @Args('id', { type: () => Int }) id: number,
-  ) {
-    return this.chatService.remove(authorization, id);
+  @UseGuards(JwtAuthGuard)
+  @Subscription(() => Chat)
+  async chatsReceived(@Context('req') req: any) {
+    const projectId = req.user.project.id;
+    return pubSub.asyncIterator(`chatsReceived:${projectId}`);
   }
 }

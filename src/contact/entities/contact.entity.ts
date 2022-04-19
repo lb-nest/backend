@@ -1,5 +1,12 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
+import { Tag, TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
 import { ContactStatus } from '../enums/contact-status.enum';
+
+@ObjectType()
+class ContactTag {
+  @Field(() => TagWithoutParentAndChildren)
+  tag: TagWithoutParentAndChildren;
+}
 
 @ObjectType()
 export class Contact {
@@ -20,4 +27,16 @@ export class Contact {
 
   @Field(() => Int, { nullable: true })
   assignedTo?: number;
+
+  @Field(() => String)
+  notes: string;
+
+  @Field(() => Int)
+  priority: number;
+
+  @Field(() => Boolean)
+  resolved: boolean;
+
+  @Field(() => [ContactTag])
+  tags: ContactTag[];
 }

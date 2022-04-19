@@ -1,7 +1,8 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 export enum WebhookEventType {
-  NewChats = 'NewChats',
+  IncomingChats = 'IncomingChats',
+  OutgoingChats = 'OutgoingChats',
   IncomingMessages = 'IncomingMessages',
   OutgoingMessages = 'OutgoingMessages',
   All = 'All',

@@ -2,6 +2,7 @@ import { ArgsType, Field, InputType, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -10,12 +11,13 @@ import {
   ValidateNested,
 } from 'class-validator';
 import GraphQLJSON from 'graphql-type-json';
+import { AttachmentType } from '../enums/attachment-type.enum';
 
 @InputType()
 class CreateAttachmentInput {
-  @Field(() => String)
-  @IsString()
-  type: string;
+  @Field(() => AttachmentType)
+  @IsEnum(AttachmentType)
+  type: AttachmentType;
 
   @Field(() => String)
   @IsUrl()

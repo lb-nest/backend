@@ -16,5 +16,5 @@ export class CreateWebhookInput {
 
   @Field(() => WebhookEventType)
   @IsEnum(WebhookEventType)
-  type: WebhookEventType;
+  eventType: WebhookEventType;
 }

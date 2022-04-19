@@ -62,6 +62,7 @@ export class ChannelService {
     try {
       const res = await axios.patch(
         this.messagingUrl.concat(`/channels/${input.id}`),
+        input,
         {
           headers: {
             authorization,
@@ -77,11 +78,14 @@ export class ChannelService {
 
   async remove(authorization: string, id: number) {
     try {
-      const res = await axios.get(this.messagingUrl.concat(`/channels/${id}`), {
-        headers: {
-          authorization,
+      const res = await axios.delete(
+        this.messagingUrl.concat(`/channels/${id}`),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
