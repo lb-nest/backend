@@ -122,11 +122,6 @@ export class ProjectService {
         url: this.configService.get<string>('BACKEND_URL').concat(path),
         eventType: 'All',
       },
-      {
-        name: 'system.contacts',
-        url: this.configService.get<string>('CONTACTS_URL').concat(path),
-        eventType: 'NewChats',
-      },
     ];
 
     await Promise.all(

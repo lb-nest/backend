@@ -1,10 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import { PubSub } from 'graphql-subscriptions';
 
 export const pubSub = new PubSub();
 
 @Injectable()
 export class AppService {
+  private readonly contactsUrl: string;
+
+  constructor(configService: ConfigService) {
+    this.contactsUrl = configService.get<string>('CONTACTS_URL');
+  }
+
   handleEvents(projectId: number, event: any) {
     switch (event.type) {
       case 'NewChats':
@@ -18,11 +26,31 @@ export class AppService {
     }
   }
 
-  private handleChats(projectId: number, chat: any) {
-    // TODO: подписка на чаты
+  private async handleChats(projectId: number, chat: any) {
+    try {
+      const contact = await axios.post(
+        this.contactsUrl.concat(`/projects/${projectId}/events`),
+        {
+          chatId: chat.id,
+          ...chat.contact,
+        },
+        {
+          headers: {
+            authoriZation: '',
+          },
+        },
+      );
+
+      pubSub.publish(`chatsReceived:${projectId}:${chat.id}`, {
+        chatsReceived: {
+          ...chat,
+          contact,
+        },
+      });
+    } catch {}
   }
 
-  private handleMessages(projectId: number, messages: any[]) {
+  private async handleMessages(projectId: number, messages: any[]) {
     messages.map((message) => {
       pubSub.publish(`messagesReceived:${projectId}:${message.chat.id}`, {
         messagesReceived: message,
