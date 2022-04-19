@@ -49,5 +49,5 @@ export class CreateMessageInput {
   @Field(() => [GraphQLJSON], { nullable: true })
   @IsOptional()
   @IsArray()
-  buttons: any[];
+  buttons?: any[];
 }

@@ -44,6 +44,9 @@ export class MessageResolver {
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
     const projectId = req.user.project.id;
+
+    // TODO: проверка contact.status, contact.assignedTo
+
     return pubSub.asyncIterator(`messagesReceived:${projectId}:${chatId}`);
   }
 
