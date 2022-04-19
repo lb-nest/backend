@@ -14,40 +14,42 @@ export class AppService {
   }
 
   handleEvents(projectId: number, event: any) {
-    switch (event.type) {
-      case 'NewChats':
-        this.handleChats(projectId, event.payload);
-        break;
+    try {
+      switch (event.type) {
+        case 'NewChats':
+          this.handleChats(projectId, event.payload);
+          break;
 
-      case 'IncomingMessages':
-      case 'OutgoingMessages':
-        this.handleMessages(projectId, event.payload);
-        break;
+        case 'IncomingMessages':
+        case 'OutgoingMessages':
+          this.handleMessages(projectId, event.payload);
+          break;
+      }
+    } catch {
+      // TODO: log error
     }
   }
 
   private async handleChats(projectId: number, chat: any) {
-    try {
-      const contact = await axios.post(
-        this.contactsUrl.concat(`/projects/${projectId}/events`),
-        {
-          chatId: chat.id,
-          ...chat.contact,
+    const contact = await axios.post(
+      this.contactsUrl.concat(`/projects/${projectId}/events`),
+      {
+        chatId: chat.id,
+        ...chat.contact,
+      },
+      {
+        headers: {
+          authorization: 'Bearer '.concat(),
         },
-        {
-          headers: {
-            authoriZation: '',
-          },
-        },
-      );
+      },
+    );
 
-      pubSub.publish(`chatsReceived:${projectId}:${chat.id}`, {
-        chatsReceived: {
-          ...chat,
-          contact,
-        },
-      });
-    } catch {}
+    pubSub.publish(`chatsReceived:${projectId}:${chat.id}`, {
+      chatsReceived: {
+        ...chat,
+        contact,
+      },
+    });
   }
 
   private async handleMessages(projectId: number, messages: any[]) {
