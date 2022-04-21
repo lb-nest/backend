@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { pubSub } from 'src/app.service';
 import { UpdateContactInput } from './dto/update-contact.input';
 
 @Injectable()
@@ -87,6 +86,60 @@ export class ContactService {
 
       await axios.delete(
         this.messagingUrl.concat(`/chats/${res.data.chatId}`),
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
+
+      return res.data;
+    } catch (e) {
+      throw new BadRequestException(e.response.data);
+    }
+  }
+
+  async addTag(authorization: string, id: number, tagId: number) {
+    try {
+      const res = await axios.post(
+        this.contactsUrl.concat(`/contacts/${id}/tags`),
+        {
+          tagId,
+        },
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
+
+      return res.data.tag;
+    } catch (e) {
+      throw new BadRequestException(e.response.data);
+    }
+  }
+
+  async delTag(authorization: string, id: number, tagId: number) {
+    try {
+      const res = await axios.delete(
+        this.contactsUrl.concat(`/contacts/${id}/tags/${tagId}`),
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
+
+      return res.data.tag;
+    } catch (e) {
+      throw new BadRequestException(e.response.data);
+    }
+  }
+
+  async getHistory(authorization: string, id: number) {
+    try {
+      const res = await axios.get(
+        this.contactsUrl.concat(`/contacts/${id}/history`),
         {
           headers: {
             authorization,

@@ -1,12 +1,12 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { Transform, TransformFnParams, Type } from 'class-transformer';
+import { Transform, TransformFnParams } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
 
 @ArgsType()
@@ -36,4 +36,9 @@ export class UpdateContactInput {
   @IsOptional()
   @IsArray()
   tags?: number[];
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  resolved?: boolean;
 }
