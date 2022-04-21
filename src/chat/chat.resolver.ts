@@ -1,7 +1,6 @@
 import { UseGuards } from '@nestjs/common';
 import {
   Args,
-  Context,
   Int,
   Mutation,
   Query,
@@ -11,6 +10,7 @@ import {
 import { pubSub } from 'src/app.service';
 import { Auth } from 'src/auth/auth.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { ChatService } from './chat.service';
 import { CreateChatInput } from './dto/create-chat.input';
 import { Chat } from './entities/chat.entity';
@@ -39,8 +39,11 @@ export class ChatResolver {
 
   @UseGuards(JwtAuthGuard)
   @Subscription(() => Chat)
-  async chatsReceived(@Context('req') req: any) {
-    const projectId = req.user.project.id;
+  async chatsReceived(@User() user: any) {
+    const projectId = user.project.id;
+
+    // TODO: проверка contact.status, contact.assignedTo
+
     return pubSub.asyncIterator(`chatsReceived:${projectId}`);
   }
 }

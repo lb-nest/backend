@@ -1,9 +1,11 @@
 import { UseGuards } from '@nestjs/common';
-import { Args, Context, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Auth } from 'src/auth/auth.decorator';
 import { RoleType } from 'src/auth/enums/role-type.enum';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { User } from 'src/auth/user.decorator';
 import { TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
 import { ContactFlowService } from './contact-flow.service';
 import { ContactService } from './contact.service';
@@ -62,14 +64,10 @@ export class ContactResolver {
   @Mutation(() => Contact)
   acceptContact(
     @Auth() authorization: string,
-    @Context('req') req: any,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    return this.contactFlowService.acceptContact(
-      authorization,
-      id,
-      req.user.id,
-    );
+    return this.contactFlowService.acceptContact(authorization, id, user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -81,8 +79,8 @@ export class ContactResolver {
     return this.contactFlowService.closeContact(authorization, id);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Roles(RoleType.Admin, RoleType.Owner)
+  @Roles(RoleType.Owner, RoleType.Admin)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Mutation(() => Contact)
   transferContact(
     @Auth() authorization: string,
@@ -104,28 +102,20 @@ export class ContactResolver {
   @Mutation(() => Contact)
   reopenContact(
     @Auth() authorization: string,
-    @Context('req') req: any,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ) {
-    return this.contactFlowService.reopenContact(
-      authorization,
-      id,
-      req.user.id,
-    );
+    return this.contactFlowService.reopenContact(authorization, id, user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Mutation(() => Contact)
   updateContact(
     @Auth() authorization: string,
-    @Context('req') req: any,
+    @User() user: any,
     @Args() input: UpdateContactInput,
   ) {
-    return this.contactService.update(
-      authorization,
-      req.user.project.id,
-      input,
-    );
+    return this.contactService.update(authorization, user.project.id, input);
   }
 
   @Mutation(() => Contact)
