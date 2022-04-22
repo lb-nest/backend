@@ -1,4 +1,9 @@
-import { UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   Args,
   Int,
@@ -7,8 +12,10 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
+import axios from 'axios';
 import { pubSub } from 'src/app.service';
 import { Auth } from 'src/auth/auth.decorator';
+import { RoleType } from 'src/auth/enums/role-type.enum';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { CreateMessageInput } from './dto/create-message.input';
@@ -19,7 +26,10 @@ import { MessageService } from './message.service';
 
 @Resolver(() => Message)
 export class MessageResolver {
-  constructor(private readonly messageService: MessageService) {}
+  constructor(
+    private readonly messageService: MessageService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Mutation(() => [Message])
   createMessage(
@@ -39,14 +49,32 @@ export class MessageResolver {
 
   @UseGuards(JwtAuthGuard)
   @Subscription(() => Message)
-  messagesReceived(
+  async messagesReceived(
+    @Auth() authorization: string,
     @User() user: any,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
+    const url = this.configService.get<string>('CONTACTS_URL');
+    const res = await axios(url.concat(`/contacts?chatIds=${chatId}`), {
+      headers: {
+        authorization,
+      },
+    });
+
+    const [contact] = res.data;
+    if (!contact) {
+      throw new NotFoundException();
+    }
+
+    const isAdmin = user.project.roles.some(({ role }) =>
+      [RoleType.Admin, RoleType.Owner].includes(role),
+    );
+
+    if (!isAdmin && contact.assignedTo !== user.id) {
+      throw new BadRequestException();
+    }
+
     const projectId = user.project.id;
-
-    // TODO: проверка contact.status, contact.assignedTo
-
     return pubSub.asyncIterator(`messagesReceived:${projectId}:${chatId}`);
   }
 

@@ -38,12 +38,15 @@ export class ChatResolver {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Subscription(() => Chat)
+  @Subscription(() => Chat, {
+    filter(payload, _, context) {
+      return [context.user.id, null].includes(
+        payload.chatsReceived.contact.assignedTo,
+      );
+    },
+  })
   async chatsReceived(@User() user: any) {
     const projectId = user.project.id;
-
-    // TODO: проверка contact.status, contact.assignedTo
-
     return pubSub.asyncIterator(`chatsReceived:${projectId}`);
   }
 }
