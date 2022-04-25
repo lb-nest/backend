@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { UserService } from 'src/user/user.service';
+import { ProjectService } from 'src/project/project.service';
 import { UpdateContactInput } from './dto/update-contact.input';
 
 @Injectable()
@@ -10,7 +10,7 @@ export class ContactService {
   private readonly contactsUrl: string;
 
   constructor(
-    private readonly userService: UserService,
+    private readonly projectService: ProjectService,
     configService: ConfigService,
   ) {
     this.messagingUrl = configService.get<string>('MESSAGING_URL');
@@ -19,20 +19,28 @@ export class ContactService {
 
   async findAll(authorization: string) {
     try {
-      const res = await axios.get(this.contactsUrl.concat('/contacts'), {
-        headers: {
-          authorization,
+      const contacts = await axios.get<any[]>(
+        this.contactsUrl.concat('/contacts'),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
-      if (res.data.assignedTo) {
-        res.data.assignedTo = await this.userService.getById(
+      const userIds = contacts.data.map((c) => c.assignedTo).filter(Boolean);
+      if (userIds.length > 0) {
+        const users = await this.projectService.getUsers(
           authorization,
-          res.data.assignedTo,
+          userIds.join(','),
         );
+
+        contacts.data.forEach((c) => {
+          c.assignedTo = users.find((u) => u.id === c.assignedTo);
+        });
       }
 
-      return res.data;
+      return contacts.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
     }
@@ -40,17 +48,22 @@ export class ContactService {
 
   async findOne(authorization: string, id: number) {
     try {
-      const res = await axios.get(this.contactsUrl.concat(`/contacts/${id}`), {
-        headers: {
-          authorization,
+      const res = await axios.get<any>(
+        this.contactsUrl.concat(`/contacts/${id}`),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       if (res.data.assignedTo) {
-        res.data.assignedTo = await this.userService.getById(
+        const users = await this.projectService.getUsers(
           authorization,
           res.data.assignedTo,
         );
+
+        res.data.assignedTo = users[0];
       }
 
       return res.data;
@@ -61,7 +74,7 @@ export class ContactService {
 
   async update(authorization: string, input: UpdateContactInput) {
     try {
-      const res = await axios.patch(
+      const res = await axios.patch<any>(
         this.contactsUrl.concat(`/contacts/${input.id}`),
         input,
         {
@@ -71,7 +84,7 @@ export class ContactService {
         },
       );
 
-      await axios.patch(
+      await axios.patch<any>(
         this.messagingUrl.concat(`/chats/${res.data.chatId}`),
         input,
         {
@@ -82,10 +95,12 @@ export class ContactService {
       );
 
       if (res.data.assignedTo) {
-        res.data.assignedTo = await this.userService.getById(
+        const users = await this.projectService.getUsers(
           authorization,
           res.data.assignedTo,
         );
+
+        res.data.assignedTo = users[0];
       }
 
       return res.data;
@@ -96,7 +111,7 @@ export class ContactService {
 
   async remove(authorization: string, id: number) {
     try {
-      const res = await axios.delete(
+      const res = await axios.delete<any>(
         this.contactsUrl.concat(`/contacts/${id}`),
         {
           headers: {
@@ -105,7 +120,7 @@ export class ContactService {
         },
       );
 
-      await axios.delete(
+      await axios.delete<any>(
         this.messagingUrl.concat(`/chats/${res.data.chatId}`),
         {
           headers: {
@@ -115,10 +130,12 @@ export class ContactService {
       );
 
       if (res.data.assignedTo) {
-        res.data.assignedTo = await this.userService.getById(
+        const users = await this.projectService.getUsers(
           authorization,
           res.data.assignedTo,
         );
+
+        res.data.assignedTo = users[0];
       }
 
       return res.data;
@@ -129,7 +146,7 @@ export class ContactService {
 
   async addTag(authorization: string, id: number, tagId: number) {
     try {
-      const res = await axios.post(
+      const res = await axios.post<any>(
         this.contactsUrl.concat(`/contacts/${id}/tags`),
         {
           tagId,
@@ -149,7 +166,7 @@ export class ContactService {
 
   async delTag(authorization: string, id: number, tagId: number) {
     try {
-      const res = await axios.delete(
+      const res = await axios.delete<any>(
         this.contactsUrl.concat(`/contacts/${id}/tags/${tagId}`),
         {
           headers: {
@@ -166,7 +183,7 @@ export class ContactService {
 
   async getHistory(authorization: string, id: number) {
     try {
-      const res = await axios.get(
+      const res = await axios.get<any[]>(
         this.contactsUrl.concat(`/contacts/${id}/history`),
         {
           headers: {
@@ -174,13 +191,6 @@ export class ContactService {
           },
         },
       );
-
-      if (res.data.assignedTo) {
-        res.data.assignedTo = await this.userService.getById(
-          authorization,
-          res.data.assignedTo,
-        );
-      }
 
       return res.data;
     } catch (e) {

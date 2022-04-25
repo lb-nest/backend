@@ -14,11 +14,15 @@ export class TagService {
 
   async create(authorization: string, input: CreateTagInput) {
     try {
-      const res = await axios.post(this.contactsUrl.concat('/tags'), input, {
-        headers: {
-          authorization,
+      const res = await axios.post<any>(
+        this.contactsUrl.concat('/tags'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -28,7 +32,7 @@ export class TagService {
 
   async findAll(authorization: string) {
     try {
-      const res = await axios.get(this.contactsUrl.concat('/tags'), {
+      const res = await axios.get<any[]>(this.contactsUrl.concat('/tags'), {
         headers: {
           authorization,
         },
@@ -42,7 +46,7 @@ export class TagService {
 
   async findOne(authorization: string, id: number) {
     try {
-      const res = await axios.get(this.contactsUrl.concat(`/tags/${id}`), {
+      const res = await axios.get<any>(this.contactsUrl.concat(`/tags/${id}`), {
         headers: {
           authorization,
         },
@@ -56,7 +60,7 @@ export class TagService {
 
   async update(authorization: string, input: UpdateTagInput) {
     try {
-      const res = await axios.patch(
+      const res = await axios.patch<any>(
         this.contactsUrl.concat(`/tags/${input.id}`),
         input,
         {
@@ -74,11 +78,14 @@ export class TagService {
 
   async remove(authorization: string, id: number) {
     try {
-      const res = await axios.delete(this.contactsUrl.concat(`/tags/${id}`), {
-        headers: {
-          authorization,
+      const res = await axios.delete<any>(
+        this.contactsUrl.concat(`/tags/${id}`),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {

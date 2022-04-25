@@ -34,17 +34,19 @@ export class MessageResolver {
   @Mutation(() => [Message])
   createMessage(
     @Auth() authorization: string,
+    @User() user: any,
     @Args() input: CreateMessageInput,
   ) {
-    return this.messageService.create(authorization, input);
+    return this.messageService.create(authorization, user, input);
   }
 
   @Query(() => [Message])
   messages(
     @Auth() authorization: string,
+    @User() user: any,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
-    return this.messageService.findAll(authorization, chatId);
+    return this.messageService.findAll(authorization, user, chatId);
   }
 
   @UseGuards(JwtAuthGuard)

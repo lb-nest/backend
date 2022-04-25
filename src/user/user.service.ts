@@ -15,19 +15,9 @@ export class UserService {
     this.authUrl = configService.get<string>('AUTH_URL');
   }
 
-  async getById(authorization: string, id: number) {
-    const res = await axios.get(this.authUrl.concat(`/users/${id}`), {
-      headers: {
-        authorization,
-      },
-    });
-
-    return res.data;
-  }
-
   async getMe(authorization: string) {
     try {
-      const res = await axios.get(this.authUrl.concat('/users/@me'), {
+      const res = await axios.get<any>(this.authUrl.concat('/users/@me'), {
         headers: {
           authorization,
         },
@@ -41,11 +31,14 @@ export class UserService {
 
   async getProjects(authorization: string) {
     try {
-      const res = await axios.get(this.authUrl.concat('/users/@me/projects'), {
-        headers: {
-          authorization,
+      const res = await axios.get<any[]>(
+        this.authUrl.concat('/users/@me/projects'),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -55,11 +48,15 @@ export class UserService {
 
   async update(authorization: string, input: UpdateUserInput) {
     try {
-      const res = await axios.patch(this.authUrl.concat('/users/@me'), input, {
-        headers: {
-          authorization,
+      const res = await axios.patch<any>(
+        this.authUrl.concat('/users/@me'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {

@@ -5,16 +5,18 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { ProjectService } from 'src/project/project.service';
 import { CreateChatInput } from './dto/create-chat.input';
 
 @Injectable()
 export class ChatService {
-  private readonly authUrl: string;
   private readonly messagingUrl: string;
   private readonly contactsUrl: string;
 
-  constructor(configService: ConfigService) {
-    this.authUrl = configService.get<string>('AUTH_URL');
+  constructor(
+    configService: ConfigService,
+    private readonly projectService: ProjectService,
+  ) {
     this.messagingUrl = configService.get<string>('MESSAGING_URL');
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
@@ -24,14 +26,17 @@ export class ChatService {
   }
 
   async findAll(authorization: string) {
-    const contacts = await axios(this.contactsUrl.concat('/contacts'), {
-      headers: {
-        authorization,
+    const contacts = await axios.get<any[]>(
+      this.contactsUrl.concat('/contacts'),
+      {
+        headers: {
+          authorization,
+        },
       },
-    });
+    );
 
     const chatIds = contacts.data.map((c) => c.chatId);
-    const chats = await axios.get(
+    const chats = await axios.get<any[]>(
       this.messagingUrl.concat(`/chats?ids=${chatIds.join(',')}`),
       {
         headers: {
@@ -41,18 +46,16 @@ export class ChatService {
     );
 
     const userIds = contacts.data.map((c) => c.assignedTo).filter(Boolean);
-    const users = await axios.get(
-      this.authUrl.concat(`/users?ids=${userIds.join(',')}`),
-      {
-        headers: {
-          authorization,
-        },
-      },
-    );
+    if (userIds.length > 0) {
+      const users = await this.projectService.getUsers(
+        authorization,
+        userIds.join(','),
+      );
 
-    contacts.data.forEach((c) => {
-      c.assignedTo = users.data.find((u) => u.id === c.assignedTo);
-    });
+      contacts.data.forEach((c) => {
+        c.assignedTo = users.find((u) => u.id === c.assignedTo);
+      });
+    }
 
     return chats.data.map((chat) =>
       Object.assign(chat, {
@@ -62,7 +65,7 @@ export class ChatService {
   }
 
   async findOne(authorization: string, id: number) {
-    const contacts = await axios(
+    const contacts = await axios.get<any[]>(
       this.contactsUrl.concat(`/contacts?chatIds=${id}`),
       {
         headers: {
@@ -71,28 +74,27 @@ export class ChatService {
       },
     );
 
-    const contact = contacts.data[0];
+    const [contact] = contacts.data;
     if (!contact) {
       throw new NotFoundException();
     }
 
-    const chat = await axios(this.messagingUrl.concat(`/chats/${id}`), {
-      headers: {
-        authorization,
+    const chat = await axios.get<any>(
+      this.messagingUrl.concat(`/chats/${id}`),
+      {
+        headers: {
+          authorization,
+        },
       },
-    });
+    );
 
     if (contact.assignedTo) {
-      const user = await axios.get(
-        this.authUrl.concat(`/users/${contact.assignedTo}`),
-        {
-          headers: {
-            authorization,
-          },
-        },
+      const users = await this.projectService.getUsers(
+        authorization,
+        contact.assignedTo,
       );
 
-      contact.assignedTo = user.data;
+      contact.assignedTo = users[0];
     }
 
     return Object.assign(chat.data, {

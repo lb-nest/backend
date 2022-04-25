@@ -14,11 +14,15 @@ export class HsmService {
 
   async create(authorization: string, input: CreateHsmInput) {
     try {
-      const res = await axios.post(this.messagingUrl.concat('/hsm'), input, {
-        headers: {
-          authorization,
+      const res = await axios.post<any>(
+        this.messagingUrl.concat('/hsm'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -28,7 +32,7 @@ export class HsmService {
 
   async findAll(authorization: string) {
     try {
-      const res = await axios.get(this.messagingUrl.concat('/hsm'), {
+      const res = await axios.get<any[]>(this.messagingUrl.concat('/hsm'), {
         headers: {
           authorization,
         },
@@ -42,7 +46,7 @@ export class HsmService {
 
   async findOne(authorization: string, id: number) {
     try {
-      const res = await axios.get(this.messagingUrl.concat(`/hsm/${id}`), {
+      const res = await axios.get<any>(this.messagingUrl.concat(`/hsm/${id}`), {
         headers: {
           authorization,
         },
@@ -56,7 +60,7 @@ export class HsmService {
 
   async update(authorization: string, input: UpdateHsmInput) {
     try {
-      const res = await axios.patch(
+      const res = await axios.patch<any>(
         this.messagingUrl.concat(`/hsm/${input.id}`),
         input,
         {
@@ -74,11 +78,14 @@ export class HsmService {
 
   async remove(authorization: string, id: number) {
     try {
-      const res = await axios.delete(this.messagingUrl.concat(`/hsm/${id}`), {
-        headers: {
-          authorization,
+      const res = await axios.delete<any>(
+        this.messagingUrl.concat(`/hsm/${id}`),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {

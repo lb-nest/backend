@@ -1,6 +1,7 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Auth } from 'src/auth/auth.decorator';
 import { Token } from 'src/auth/entities/token.entity';
+import { User } from 'src/user/entities/user.entity';
 import { CreateProjectInput } from './dto/create-project.input';
 import { InviteInput } from './dto/invite.input';
 import { UpdateProjectInput } from './dto/update-project.input';
@@ -48,5 +49,10 @@ export class ProjectResolver {
   @Mutation(() => Boolean)
   invite(@Auth() authorization: string, @Args() input: InviteInput) {
     return this.projectService.invite(authorization, input);
+  }
+
+  @Query(() => [User])
+  projectUsers(@Auth() authorization: string) {
+    return this.projectService.getUsers(authorization);
   }
 }

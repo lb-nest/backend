@@ -14,7 +14,7 @@ export class ChannelService {
 
   async create(authorization: string, input: CreateChannelInput) {
     try {
-      const res = await axios.post(
+      const res = await axios.post<any>(
         this.messagingUrl.concat('/channels'),
         input,
         {
@@ -32,11 +32,14 @@ export class ChannelService {
 
   async findAll(authorization: string) {
     try {
-      const res = await axios.get(this.messagingUrl.concat('/channels'), {
-        headers: {
-          authorization,
+      const res = await axios.get<any[]>(
+        this.messagingUrl.concat('/channels'),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -46,11 +49,14 @@ export class ChannelService {
 
   async findOne(authorization: string, id: number) {
     try {
-      const res = await axios.get(this.messagingUrl.concat(`/channels/${id}`), {
-        headers: {
-          authorization,
+      const res = await axios.get<any>(
+        this.messagingUrl.concat(`/channels/${id}`),
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -60,7 +66,7 @@ export class ChannelService {
 
   async update(authorization: string, input: UpdateChannelInput) {
     try {
-      const res = await axios.patch(
+      const res = await axios.patch<any>(
         this.messagingUrl.concat(`/channels/${input.id}`),
         input,
         {
@@ -78,7 +84,7 @@ export class ChannelService {
 
   async remove(authorization: string, id: number) {
     try {
-      const res = await axios.delete(
+      const res = await axios.delete<any>(
         this.messagingUrl.concat(`/channels/${id}`),
         {
           headers: {

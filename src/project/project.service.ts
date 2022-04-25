@@ -11,17 +11,23 @@ import { UpdateProjectInput } from './dto/update-project.input';
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly authUrl: string;
+
+  constructor(private readonly configService: ConfigService) {
+    this.authUrl = configService.get<string>('AUTH_URL');
+  }
 
   async create(authorization: string, input: CreateProjectInput) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      const res = await axios.post(url.concat('/projects'), input, {
-        headers: {
-          authorization,
+      const res = await axios.post<any>(
+        this.authUrl.concat('/projects'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       await this.createWebhooks(authorization, res.data.id);
       return res.data;
@@ -31,11 +37,9 @@ export class ProjectService {
   }
 
   async signIn(authorization: string, id: number) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      const res = await axios.post(
-        url.concat(`/auth/projects/${id}/token`),
+      const res = await axios.post<any>(
+        this.authUrl.concat(`/auth/projects/${id}/token`),
         undefined,
         {
           headers: {
@@ -51,10 +55,8 @@ export class ProjectService {
   }
 
   async getByToken(authorization: string) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      const res = await axios.get(url.concat('/projects/@me'), {
+      const res = await axios.get<any>(this.authUrl.concat('/projects/@me'), {
         headers: {
           authorization,
         },
@@ -67,14 +69,16 @@ export class ProjectService {
   }
 
   async invite(authorization: string, input: InviteInput) {
-    const url = this.configService.get<string>('AUTH_URL');
-
     try {
-      await axios.post(url.concat('/projects/@me/invites'), input, {
-        headers: {
-          authorization,
+      await axios.post<any>(
+        this.authUrl.concat('/projects/@me/invites'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return true;
     } catch (e) {
@@ -82,15 +86,32 @@ export class ProjectService {
     }
   }
 
-  async update(authorization: string, input: UpdateProjectInput) {
-    const url = this.configService.get<string>('AUTH_URL');
+  async getUsers(authorization: string, ids?: string) {
+    const url = this.authUrl.concat(
+      '/projects/@me/users',
+      ids ? `?ids=${ids}` : '',
+    );
 
+    const res = await axios.get<any[]>(url, {
+      headers: {
+        authorization,
+      },
+    });
+
+    return res.data;
+  }
+
+  async update(authorization: string, input: UpdateProjectInput) {
     try {
-      const res = await axios.patch(url.concat('/projects/@me'), input, {
-        headers: {
-          authorization,
+      const res = await axios.patch<any>(
+        this.authUrl.concat('/projects/@me'),
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -118,7 +139,7 @@ export class ProjectService {
 
     await Promise.all(
       webhooks.map(async (webhook) =>
-        axios.post(url.concat('/webhooks'), webhook, {
+        axios.post<any>(url.concat('/webhooks'), webhook, {
           headers: {
             authorization: 'Bearer '.concat(res.token),
           },
