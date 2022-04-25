@@ -29,6 +29,15 @@ export class ChatResolver {
     return this.chatService.findAll(authorization);
   }
 
+  @Query(() => [Chat])
+  chatsByQuery(
+    @Auth() authorization: string,
+    @User() user: any,
+    @Args('query', { type: () => String }) query: string,
+  ) {
+    return this.chatService.findWithQuery(authorization, user, query);
+  }
+
   @Query(() => Chat)
   chatById(
     @Auth() authorization: string,

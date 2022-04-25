@@ -64,6 +64,10 @@ export class ChatService {
     );
   }
 
+  async findWithQuery(authorization: string, user: any, query: string) {
+    throw new NotImplementedException();
+  }
+
   async findOne(authorization: string, id: number) {
     const contacts = await axios.get<any[]>(
       this.contactsUrl.concat(`/contacts?chatIds=${id}`),
