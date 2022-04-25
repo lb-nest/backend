@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { UserService } from 'src/user/user.service';
 import { UpdateContactInput } from './dto/update-contact.input';
 
 @Injectable()
@@ -8,7 +9,10 @@ export class ContactService {
   private readonly messagingUrl: string;
   private readonly contactsUrl: string;
 
-  constructor(configService: ConfigService) {
+  constructor(
+    private readonly userService: UserService,
+    configService: ConfigService,
+  ) {
     this.messagingUrl = configService.get<string>('MESSAGING_URL');
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
@@ -20,6 +24,13 @@ export class ContactService {
           authorization,
         },
       });
+
+      if (res.data.assignedTo) {
+        res.data.assignedTo = await this.userService.getById(
+          authorization,
+          res.data.assignedTo,
+        );
+      }
 
       return res.data;
     } catch (e) {
@@ -35,17 +46,20 @@ export class ContactService {
         },
       });
 
+      if (res.data.assignedTo) {
+        res.data.assignedTo = await this.userService.getById(
+          authorization,
+          res.data.assignedTo,
+        );
+      }
+
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
     }
   }
 
-  async update(
-    authorization: string,
-    projectId: number,
-    input: UpdateContactInput,
-  ) {
+  async update(authorization: string, input: UpdateContactInput) {
     try {
       const res = await axios.patch(
         this.contactsUrl.concat(`/contacts/${input.id}`),
@@ -66,6 +80,13 @@ export class ContactService {
           },
         },
       );
+
+      if (res.data.assignedTo) {
+        res.data.assignedTo = await this.userService.getById(
+          authorization,
+          res.data.assignedTo,
+        );
+      }
 
       return res.data;
     } catch (e) {
@@ -92,6 +113,13 @@ export class ContactService {
           },
         },
       );
+
+      if (res.data.assignedTo) {
+        res.data.assignedTo = await this.userService.getById(
+          authorization,
+          res.data.assignedTo,
+        );
+      }
 
       return res.data;
     } catch (e) {
@@ -146,6 +174,13 @@ export class ContactService {
           },
         },
       );
+
+      if (res.data.assignedTo) {
+        res.data.assignedTo = await this.userService.getById(
+          authorization,
+          res.data.assignedTo,
+        );
+      }
 
       return res.data;
     } catch (e) {

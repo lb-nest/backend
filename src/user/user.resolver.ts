@@ -11,7 +11,7 @@ export class UserResolver {
 
   @Query(() => User)
   user(@Auth() authorization: string) {
-    return this.userService.getByToken(authorization);
+    return this.userService.getMe(authorization);
   }
 
   @Query(() => [Project])

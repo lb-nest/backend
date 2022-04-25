@@ -40,8 +40,8 @@ export class ChatResolver {
   @UseGuards(JwtAuthGuard)
   @Subscription(() => Chat, {
     filter(payload, _, context) {
-      return [context.req.user.id, null].includes(
-        payload.chatsReceived.contact.assignedTo,
+      return [context.req.user.id, undefined].includes(
+        payload.chatsReceived.contact.assignedTo?.id,
       );
     },
   })

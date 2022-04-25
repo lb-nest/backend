@@ -1,5 +1,6 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Tag, TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
+import { User } from 'src/user/entities/user.entity';
 import { ContactStatus } from '../enums/contact-status.enum';
 
 @ObjectType()
@@ -25,8 +26,8 @@ export class Contact {
   @Field(() => ContactStatus)
   status: ContactStatus;
 
-  @Field(() => Int, { nullable: true })
-  assignedTo?: number;
+  @Field(() => User, { nullable: true })
+  assignedTo?: User;
 
   @Field(() => String)
   notes: string;

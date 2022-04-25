@@ -15,7 +15,17 @@ export class UserService {
     this.authUrl = configService.get<string>('AUTH_URL');
   }
 
-  async getByToken(authorization: string) {
+  async getById(authorization: string, id: number) {
+    const res = await axios.get(this.authUrl.concat(`/users/${id}`), {
+      headers: {
+        authorization,
+      },
+    });
+
+    return res.data;
+  }
+
+  async getMe(authorization: string) {
     try {
       const res = await axios.get(this.authUrl.concat('/users/@me'), {
         headers: {
