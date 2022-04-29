@@ -12,7 +12,6 @@ import { ContactService } from './contact.service';
 import { TransferContactInput } from './dto/transfer-contact.input';
 import { UpdateContactInput } from './dto/update-contact.input';
 import { Contact } from './entities/contact.entity';
-import { ContactsCount } from './entities/contacts-count.entity';
 import { HistoryEvent } from './entities/history-event.entity';
 
 @Resolver(() => Contact)
@@ -25,11 +24,6 @@ export class ContactResolver {
   @Query(() => [Contact])
   contacts(@Auth() authorization: string) {
     return this.contactService.findAll(authorization);
-  }
-
-  @Query(() => ContactsCount)
-  contactsCount(@Auth() authorization: string) {
-    return this.contactService.count(authorization);
   }
 
   @Query(() => Contact)

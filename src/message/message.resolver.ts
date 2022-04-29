@@ -57,7 +57,7 @@ export class MessageResolver {
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
     const url = this.configService.get<string>('CONTACTS_URL');
-    const res = await axios(url.concat(`/contacts?chatIds=${chatId}`), {
+    const res = await axios(url.concat(`/contacts/chatId/${chatId}`), {
       headers: {
         authorization,
       },

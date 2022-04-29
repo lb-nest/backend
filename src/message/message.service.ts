@@ -24,7 +24,7 @@ export class MessageService {
   async create(authorization: string, user: any, input: CreateMessageInput) {
     try {
       const contacts = await axios.get(
-        this.contactsUrl.concat(`/contacts?chatIds=${input.chatId}`),
+        this.contactsUrl.concat(`/contacts/chatId/${input.chatId}`),
         {
           headers: {
             authorization,
@@ -60,7 +60,7 @@ export class MessageService {
   async findAll(authorization: string, user: any, chatId: number) {
     try {
       const contacts = await axios.get(
-        this.contactsUrl.concat(`/contacts?chatIds=${chatId}`),
+        this.contactsUrl.concat(`/contacts/chatId/${chatId}`),
         {
           headers: {
             authorization,

@@ -46,25 +46,6 @@ export class ContactService {
     }
   }
 
-  async count(authorization: string) {
-    try {
-      const res = await axios.get<any>(
-        this.contactsUrl.concat('/contacts/count'),
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data;
-    } catch (e) {
-      console.log(e);
-
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
   async findOne(authorization: string, id: number) {
     try {
       const res = await axios.get<any>(

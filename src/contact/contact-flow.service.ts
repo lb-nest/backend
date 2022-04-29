@@ -120,7 +120,7 @@ export class ContactFlowService {
         this.contactsUrl.concat(`/contacts/${id}`),
         {
           assignedTo: null,
-          status: ContactStatus.Opened,
+          status: ContactStatus.Open,
         },
         {
           headers: {
@@ -154,7 +154,7 @@ export class ContactFlowService {
         this.contactsUrl.concat(`/contacts/${id}`),
         {
           assignedTo: userId,
-          status: ContactStatus.Opened,
+          status: ContactStatus.Open,
         },
         {
           headers: {
