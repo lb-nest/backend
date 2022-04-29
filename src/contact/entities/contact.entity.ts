@@ -1,5 +1,5 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { Tag, TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
 import { User } from 'src/user/entities/user.entity';
 import { ContactStatus } from '../enums/contact-status.enum';
 
