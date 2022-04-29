@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios from 'axios';
 import { TransferContactInput } from './dto/transfer-contact.input';
 import { ContactStatus } from './enums/contact-status.enum';
@@ -9,7 +10,10 @@ import { HistoryEventType } from './enums/history-event-type';
 export class ContactFlowService {
   private readonly contactsUrl: string;
 
-  constructor(configService: ConfigService) {
+  constructor(
+    private readonly eventEmiter: EventEmitter2,
+    configService: ConfigService,
+  ) {
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
 
@@ -42,6 +46,7 @@ export class ContactFlowService {
         },
       );
 
+      this.eventEmiter.emit('contact.updated', authorization, res.data);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -75,6 +80,7 @@ export class ContactFlowService {
         },
       );
 
+      this.eventEmiter.emit('contact.updated', authorization, res.data);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -108,6 +114,7 @@ export class ContactFlowService {
         },
       );
 
+      this.eventEmiter.emit('contact.updated', authorization, res.data);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -142,6 +149,7 @@ export class ContactFlowService {
         },
       );
 
+      this.eventEmiter.emit('contact.updated', authorization, res.data);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -178,6 +186,7 @@ export class ContactFlowService {
         },
       );
 
+      this.eventEmiter.emit('contact.updated', authorization, res.data);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);

@@ -17,8 +17,8 @@ export class ChatService {
   private readonly contactsUrl: string;
 
   constructor(
-    configService: ConfigService,
     private readonly projectService: ProjectService,
+    configService: ConfigService,
   ) {
     this.messagingUrl = configService.get<string>('MESSAGING_URL');
     this.contactsUrl = configService.get<string>('CONTACTS_URL');

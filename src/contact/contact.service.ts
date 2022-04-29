@@ -17,6 +17,23 @@ export class ContactService {
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
 
+  async create(authorization: string, chatId: number, contact: any) {
+    const res = await axios.post(
+      this.contactsUrl.concat('/contacts'),
+      {
+        chatId,
+        ...contact,
+      },
+      {
+        headers: {
+          authorization,
+        },
+      },
+    );
+
+    return res.data;
+  }
+
   async findAll(authorization: string) {
     try {
       const contacts = await axios.get<any[]>(

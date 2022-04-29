@@ -112,7 +112,6 @@ export class ContactResolver {
   @Mutation(() => Contact)
   updateContact(
     @Auth() authorization: string,
-    @User() user: any,
     @Args() input: UpdateContactInput,
   ) {
     return this.contactService.update(authorization, input);

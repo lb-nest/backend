@@ -1,4 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Token } from 'src/auth/entities/token.entity';
 import { BillingType } from '../enums/billing-type.enum';
 import { RoleType } from '../enums/role-type.enum';
 
@@ -30,6 +31,9 @@ export class Project {
 
   @Field(() => [Role])
   roles: Role[];
+
+  @Field(() => Token)
+  token: Token;
 
   @Field(() => String)
   createdAt: string;
