@@ -53,6 +53,8 @@ export class MessageService {
         throw e;
       }
 
+      console.log(user, e);
+
       throw new BadRequestException(e.response.data);
     }
   }

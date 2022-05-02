@@ -31,6 +31,7 @@ export class MessageResolver {
     private readonly configService: ConfigService,
   ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Mutation(() => [Message])
   createMessage(
     @Auth() authorization: string,
@@ -40,6 +41,7 @@ export class MessageResolver {
     return this.messageService.create(authorization, user, input);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Query(() => [Message])
   messages(
     @Auth() authorization: string,
@@ -49,6 +51,7 @@ export class MessageResolver {
     return this.messageService.findAll(authorization, user, chatId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @UseGuards(JwtAuthGuard)
   @Subscription(() => Message)
   async messagesReceived(

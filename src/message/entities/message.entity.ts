@@ -1,5 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import GraphQLJSON from 'graphql-type-json';
+import { MessageStatus } from '../enums/message-status.enum';
 
 @ObjectType()
 class ChatId {
@@ -39,8 +40,8 @@ export class Message {
   @Field(() => Boolean)
   fromMe: boolean;
 
-  @Field(() => String)
-  status: string;
+  @Field(() => MessageStatus)
+  status: MessageStatus;
 
   @Field(() => ChatId)
   chat: ChatId;
