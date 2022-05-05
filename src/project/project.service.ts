@@ -6,6 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
+import { Token } from 'src/auth/entities/token.entity';
 import { User } from 'src/user/entities/user.entity';
 import { CreateProjectInput } from './dto/create-project.input';
 import { InviteInput } from './dto/invite.input';
@@ -49,6 +50,8 @@ export class ProjectService {
         res.data.id,
         await this.signIn('Bearer '.concat(rootToken), res.data.id),
       );
+
+      console.log(res.data, token);
 
       return {
         ...res.data,
@@ -98,7 +101,7 @@ export class ProjectService {
     throw new NotImplementedException();
   }
 
-  async signIn(authorization: string, id: number): Promise<any> {
+  async signIn(authorization: string, id: number): Promise<Token> {
     try {
       const res = await axios.post<any>(
         this.url.concat(`/auth/projects/${id}/token`),
