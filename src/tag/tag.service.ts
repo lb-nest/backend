@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { CreateTagInput } from './dto/create-tag.input';
 import { UpdateTagInput } from './dto/update-tag.input';
+import { Tag } from './entities/tag.entity';
 
 @Injectable()
 export class TagService {
@@ -12,7 +13,7 @@ export class TagService {
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
 
-  async create(authorization: string, input: CreateTagInput) {
+  async create(authorization: string, input: CreateTagInput): Promise<Tag> {
     try {
       const res = await axios.post<any>(
         this.contactsUrl.concat('/tags'),
@@ -30,7 +31,7 @@ export class TagService {
     }
   }
 
-  async findAll(authorization: string) {
+  async findAll(authorization: string): Promise<Tag[]> {
     try {
       const res = await axios.get<any[]>(this.contactsUrl.concat('/tags'), {
         headers: {
@@ -44,7 +45,7 @@ export class TagService {
     }
   }
 
-  async findOne(authorization: string, id: number) {
+  async findOne(authorization: string, id: number): Promise<Tag> {
     try {
       const res = await axios.get<any>(this.contactsUrl.concat(`/tags/${id}`), {
         headers: {
@@ -58,7 +59,7 @@ export class TagService {
     }
   }
 
-  async update(authorization: string, input: UpdateTagInput) {
+  async update(authorization: string, input: UpdateTagInput): Promise<Tag> {
     try {
       const res = await axios.patch<any>(
         this.contactsUrl.concat(`/tags/${input.id}`),
@@ -76,7 +77,7 @@ export class TagService {
     }
   }
 
-  async remove(authorization: string, id: number) {
+  async remove(authorization: string, id: number): Promise<Tag> {
     try {
       const res = await axios.delete<any>(
         this.contactsUrl.concat(`/tags/${id}`),

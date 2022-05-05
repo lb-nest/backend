@@ -42,9 +42,10 @@ export class CreateMessageInput {
 
   @Field(() => [CreateAttachmentInput], { nullable: true })
   @Type(() => CreateAttachmentInput)
-  @ValidateNested({ each: true })
+  @IsOptional()
   @IsArray()
-  attachments: CreateAttachmentInput[];
+  @ValidateNested({ each: true })
+  attachments?: CreateAttachmentInput[];
 
   @Field(() => [GraphQLJSON], { nullable: true })
   @IsOptional()

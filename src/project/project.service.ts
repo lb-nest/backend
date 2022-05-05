@@ -5,12 +5,13 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { URLSearchParams } from 'url';
+import * as jwt from 'jsonwebtoken';
+import { User } from 'src/user/entities/user.entity';
 import { CreateProjectInput } from './dto/create-project.input';
 import { InviteInput } from './dto/invite.input';
 import { UpdateProjectInput } from './dto/update-project.input';
+import { Project } from './entities/project.entity';
 import { ProjectTokenService } from './project-token.service';
-import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class ProjectService {
@@ -23,7 +24,10 @@ export class ProjectService {
     this.url = configService.get<string>('AUTH_URL');
   }
 
-  async create(authorization: string, input: CreateProjectInput) {
+  async create(
+    authorization: string,
+    input: CreateProjectInput,
+  ): Promise<Project> {
     try {
       const res = await axios.post<any>(this.url.concat('/projects'), input, {
         headers: {
@@ -55,25 +59,7 @@ export class ProjectService {
     }
   }
 
-  async signIn(authorization: string, id: number) {
-    try {
-      const res = await axios.post<any>(
-        this.url.concat(`/auth/projects/${id}/token`),
-        undefined,
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async getByToken(authorization: string) {
+  async getMe(authorization: string): Promise<Project> {
     try {
       const res = await axios.get<any>(this.url.concat('/projects/@me'), {
         headers: {
@@ -87,39 +73,10 @@ export class ProjectService {
     }
   }
 
-  async invite(authorization: string, input: InviteInput) {
-    try {
-      await axios.post<any>(this.url.concat('/projects/@me/invites'), input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return true;
-    } catch (e) {
-      console.log(authorization);
-
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async getUsers(authorization: string, ids?: string) {
-    const query = new URLSearchParams();
-    if (ids) {
-      query.set('ids', ids);
-    }
-
-    const url = this.url.concat(`/projects/@me/users?${query}`);
-    const res = await axios.get<any[]>(url, {
-      headers: {
-        authorization,
-      },
-    });
-
-    return res.data;
-  }
-
-  async update(authorization: string, input: UpdateProjectInput) {
+  async update(
+    authorization: string,
+    input: UpdateProjectInput,
+  ): Promise<Project> {
     try {
       const res = await axios.patch<any>(
         this.url.concat('/projects/@me'),
@@ -137,8 +94,58 @@ export class ProjectService {
     }
   }
 
-  async remove(authorization: string) {
+  async remove(authorization: string): Promise<Project> {
     throw new NotImplementedException();
+  }
+
+  async signIn(authorization: string, id: number): Promise<any> {
+    try {
+      const res = await axios.post<any>(
+        this.url.concat(`/auth/projects/${id}/token`),
+        undefined,
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
+
+      return res.data;
+    } catch (e) {
+      throw new BadRequestException(e.response.data);
+    }
+  }
+
+  async invite(authorization: string, input: InviteInput): Promise<boolean> {
+    try {
+      await axios.post<any>(this.url.concat('/projects/@me/invites'), input, {
+        headers: {
+          authorization,
+        },
+      });
+
+      return true;
+    } catch (e) {
+      console.log(authorization);
+
+      throw new BadRequestException(e.response.data);
+    }
+  }
+
+  async getUsers(authorization: string, ids?: string): Promise<User[]> {
+    const query = new URLSearchParams();
+    if (ids) {
+      query.set('ids', ids);
+    }
+
+    const url = this.url.concat(`/projects/@me/users?${query}`);
+    const res = await axios.get<any[]>(url, {
+      headers: {
+        authorization,
+      },
+    });
+
+    return res.data;
   }
 
   private async createWebhooks(authorization: string, id: number) {

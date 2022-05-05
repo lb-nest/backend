@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PubSub } from 'graphql-subscriptions';
 import { ContactService } from './contact/contact.service';
 import { ProjectTokenService } from './project/project-token.service';
@@ -32,6 +31,7 @@ export class AppService {
 
     switch (event.type) {
       case WebhookEventType.IncomingChats:
+      case WebhookEventType.OutgoingChats:
         this.handleChats(projectId, event.payload).catch(() => null);
         break;
 

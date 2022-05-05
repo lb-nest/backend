@@ -2,7 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { ProjectService } from 'src/project/project.service';
+import { CreateContactInput } from './dto/create-contact.input';
 import { UpdateContactInput } from './dto/update-contact.input';
+import { Contact } from './entities/contact.entity';
 
 @Injectable()
 export class ContactService {
@@ -17,24 +19,32 @@ export class ContactService {
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
 
-  async create(authorization: string, chatId: number, contact: any) {
-    const res = await axios.post(
-      this.contactsUrl.concat('/contacts'),
-      {
-        chatId,
-        ...contact,
-      },
-      {
-        headers: {
-          authorization,
+  async create(
+    authorization: string,
+    chatId: number,
+    contact: CreateContactInput,
+  ): Promise<Contact> {
+    try {
+      const res = await axios.post(
+        this.contactsUrl.concat('/contacts'),
+        {
+          chatId,
+          ...contact,
         },
-      },
-    );
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
 
-    return res.data;
+      return res.data;
+    } catch (e) {
+      throw new BadRequestException(e.response.data);
+    }
   }
 
-  async findAll(authorization: string) {
+  async findAll(authorization: string): Promise<Contact[]> {
     try {
       const contacts = await axios.get<any[]>(
         this.contactsUrl.concat('/contacts'),
@@ -63,7 +73,7 @@ export class ContactService {
     }
   }
 
-  async findOne(authorization: string, id: number) {
+  async findOne(authorization: string, id: number): Promise<Contact> {
     try {
       const res = await axios.get<any>(
         this.contactsUrl.concat(`/contacts/${id}`),
@@ -75,12 +85,12 @@ export class ContactService {
       );
 
       if (res.data.assignedTo) {
-        const users = await this.projectService.getUsers(
+        const [user] = await this.projectService.getUsers(
           authorization,
           res.data.assignedTo,
         );
 
-        res.data.assignedTo = users[0];
+        res.data.assignedTo = user;
       }
 
       return res.data;
@@ -89,7 +99,10 @@ export class ContactService {
     }
   }
 
-  async update(authorization: string, input: UpdateContactInput) {
+  async update(
+    authorization: string,
+    input: UpdateContactInput,
+  ): Promise<Contact> {
     try {
       const res = await axios.patch<any>(
         this.contactsUrl.concat(`/contacts/${input.id}`),
@@ -112,12 +125,12 @@ export class ContactService {
       );
 
       if (res.data.assignedTo) {
-        const users = await this.projectService.getUsers(
+        const [user] = await this.projectService.getUsers(
           authorization,
           res.data.assignedTo,
         );
 
-        res.data.assignedTo = users[0];
+        res.data.assignedTo = user;
       }
 
       return res.data;
@@ -126,7 +139,7 @@ export class ContactService {
     }
   }
 
-  async remove(authorization: string, id: number) {
+  async remove(authorization: string, id: number): Promise<Contact> {
     try {
       const res = await axios.delete<any>(
         this.contactsUrl.concat(`/contacts/${id}`),
@@ -147,67 +160,13 @@ export class ContactService {
       );
 
       if (res.data.assignedTo) {
-        const users = await this.projectService.getUsers(
+        const [user] = await this.projectService.getUsers(
           authorization,
           res.data.assignedTo,
         );
 
-        res.data.assignedTo = users[0];
+        res.data.assignedTo = user;
       }
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async addTag(authorization: string, id: number, tagId: number) {
-    try {
-      const res = await axios.post<any>(
-        this.contactsUrl.concat(`/contacts/${id}/tags`),
-        {
-          tagId,
-        },
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data.tag;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async delTag(authorization: string, id: number, tagId: number) {
-    try {
-      const res = await axios.delete<any>(
-        this.contactsUrl.concat(`/contacts/${id}/tags/${tagId}`),
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data.tag;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async getHistory(authorization: string, id: number) {
-    try {
-      const res = await axios.get<any[]>(
-        this.contactsUrl.concat(`/contacts/${id}/history`),
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
 
       return res.data;
     } catch (e) {

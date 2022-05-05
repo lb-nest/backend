@@ -10,6 +10,7 @@ import { ProjectService } from 'src/project/project.service';
 import { URLSearchParams } from 'url';
 import { ChatsInput } from './dto/chats.input';
 import { CreateChatInput } from './dto/create-chat.input';
+import { Chat } from './entities/chat.entity';
 
 @Injectable()
 export class ChatService {
@@ -24,11 +25,11 @@ export class ChatService {
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
 
-  async create(authorization: string, input: CreateChatInput) {
+  async create(authorization: string, input: CreateChatInput): Promise<Chat> {
     throw new NotImplementedException();
   }
 
-  async findAll(authorization: string, input: ChatsInput) {
+  async findAll(authorization: string, input: ChatsInput): Promise<Chat[]> {
     try {
       const query = new URLSearchParams({
         status: input.status,
@@ -79,11 +80,15 @@ export class ChatService {
     }
   }
 
-  async findWithQuery(authorization: string, user: any, query: string) {
+  async findWithQuery(
+    authorization: string,
+    user: any,
+    query: string,
+  ): Promise<Chat[]> {
     throw new NotImplementedException();
   }
 
-  async count(authorization: string) {
+  async count(authorization: string): Promise<Record<string, number>> {
     try {
       const res = await axios.get<any>(
         this.contactsUrl.concat('/contacts/count'),
@@ -100,9 +105,9 @@ export class ChatService {
     }
   }
 
-  async findOne(authorization: string, id: number) {
+  async findOne(authorization: string, id: number): Promise<Chat> {
     const contacts = await axios.get<any[]>(
-      this.contactsUrl.concat(`/contacts/chatId/${id}`),
+      this.contactsUrl.concat(`/contacts/batch?chatIds=${id}`),
       {
         headers: {
           authorization,
@@ -125,12 +130,12 @@ export class ChatService {
     );
 
     if (contact.assignedTo) {
-      const users = await this.projectService.getUsers(
+      const [user] = await this.projectService.getUsers(
         authorization,
         contact.assignedTo,
       );
 
-      contact.assignedTo = users[0];
+      contact.assignedTo = user;
     }
 
     return Object.assign(chat.data, {

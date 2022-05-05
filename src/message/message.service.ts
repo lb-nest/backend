@@ -10,6 +10,7 @@ import axios from 'axios';
 import { CreateMessageInput } from './dto/create-message.input';
 import { RemoveChatInput } from './dto/remove-chat.input';
 import { UpdateMessageInput } from './dto/update-message.input';
+import { Message } from './entities/message.entity';
 
 @Injectable()
 export class MessageService {
@@ -21,7 +22,11 @@ export class MessageService {
     this.contactsUrl = configService.get<string>('CONTACTS_URL');
   }
 
-  async create(authorization: string, user: any, input: CreateMessageInput) {
+  async create(
+    authorization: string,
+    user: any,
+    input: CreateMessageInput,
+  ): Promise<Message[]> {
     try {
       const contacts = await axios.get(
         this.contactsUrl.concat(`/contacts/chatId/${input.chatId}`),
@@ -53,13 +58,15 @@ export class MessageService {
         throw e;
       }
 
-      console.log(user, e);
-
       throw new BadRequestException(e.response.data);
     }
   }
 
-  async findAll(authorization: string, user: any, chatId: number) {
+  async findAll(
+    authorization: string,
+    user: any,
+    chatId: number,
+  ): Promise<Message[]> {
     try {
       const contacts = await axios.get(
         this.contactsUrl.concat(`/contacts/chatId/${chatId}`),
@@ -94,11 +101,17 @@ export class MessageService {
     }
   }
 
-  async update(authorization: string, input: UpdateMessageInput) {
+  async update(
+    authorization: string,
+    input: UpdateMessageInput,
+  ): Promise<Message> {
     throw new NotImplementedException();
   }
 
-  async remove(authorization: string, input: RemoveChatInput) {
+  async remove(
+    authorization: string,
+    input: RemoveChatInput,
+  ): Promise<Message> {
     throw new NotImplementedException();
   }
 }

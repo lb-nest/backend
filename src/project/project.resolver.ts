@@ -30,7 +30,7 @@ export class ProjectResolver {
 
   @Query(() => Project)
   project(@Auth() authorization: string) {
-    return this.projectService.getByToken(authorization);
+    return this.projectService.getMe(authorization);
   }
 
   @Mutation(() => Project)

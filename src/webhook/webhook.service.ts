@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { CreateWebhookInput } from './dto/create-webhook.input';
 import { UpdateWebhookInput } from './dto/update-webhook.input';
+import { Webhook } from './entities/webhook.entity';
 
 @Injectable()
 export class WebhookService {
@@ -12,7 +13,10 @@ export class WebhookService {
     this.messagingUrl = configService.get<string>('MESSAGING_URL');
   }
 
-  async create(authorization: string, input: CreateWebhookInput) {
+  async create(
+    authorization: string,
+    input: CreateWebhookInput,
+  ): Promise<Webhook> {
     try {
       const res = await axios.post<any>(
         this.messagingUrl.concat('/webhooks'),
@@ -30,7 +34,7 @@ export class WebhookService {
     }
   }
 
-  async findAll(authorization: string) {
+  async findAll(authorization: string): Promise<Webhook[]> {
     try {
       const res = await axios.get<any[]>(
         this.messagingUrl.concat('/webhooks'),
@@ -47,7 +51,7 @@ export class WebhookService {
     }
   }
 
-  async findOne(authorization: string, id: number) {
+  async findOne(authorization: string, id: number): Promise<Webhook> {
     try {
       const res = await axios.get<any>(
         this.messagingUrl.concat(`/webhooks/${id}`),
@@ -64,7 +68,10 @@ export class WebhookService {
     }
   }
 
-  async update(authorization: string, input: UpdateWebhookInput) {
+  async update(
+    authorization: string,
+    input: UpdateWebhookInput,
+  ): Promise<Webhook> {
     try {
       const res = await axios.patch<any>(
         this.messagingUrl.concat(`/webhooks/${input.id}`),
@@ -82,7 +89,7 @@ export class WebhookService {
     }
   }
 
-  async remove(authorization: string, id: number) {
+  async remove(authorization: string, id: number): Promise<Webhook> {
     try {
       const res = await axios.delete<any>(
         this.messagingUrl.concat(`/webhooks/${id}`),

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { CreateHsmInput } from './dto/create-hsm.input';
 import { UpdateHsmInput } from './dto/update-hsm.input';
+import { Hsm } from './entities/hsm.entity';
 
 @Injectable()
 export class HsmService {
@@ -12,7 +13,7 @@ export class HsmService {
     this.messagingUrl = configService.get<string>('MESSAGING_URL');
   }
 
-  async create(authorization: string, input: CreateHsmInput) {
+  async create(authorization: string, input: CreateHsmInput): Promise<Hsm> {
     try {
       const res = await axios.post<any>(
         this.messagingUrl.concat('/hsm'),
@@ -30,7 +31,7 @@ export class HsmService {
     }
   }
 
-  async findAll(authorization: string) {
+  async findAll(authorization: string): Promise<Hsm[]> {
     try {
       const res = await axios.get<any[]>(this.messagingUrl.concat('/hsm'), {
         headers: {
@@ -44,7 +45,7 @@ export class HsmService {
     }
   }
 
-  async findOne(authorization: string, id: number) {
+  async findOne(authorization: string, id: number): Promise<Hsm> {
     try {
       const res = await axios.get<any>(this.messagingUrl.concat(`/hsm/${id}`), {
         headers: {
@@ -58,7 +59,7 @@ export class HsmService {
     }
   }
 
-  async update(authorization: string, input: UpdateHsmInput) {
+  async update(authorization: string, input: UpdateHsmInput): Promise<Hsm> {
     try {
       const res = await axios.patch<any>(
         this.messagingUrl.concat(`/hsm/${input.id}`),
@@ -76,7 +77,7 @@ export class HsmService {
     }
   }
 
-  async remove(authorization: string, id: number) {
+  async remove(authorization: string, id: number): Promise<Hsm> {
     try {
       const res = await axios.delete<any>(
         this.messagingUrl.concat(`/hsm/${id}`),

@@ -1,9 +1,9 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { HistoryEventType } from '../enums/history-event-type';
+import { HistoryEventType } from '../enums/history-event-type.enum';
 
 @ObjectType()
-export class HistoryEvent {
+export class History {
   @Field(() => Int)
   id: number;
 

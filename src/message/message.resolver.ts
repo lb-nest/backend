@@ -51,6 +51,19 @@ export class MessageResolver {
     return this.messageService.findAll(authorization, user, chatId);
   }
 
+  @Mutation(() => Message)
+  updateMessage(
+    @Auth() authorization: string,
+    @Args() input: UpdateMessageInput,
+  ) {
+    return this.messageService.update(authorization, input);
+  }
+
+  @Mutation(() => Message)
+  removeMessage(@Auth() authorization: string, @Args() input: RemoveChatInput) {
+    return this.messageService.remove(authorization, input);
+  }
+
   @UseGuards(JwtAuthGuard)
   @UseGuards(JwtAuthGuard)
   @Subscription(() => Message)
@@ -60,7 +73,7 @@ export class MessageResolver {
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
     const url = this.configService.get<string>('CONTACTS_URL');
-    const res = await axios(url.concat(`/contacts/chatId/${chatId}`), {
+    const res = await axios(url.concat(`/contacts/batch?chatIds=${chatId}`), {
       headers: {
         authorization,
       },
@@ -81,18 +94,5 @@ export class MessageResolver {
 
     const projectId = user.project.id;
     return pubSub.asyncIterator(`messagesReceived:${projectId}:${chatId}`);
-  }
-
-  @Mutation(() => Message)
-  updateMessage(
-    @Auth() authorization: string,
-    @Args() input: UpdateMessageInput,
-  ) {
-    return this.messageService.update(authorization, input);
-  }
-
-  @Mutation(() => Message)
-  removeMessage(@Auth() authorization: string, @Args() input: RemoveChatInput) {
-    return this.messageService.remove(authorization, input);
   }
 }
