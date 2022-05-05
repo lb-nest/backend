@@ -51,8 +51,6 @@ export class ProjectService {
         await this.signIn('Bearer '.concat(rootToken), res.data.id),
       );
 
-      console.log(res.data, token);
-
       return {
         ...res.data,
         token,
