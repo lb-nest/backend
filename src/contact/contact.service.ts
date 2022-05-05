@@ -23,7 +23,7 @@ export class ContactService {
     authorization: string,
     chatId: number,
     contact: CreateContactInput,
-  ): Promise<Contact> {
+  ): Promise<any> {
     try {
       const res = await axios.post(
         this.contactsUrl.concat('/contacts'),
