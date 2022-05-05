@@ -11,7 +11,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       passReqToCallback: true,
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET'),
+      secretOrKey: configService.get<string>('SECRET'),
     });
   }
 
