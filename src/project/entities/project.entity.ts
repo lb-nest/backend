@@ -32,9 +32,6 @@ export class Project {
   @Field(() => [Role])
   roles: Role[];
 
-  @Field(() => Token)
-  token: Token;
-
   @Field(() => String)
   createdAt: string;
 

@@ -5,6 +5,7 @@ import { User } from 'src/user/entities/user.entity';
 import { CreateProjectInput } from './dto/create-project.input';
 import { InviteInput } from './dto/invite.input';
 import { UpdateProjectInput } from './dto/update-project.input';
+import { ProjectWithToken } from './entities/project-with-token.entity';
 import { Project } from './entities/project.entity';
 import { ProjectService } from './project.service';
 
@@ -12,7 +13,7 @@ import { ProjectService } from './project.service';
 export class ProjectResolver {
   constructor(private readonly projectService: ProjectService) {}
 
-  @Mutation(() => Project)
+  @Mutation(() => ProjectWithToken)
   createProject(
     @Auth() authorization: string,
     @Args() input: CreateProjectInput,
