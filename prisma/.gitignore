@@ -1,1 +1,2 @@
-backend.db
+*.db
+*.db-journal
