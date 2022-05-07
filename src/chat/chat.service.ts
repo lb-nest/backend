@@ -70,11 +70,15 @@ export class ChatService {
         });
       }
 
-      return chats.data.map((chat) =>
-        Object.assign(chat, {
-          contact: contacts.data.find((contact) => contact.chatId === chat.id),
-        }),
-      );
+      return chats.data
+        .sort((a, b) => chatIds.indexOf(a) + chatIds.indexOf(b))
+        .map((chat) =>
+          Object.assign(chat, {
+            contact: contacts.data.find(
+              (contact) => contact.chatId === chat.id,
+            ),
+          }),
+        );
     } catch (e) {
       throw new BadRequestException(e.response.data);
     }
