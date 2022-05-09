@@ -58,7 +58,8 @@ export class ChatResolver {
     filter(payload, _, context) {
       const userId = payload.chatsReceived.contact.assignedTo?.id;
       return (
-        [context.req.user.id, undefined].includes(userId) || payload.isFlow
+        [context.req.user.id, undefined].includes(userId) ||
+        payload.chatsReceived.isFlow
       );
     },
   })

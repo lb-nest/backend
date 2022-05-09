@@ -43,7 +43,7 @@ export class ContactFlowService {
         id,
         HistoryEventType.Accepted,
         {
-          assignedto: userId,
+          assignedTo: userId,
         },
       );
 
@@ -59,6 +59,7 @@ export class ContactFlowService {
       const res = await axios.patch(
         this.contactsUrl.concat(`/contacts/${id}`),
         {
+          assignedTo: null,
           status: ContactStatus.Closed,
         },
         {
