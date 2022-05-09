@@ -56,8 +56,9 @@ export class ChatResolver {
   @UseGuards(JwtAuthGuard)
   @Subscription(() => Chat, {
     filter(payload, _, context) {
-      return [context.req.user.id, undefined].includes(
-        payload.chatsReceived.contact.assignedTo?.id,
+      const userId = payload.chatsReceived.contact.assignedTo?.id;
+      return (
+        [context.req.user.id, undefined].includes(userId) || payload.isFlow
       );
     },
   })
