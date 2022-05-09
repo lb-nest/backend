@@ -78,7 +78,7 @@ export class MessageService {
       );
 
       const [contact] = contacts.data;
-      if ([user.id, undefined].includes(contact?.assignedTo)) {
+      if (![user.id, null].includes(contact?.assignedTo)) {
         throw new ForbiddenException();
       }
 
