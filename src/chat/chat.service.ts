@@ -111,7 +111,7 @@ export class ChatService {
 
   async findOne(authorization: string, id: number): Promise<Chat> {
     const contacts = await axios.get<any[]>(
-      this.contactsUrl.concat(`/contacts/batch?chatIds=${id}`),
+      this.contactsUrl.concat(`/contacts/filter?chatIds=${id}`),
       {
         headers: {
           authorization,

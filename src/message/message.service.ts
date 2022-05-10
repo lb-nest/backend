@@ -29,7 +29,7 @@ export class MessageService {
   ): Promise<Message[]> {
     try {
       const contacts = await axios.get(
-        this.contactsUrl.concat(`/contacts/batch?chatIds=${input.chatId}`),
+        this.contactsUrl.concat(`/contacts/filter?chatIds=${input.chatId}`),
         {
           headers: {
             authorization,
@@ -69,7 +69,7 @@ export class MessageService {
   ): Promise<Message[]> {
     try {
       const contacts = await axios.get(
-        this.contactsUrl.concat(`/contacts/batch?chatIds=${chatId}`),
+        this.contactsUrl.concat(`/contacts/filter?chatIds=${chatId}`),
         {
           headers: {
             authorization,
