@@ -4,12 +4,14 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Context } from 'apollo-server-core';
+import { GraphQLUpload } from 'graphql-upload';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ChannelModule } from './channel/channel.module';
 import { ChatModule } from './chat/chat.module';
 import { ContactModule } from './contact/contact.module';
+import { FileModule } from './file/file.module';
 import { HsmModule } from './hsm/hsm.module';
 import { MessageModule } from './message/message.module';
 import { ProjectModule } from './project/project.module';
@@ -25,7 +27,7 @@ import { WebhookModule } from './webhook/webhook.module';
       driver: ApolloDriver,
       useFactory: async () => ({
         autoSchemaFile: true,
-        playground: true,
+        uploads: false,
         subscriptions: {
           'graphql-ws': {
             onConnect: async (context: Context<any>) => {
@@ -45,6 +47,7 @@ import { WebhookModule } from './webhook/webhook.module';
             extra,
           }),
         },
+        playground: true,
       }),
     }),
     AuthModule,
@@ -57,6 +60,7 @@ import { WebhookModule } from './webhook/webhook.module';
     MessageModule,
     ContactModule,
     TagModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],

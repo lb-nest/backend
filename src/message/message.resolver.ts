@@ -65,7 +65,6 @@ export class MessageResolver {
   }
 
   @UseGuards(JwtAuthGuard)
-  @UseGuards(JwtAuthGuard)
   @Subscription(() => Message)
   async messagesReceived(
     @Auth() authorization: string,
