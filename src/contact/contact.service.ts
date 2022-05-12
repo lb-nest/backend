@@ -47,7 +47,7 @@ export class ContactService {
   async findAll(authorization: string): Promise<Contact[]> {
     try {
       const contacts = await axios.get<any[]>(
-        this.contactsUrl.concat('/contacts'),
+        this.contactsUrl.concat('/contacts?assignedTo=all'),
         {
           headers: {
             authorization,
