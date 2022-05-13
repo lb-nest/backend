@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3 } from 'aws-sdk';
-import * as contentDisposition from 'content-disposition';
+import contentDisposition from 'content-disposition';
 import { Stream } from 'stream';
 import * as uuid from 'uuid';
 
