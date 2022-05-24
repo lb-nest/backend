@@ -29,7 +29,7 @@ export class ContactTagService {
         },
       );
 
-      return res.data.tag;
+      return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
     }
@@ -50,7 +50,7 @@ export class ContactTagService {
         },
       );
 
-      return res.data.tag;
+      return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
     }
