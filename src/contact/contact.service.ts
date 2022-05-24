@@ -133,6 +133,8 @@ export class ContactService {
         res.data.assignedTo = user;
       }
 
+      // TODO: оповещать вебсокеты
+
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -167,6 +169,8 @@ export class ContactService {
 
         res.data.assignedTo = user;
       }
+
+      // TODO: оповещать вебсокеты
 
       return res.data;
     } catch (e) {
