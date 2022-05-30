@@ -16,23 +16,10 @@ export class AppService {
   ) {}
 
   handleEvents(projectId: number, event: any) {
-    // TODO: обмен сообщениями с сервисом ботов
-    // после общения с ботом отправлять особый тип события
-    // со своим набором данных.
-    // На основе полученных данных принимать решение чтто делать с контактом и чатом.
-    // 1 создать контакт и поместить в очередь
-    // 2 создать контакт и поместить в решенные
-    // if (???) {
-    //     отправка запроса на бэкенд ботов
-    //     в зависимости от ответа
-    //     1 не делать ничего (return)
-    //     что-то из вышенаписанного списка
-    // }
-
     switch (event.type) {
       case WebhookEventType.IncomingChats:
       case WebhookEventType.OutgoingChats:
-        this.handleChats(projectId, event.payload).catch(() => null);
+        this.handleChats(projectId, event.payload).catch(() => undefined);
         break;
 
       case WebhookEventType.IncomingMessages:

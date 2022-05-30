@@ -30,6 +30,8 @@
     "@nestjs/jwt": "^8.0.0",
     "@nestjs/passport": "^8.2.1",
     "@nestjs/platform-express": "^8.0.0",
+    "@nestjs/platform-socket.io": "^8.4.5",
+    "@nestjs/websockets": "^8.4.5",
     "@prisma/client": "^3.13.0",
     "apollo-server-express": "^3.6.7",
     "aws-sdk": "^2.1132.0",

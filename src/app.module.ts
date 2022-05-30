@@ -4,8 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Context } from 'apollo-server-core';
-import { GraphQLUpload } from 'graphql-upload';
 import { AppController } from './app.controller';
+import { AppGateway } from './app.gateway';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ChannelModule } from './channel/channel.module';
@@ -63,6 +63,6 @@ import { WebhookModule } from './webhook/webhook.module';
     FileModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppGateway],
 })
 export class AppModule {}
