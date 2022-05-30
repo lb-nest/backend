@@ -5,11 +5,11 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Context } from 'apollo-server-core';
 import { AppController } from './app.controller';
-import { AppGateway } from './app.gateway';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ChannelModule } from './channel/channel.module';
 import { ChatModule } from './chat/chat.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
 import { ContactModule } from './contact/contact.module';
 import { FileModule } from './file/file.module';
 import { HsmModule } from './hsm/hsm.module';
@@ -61,8 +61,9 @@ import { WebhookModule } from './webhook/webhook.module';
     ContactModule,
     TagModule,
     FileModule,
+    ChatbotModule,
   ],
   controllers: [AppController],
-  providers: [AppService, AppGateway],
+  providers: [AppService],
 })
 export class AppModule {}

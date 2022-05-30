@@ -26,9 +26,6 @@ export class AppService {
       case WebhookEventType.OutgoingMessages:
         this.handleMessages(projectId, event.payload);
         break;
-
-      // case 'событие от бота':
-      //   break
     }
   }
 
