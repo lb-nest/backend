@@ -7,7 +7,7 @@ import {
 import { Socket } from 'socket.io';
 import { ChatbotService } from './chatbot.service';
 
-// https://stackoverflow.com/questions/69435506/how-to-pass-a-dynamic-port-to-the-websockets-gateway-in-nestjs
+// TODO: https://stackoverflow.com/questions/69435506/how-to-pass-a-dynamic-port-to-the-websockets-gateway-in-nestjs
 @WebSocketGateway(9090)
 export class ChatbotGateway {
   constructor(private readonly chatbotService: ChatbotService) {}
