@@ -13,15 +13,15 @@ export class ChatbotGateway {
   constructor(private readonly chatbotService: ChatbotService) {}
 
   async handleConnection(socket: Socket) {
-    this.chatbotService.handleConnection(socket.handshake.auth.token, socket);
+    this.chatbotService.handleConnection(socket.handshake.auth, socket);
   }
 
   async handleDisconnect(socket: Socket) {
-    this.chatbotService.handleDisconnect(socket.handshake.auth.token, socket);
+    this.chatbotService.handleDisconnect(socket.handshake.auth, socket);
   }
 
   @SubscribeMessage('event')
-  async handle(@ConnectedSocket() socket: Socket, @MessageBody() message: any) {
-    socket.emit('event', 'data');
+  async handle(@ConnectedSocket() socket: Socket, @MessageBody() body: any) {
+    socket.emit('event', body);
   }
 }
