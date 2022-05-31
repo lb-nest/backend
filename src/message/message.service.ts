@@ -6,7 +6,7 @@ import {
   NotImplementedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { CreateMessageInput } from './dto/create-message.input';
 import { RemoveChatInput } from './dto/remove-chat.input';
 import { UpdateMessageInput } from './dto/update-message.input';
@@ -14,12 +14,16 @@ import { Message } from './entities/message.entity';
 
 @Injectable()
 export class MessageService {
-  private readonly messagingUrl: string;
-  private readonly contactsUrl: string;
+  private readonly mAxios: AxiosInstance;
+  private readonly cAxios: AxiosInstance;
 
   constructor(configService: ConfigService) {
-    this.messagingUrl = configService.get<string>('MESSAGING_URL');
-    this.contactsUrl = configService.get<string>('CONTACTS_URL');
+    this.mAxios = axios.create({
+      baseURL: configService.get<string>('MESSAGING_URL'),
+    });
+    this.cAxios = axios.create({
+      baseURL: configService.get<string>('CONTACTS_URL'),
+    });
   }
 
   async create(
@@ -28,8 +32,8 @@ export class MessageService {
     input: CreateMessageInput,
   ): Promise<Message[]> {
     try {
-      const contacts = await axios.get(
-        this.contactsUrl.concat(`/contacts/filter?chatIds=${input.chatId}`),
+      const contacts = await this.cAxios.get<any>(
+        `/contacts/filter?chatIds=${input.chatId}`,
         {
           headers: {
             authorization,
@@ -42,8 +46,8 @@ export class MessageService {
         throw new ForbiddenException();
       }
 
-      const res = await axios.post<any[]>(
-        this.messagingUrl.concat(`/chats/${input.chatId}/messages`),
+      const res = await this.mAxios.post<any[]>(
+        `/chats/${input.chatId}/messages`,
         input,
         {
           headers: {
@@ -68,8 +72,8 @@ export class MessageService {
     chatId: number,
   ): Promise<Message[]> {
     try {
-      const contacts = await axios.get(
-        this.contactsUrl.concat(`/contacts/filter?chatIds=${chatId}`),
+      const contacts = await this.cAxios.get<any[]>(
+        `/contacts/filter?chatIds=${chatId}`,
         {
           headers: {
             authorization,
@@ -82,14 +86,11 @@ export class MessageService {
         throw new ForbiddenException();
       }
 
-      const res = await axios.get(
-        this.messagingUrl.concat(`/chats/${chatId}/messages`),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.mAxios.get(`/chats/${chatId}/messages`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {

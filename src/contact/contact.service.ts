@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { ProjectService } from 'src/project/project.service';
 import { CreateContactInput } from './dto/create-contact.input';
 import { UpdateContactInput } from './dto/update-contact.input';
@@ -8,15 +8,19 @@ import { Contact } from './entities/contact.entity';
 
 @Injectable()
 export class ContactService {
-  private readonly messagingUrl: string;
-  private readonly contactsUrl: string;
+  private readonly mAxios: AxiosInstance;
+  private readonly cAxios: AxiosInstance;
 
   constructor(
     private readonly projectService: ProjectService,
     configService: ConfigService,
   ) {
-    this.messagingUrl = configService.get<string>('MESSAGING_URL');
-    this.contactsUrl = configService.get<string>('CONTACTS_URL');
+    this.mAxios = axios.create({
+      baseURL: configService.get<string>('MESSAGING_URL'),
+    });
+    this.cAxios = axios.create({
+      baseURL: configService.get<string>('CONTACTS_URL'),
+    });
   }
 
   async create(
@@ -25,8 +29,8 @@ export class ContactService {
     contact: CreateContactInput,
   ): Promise<any> {
     try {
-      const res = await axios.post(
-        this.contactsUrl.concat('/contacts'),
+      const res = await this.cAxios.post(
+        '/contacts',
         {
           chatId,
           ...contact,
@@ -46,8 +50,8 @@ export class ContactService {
 
   async findAll(authorization: string): Promise<Contact[]> {
     try {
-      const contacts = await axios.get<any[]>(
-        this.contactsUrl.concat('/contacts?assignedTo=all'),
+      const contacts = await this.cAxios.get<any[]>(
+        '/contacts?assignedTo=all',
         {
           headers: {
             authorization,
@@ -75,14 +79,11 @@ export class ContactService {
 
   async findOne(authorization: string, id: number): Promise<Contact> {
     try {
-      const res = await axios.get<any>(
-        this.contactsUrl.concat(`/contacts/${id}`),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.cAxios.get<any>(`/contacts/${id}`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       if (res.data.assignedTo) {
         const [user] = await this.projectService.getUsers(
@@ -104,25 +105,17 @@ export class ContactService {
     input: UpdateContactInput,
   ): Promise<Contact> {
     try {
-      const res = await axios.patch<any>(
-        this.contactsUrl.concat(`/contacts/${input.id}`),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.cAxios.patch<any>(`/contacts/${input.id}`, input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
-      await axios.patch<any>(
-        this.messagingUrl.concat(`/chats/${res.data.chatId}`),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      await this.mAxios.patch<any>(`/chats/${res.data.chatId}`, input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       if (res.data.assignedTo) {
         const [user] = await this.projectService.getUsers(
@@ -143,23 +136,17 @@ export class ContactService {
 
   async remove(authorization: string, id: number): Promise<Contact> {
     try {
-      const res = await axios.delete<any>(
-        this.contactsUrl.concat(`/contacts/${id}`),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.cAxios.delete<any>(`/contacts/${id}`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
-      await axios.delete<any>(
-        this.messagingUrl.concat(`/chats/${res.data.chatId}`),
-        {
-          headers: {
-            authorization,
-          },
+      await this.mAxios.delete<any>(`/chats/${res.data.chatId}`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       if (res.data.assignedTo) {
         const [user] = await this.projectService.getUsers(

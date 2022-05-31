@@ -5,7 +5,7 @@ import {
   NotImplementedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { ProjectService } from 'src/project/project.service';
 import { URLSearchParams } from 'url';
 import { ChatsInput } from './dto/chats.input';
@@ -14,15 +14,19 @@ import { Chat } from './entities/chat.entity';
 
 @Injectable()
 export class ChatService {
-  private readonly messagingUrl: string;
-  private readonly contactsUrl: string;
+  private readonly mAxios: AxiosInstance;
+  private readonly cAxios: AxiosInstance;
 
   constructor(
     private readonly projectService: ProjectService,
     configService: ConfigService,
   ) {
-    this.messagingUrl = configService.get<string>('MESSAGING_URL');
-    this.contactsUrl = configService.get<string>('CONTACTS_URL');
+    this.mAxios = axios.create({
+      baseURL: configService.get<string>('MESSAGING_URL'),
+    });
+    this.cAxios = axios.create({
+      baseURL: configService.get<string>('CONTACTS_URL'),
+    });
   }
 
   async create(authorization: string, input: CreateChatInput): Promise<Chat> {
@@ -39,18 +43,15 @@ export class ChatService {
         query.set('assignedTo', String(input.assignedTo));
       }
 
-      const contacts = await axios.get<any[]>(
-        this.contactsUrl.concat(`/contacts?${query}`),
-        {
-          headers: {
-            authorization,
-          },
+      const contacts = await this.cAxios.get<any[]>(`/contacts?${query}`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       const chatIds = contacts.data.map((c) => c.chatId);
-      const chats = await axios.get<any[]>(
-        this.messagingUrl.concat(`/chats?ids=${chatIds.join(',')}`),
+      const chats = await this.mAxios.get<any[]>(
+        `/chats?ids=${chatIds.join(',')}`,
         {
           headers: {
             authorization,
@@ -94,14 +95,11 @@ export class ChatService {
 
   async count(authorization: string): Promise<Record<string, number>> {
     try {
-      const res = await axios.get<any>(
-        this.contactsUrl.concat('/contacts/count'),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.cAxios.get<any>('/contacts/count', {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -110,8 +108,8 @@ export class ChatService {
   }
 
   async findOne(authorization: string, id: number): Promise<Chat> {
-    const contacts = await axios.get<any[]>(
-      this.contactsUrl.concat(`/contacts/filter?chatIds=${id}`),
+    const contacts = await this.cAxios.get<any[]>(
+      `/contacts/filter?chatIds=${id}`,
       {
         headers: {
           authorization,
@@ -124,14 +122,11 @@ export class ChatService {
       throw new NotFoundException();
     }
 
-    const chat = await axios.get<any>(
-      this.messagingUrl.concat(`/chats/${id}`),
-      {
-        headers: {
-          authorization,
-        },
+    const chat = await this.mAxios.get<any>(`/chats/${id}`, {
+      headers: {
+        authorization,
       },
-    );
+    });
 
     if (contact.assignedTo) {
       const [user] = await this.projectService.getUsers(

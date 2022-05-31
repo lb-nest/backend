@@ -1,29 +1,27 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { CreateTagInput } from './dto/create-tag.input';
 import { UpdateTagInput } from './dto/update-tag.input';
 import { Tag } from './entities/tag.entity';
 
 @Injectable()
 export class TagService {
-  private readonly contactsUrl: string;
+  private readonly axios: AxiosInstance;
 
   constructor(configService: ConfigService) {
-    this.contactsUrl = configService.get<string>('CONTACTS_URL');
+    this.axios = axios.create({
+      baseURL: configService.get<string>('CONTACTS_URL'),
+    });
   }
 
   async create(authorization: string, input: CreateTagInput): Promise<Tag> {
     try {
-      const res = await axios.post<any>(
-        this.contactsUrl.concat('/tags'),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.post<any>('/tags', input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -33,7 +31,7 @@ export class TagService {
 
   async findAll(authorization: string): Promise<Tag[]> {
     try {
-      const res = await axios.get<any[]>(this.contactsUrl.concat('/tags'), {
+      const res = await this.axios.get<any[]>('/tags', {
         headers: {
           authorization,
         },
@@ -47,7 +45,7 @@ export class TagService {
 
   async findOne(authorization: string, id: number): Promise<Tag> {
     try {
-      const res = await axios.get<any>(this.contactsUrl.concat(`/tags/${id}`), {
+      const res = await this.axios.get<any>(`/tags/${id}`, {
         headers: {
           authorization,
         },
@@ -61,15 +59,11 @@ export class TagService {
 
   async update(authorization: string, input: UpdateTagInput): Promise<Tag> {
     try {
-      const res = await axios.patch<any>(
-        this.contactsUrl.concat(`/tags/${input.id}`),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.patch<any>(`/tags/${input.id}`, input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -79,14 +73,11 @@ export class TagService {
 
   async remove(authorization: string, id: number): Promise<Tag> {
     try {
-      const res = await axios.delete<any>(
-        this.contactsUrl.concat(`/tags/${id}`),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.delete<any>(`/tags/${id}`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {

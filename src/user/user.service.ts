@@ -4,22 +4,24 @@ import {
   NotImplementedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { Project } from 'src/project/entities/project.entity';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
-  private readonly authUrl: string;
+  private readonly axios: AxiosInstance;
 
   constructor(configService: ConfigService) {
-    this.authUrl = configService.get<string>('AUTH_URL');
+    this.axios = axios.create({
+      baseURL: configService.get<string>('AUTH_URL'),
+    });
   }
 
   async getMe(authorization: string): Promise<User> {
     try {
-      const res = await axios.get<any>(this.authUrl.concat('/users/@me'), {
+      const res = await this.axios.get<any>('/users/@me', {
         headers: {
           authorization,
         },
@@ -33,14 +35,11 @@ export class UserService {
 
   async getProjects(authorization: string): Promise<Project[]> {
     try {
-      const res = await axios.get<any[]>(
-        this.authUrl.concat('/users/@me/projects'),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.get<any[]>('/users/@me/projects', {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -53,15 +52,11 @@ export class UserService {
     input: UpdateUserInput,
   ): Promise<Project> {
     try {
-      const res = await axios.patch<any>(
-        this.authUrl.concat('/users/@me'),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.patch<any>('/users/@me', input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {

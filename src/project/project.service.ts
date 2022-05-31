@@ -4,10 +4,11 @@ import {
   NotImplementedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
-import * as jwt from 'jsonwebtoken';
+import axios, { AxiosInstance } from 'axios';
+import { decode, JwtPayload } from 'jsonwebtoken';
 import { Token } from 'src/auth/entities/token.entity';
 import { User } from 'src/user/entities/user.entity';
+import { WebhookEventType } from 'src/webhook/enums/webhook-event-type.enum';
 import { CreateProjectInput } from './dto/create-project.input';
 import { InviteInput } from './dto/invite.input';
 import { UpdateProjectInput } from './dto/update-project.input';
@@ -16,13 +17,15 @@ import { ProjectTokenService } from './project-token.service';
 
 @Injectable()
 export class ProjectService {
-  private readonly url: string;
+  private readonly axios: AxiosInstance;
 
   constructor(
     private readonly projectTokenService: ProjectTokenService,
     private readonly configService: ConfigService,
   ) {
-    this.url = configService.get<string>('AUTH_URL');
+    this.axios = axios.create({
+      baseURL: configService.get<string>('AUTH_URL'),
+    });
   }
 
   async create(
@@ -30,7 +33,7 @@ export class ProjectService {
     input: CreateProjectInput,
   ): Promise<Project> {
     try {
-      const res = await axios.post<any>(this.url.concat('/projects'), input, {
+      const res = await this.axios.post<any>('/projects', input, {
         headers: {
           authorization,
         },
@@ -41,7 +44,7 @@ export class ProjectService {
       await this.createWebhooks(authorization, res.data.id);
 
       const rootToken = this.configService.get<string>('ROOT_TOKEN');
-      const root: any = jwt.decode(rootToken);
+      const root = <JwtPayload>decode(rootToken);
       await this.invite('Bearer '.concat(token.token), {
         email: root.email,
       });
@@ -62,7 +65,7 @@ export class ProjectService {
 
   async getMe(authorization: string): Promise<Project> {
     try {
-      const res = await axios.get<any>(this.url.concat('/projects/@me'), {
+      const res = await this.axios.get<any>('/projects/@me', {
         headers: {
           authorization,
         },
@@ -79,15 +82,11 @@ export class ProjectService {
     input: UpdateProjectInput,
   ): Promise<Project> {
     try {
-      const res = await axios.patch<any>(
-        this.url.concat('/projects/@me'),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.patch<any>('/projects/@me', input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -101,8 +100,8 @@ export class ProjectService {
 
   async signIn(authorization: string, id: number): Promise<Token> {
     try {
-      const res = await axios.post<any>(
-        this.url.concat(`/auth/projects/${id}/token`),
+      const res = await this.axios.post<any>(
+        `/auth/projects/${id}/token`,
         undefined,
         {
           headers: {
@@ -119,7 +118,7 @@ export class ProjectService {
 
   async invite(authorization: string, input: InviteInput): Promise<boolean> {
     try {
-      await axios.post<any>(this.url.concat('/projects/@me/invites'), input, {
+      await this.axios.post<any>('/projects/@me/invites', input, {
         headers: {
           authorization,
         },
@@ -127,8 +126,6 @@ export class ProjectService {
 
       return true;
     } catch (e) {
-      console.log(authorization);
-
       throw new BadRequestException(e.response.data);
     }
   }
@@ -139,8 +136,7 @@ export class ProjectService {
       query.set('ids', ids);
     }
 
-    const url = this.url.concat(`/projects/@me/users?${query}`);
-    const res = await axios.get<any[]>(url, {
+    const res = await this.axios.get<any[]>(`/projects/@me/users?${query}`, {
       headers: {
         authorization,
       },
@@ -150,24 +146,23 @@ export class ProjectService {
   }
 
   private async createWebhooks(authorization: string, id: number) {
-    const res = await this.signIn(authorization, id);
+    const backend = this.configService.get<string>('BACKEND_URL');
+    const messaging = this.configService.get<string>('MESSAGING_URL');
 
-    const url = this.configService.get<string>('MESSAGING_URL');
-
-    const path = `/projects/${id}/events`;
     const webhooks = [
       {
         name: 'system.backend',
-        url: this.configService.get<string>('BACKEND_URL').concat(path),
-        eventType: 'All',
+        url: backend.concat(`/projects/${id}/events`),
+        eventType: WebhookEventType.All,
       },
     ];
 
+    const token = await this.signIn(authorization, id);
     await Promise.all(
-      webhooks.map(async (webhook) =>
-        axios.post<any>(url.concat('/webhooks'), webhook, {
+      webhooks.map((webhook) =>
+        axios.post<any>(messaging.concat('/webhooks'), webhook, {
           headers: {
-            authorization: 'Bearer '.concat(res.token),
+            authorization: 'Bearer '.concat(token.token),
           },
         }),
       ),

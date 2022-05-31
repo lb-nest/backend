@@ -1,28 +1,26 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { CreateChannelInput } from './dto/create-channel.input';
 import { UpdateChannelInput } from './dto/update-channel.input';
 
 @Injectable()
 export class ChannelService {
-  private readonly messagingUrl: string;
+  private readonly axios: AxiosInstance;
 
   constructor(configService: ConfigService) {
-    this.messagingUrl = configService.get<string>('MESSAGING_URL');
+    this.axios = axios.create({
+      baseURL: configService.get<string>('MESSAGING_URL'),
+    });
   }
 
   async create(authorization: string, input: CreateChannelInput) {
     try {
-      const res = await axios.post<any>(
-        this.messagingUrl.concat('/channels'),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.post<any>('/channels', input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -32,14 +30,11 @@ export class ChannelService {
 
   async findAll(authorization: string) {
     try {
-      const res = await axios.get<any[]>(
-        this.messagingUrl.concat('/channels'),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.get<any[]>('/channels', {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -49,14 +44,11 @@ export class ChannelService {
 
   async findOne(authorization: string, id: number) {
     try {
-      const res = await axios.get<any>(
-        this.messagingUrl.concat(`/channels/${id}`),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.get<any>(`/channels/${id}`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -66,15 +58,11 @@ export class ChannelService {
 
   async update(authorization: string, input: UpdateChannelInput) {
     try {
-      const res = await axios.patch<any>(
-        this.messagingUrl.concat(`/channels/${input.id}`),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.patch<any>(`/channels/${input.id}`, input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -84,14 +72,11 @@ export class ChannelService {
 
   async remove(authorization: string, id: number) {
     try {
-      const res = await axios.delete<any>(
-        this.messagingUrl.concat(`/channels/${id}`),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.delete<any>(`/channels/${id}`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {

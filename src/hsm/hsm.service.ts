@@ -1,29 +1,27 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { CreateHsmInput } from './dto/create-hsm.input';
 import { UpdateHsmInput } from './dto/update-hsm.input';
 import { Hsm } from './entities/hsm.entity';
 
 @Injectable()
 export class HsmService {
-  private readonly messagingUrl: string;
+  private readonly axios: AxiosInstance;
 
   constructor(configService: ConfigService) {
-    this.messagingUrl = configService.get<string>('MESSAGING_URL');
+    this.axios = axios.create({
+      baseURL: configService.get<string>('MESSAGING_URL'),
+    });
   }
 
   async create(authorization: string, input: CreateHsmInput): Promise<Hsm> {
     try {
-      const res = await axios.post<any>(
-        this.messagingUrl.concat('/hsm'),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.post<any>('/hsm', input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -33,7 +31,7 @@ export class HsmService {
 
   async findAll(authorization: string): Promise<Hsm[]> {
     try {
-      const res = await axios.get<any[]>(this.messagingUrl.concat('/hsm'), {
+      const res = await this.axios.get<any[]>('/hsm', {
         headers: {
           authorization,
         },
@@ -47,7 +45,7 @@ export class HsmService {
 
   async findOne(authorization: string, id: number): Promise<Hsm> {
     try {
-      const res = await axios.get<any>(this.messagingUrl.concat(`/hsm/${id}`), {
+      const res = await this.axios.get<any>(`/hsm/${id}`, {
         headers: {
           authorization,
         },
@@ -61,15 +59,11 @@ export class HsmService {
 
   async update(authorization: string, input: UpdateHsmInput): Promise<Hsm> {
     try {
-      const res = await axios.patch<any>(
-        this.messagingUrl.concat(`/hsm/${input.id}`),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.patch<any>(`/hsm/${input.id}`, input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -79,14 +73,11 @@ export class HsmService {
 
   async remove(authorization: string, id: number): Promise<Hsm> {
     try {
-      const res = await axios.delete<any>(
-        this.messagingUrl.concat(`/hsm/${id}`),
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.delete<any>(`/hsm/${id}`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
