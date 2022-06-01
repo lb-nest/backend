@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PubSub } from 'graphql-subscriptions';
+import { ChatbotEventType } from './chatbot/enums/chatbot-event-type.enum';
 import { ContactService } from './contact/contact.service';
 import { ProjectTokenService } from './project/project-token.service';
 import { ProjectService } from './project/project.service';
@@ -13,6 +15,7 @@ export class AppService {
     private readonly contactService: ContactService,
     private readonly projectService: ProjectService,
     private readonly projectTokenService: ProjectTokenService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   handleEvents(projectId: number, event: any) {
@@ -47,6 +50,14 @@ export class AppService {
 
       contact.assignedTo = user;
     }
+
+    // if (chat.isNew) {
+    //   await this.eventEmitter.emitAsync(ChatbotEventType.NewAssignment, {
+    //     projectId,
+    //     ...chat,
+    //     contact,
+    //   });
+    // }
 
     pubSub.publish(`chatsReceived:${projectId}`, {
       chatsReceived: {
