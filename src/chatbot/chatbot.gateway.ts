@@ -13,7 +13,7 @@ import { ChatbotEventType } from './enums/chatbot-event-type.enum';
 // TODO: https://stackoverflow.com/questions/69435506/how-to-pass-a-dynamic-port-to-the-websockets-gateway-in-nestjs
 @WebSocketGateway(9090)
 export class ChatbotGateway {
-  private readonly chatbots: Record<string, any[]> = {};
+  private readonly socket: Record<string, Socket[]> = {};
 
   constructor(
     private readonly configService: ConfigService,
@@ -27,14 +27,11 @@ export class ChatbotGateway {
         verify(init.token, this.configService.get<string>('SECRET'))
       );
 
-      if (!this.chatbots[payload.project.id]) {
-        this.chatbots[payload.project.id] = [];
+      if (!this.socket[payload.project.id]) {
+        this.socket[payload.project.id] = [];
       }
 
-      this.chatbots[payload.project.id].push({
-        socket,
-        trigger: init.trigger,
-      });
+      this.socket[payload.project.id].push(socket);
     } catch {}
   }
 
@@ -45,19 +42,19 @@ export class ChatbotGateway {
         verify(init.token, this.configService.get<string>('SECRET'))
       );
 
-      const index = this.chatbots[payload.project.id].findIndex(
-        (chatbot) => chatbot.socket === socket,
+      const index = this.socket[payload.project.id].findIndex(
+        (value) => value === socket,
       );
 
       if (~index) {
-        this.chatbots[payload.project.id].splice(index, 1);
+        this.socket[payload.project.id].splice(index, 1);
       }
     } catch {}
   }
 
   emit(projectId: number, event: ChatbotEventType, data: any): void {
-    this.chatbots[projectId].map((chatbot) => {
-      chatbot.socket.emit(event, data);
+    this.socket[projectId].map((socket) => {
+      socket.emit(event, data);
     });
   }
 
