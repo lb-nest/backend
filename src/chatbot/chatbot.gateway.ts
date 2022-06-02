@@ -77,20 +77,20 @@ export class ChatbotGateway {
     this.eventEmitter.emit(ChatbotEventType.AssignTag, body);
   }
 
-  @SubscribeMessage(ChatbotEventType.TransferContact)
+  @SubscribeMessage(ChatbotEventType.Transfer)
   async handleTransferContact(
     @ConnectedSocket() socket: Socket,
     @MessageBody() body: any,
   ) {
-    this.eventEmitter.emit(ChatbotEventType.TransferContact, body);
+    this.eventEmitter.emit(ChatbotEventType.Transfer, body);
   }
 
-  @SubscribeMessage(ChatbotEventType.CloseContact)
+  @SubscribeMessage(ChatbotEventType.Close)
   async handleCloseContact(
     @ConnectedSocket() socket: Socket,
     @MessageBody() body: any,
   ) {
-    this.eventEmitter.emit(ChatbotEventType.CloseContact, body);
+    this.eventEmitter.emit(ChatbotEventType.Close, body);
   }
 
   @SubscribeMessage(ChatbotEventType.Callback)
