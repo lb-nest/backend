@@ -1,7 +1,8 @@
 export enum ChatbotEventType {
-  NewAssignment = 'NewAssignment',
-  NewMessage = 'NewMessage',
-  SetTag = 'SetTag',
+  NewEvent = 'NewEvent',
+  Callback = 'Callback',
+  SendMessage = 'SendMessage',
+  AssignTag = 'AssignTag',
   TransferContact = 'TransferContact',
   CloseContact = 'CloseContact',
 }
