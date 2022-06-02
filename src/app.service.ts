@@ -51,13 +51,11 @@ export class AppService {
       contact.assignedTo = user;
     }
 
-    // if (chat.isNew) {
-    //   await this.eventEmitter.emitAsync(ChatbotEventType.NewAssignment, {
-    //     projectId,
-    //     ...chat,
-    //     contact,
-    //   });
-    // }
+    this.eventEmitter.emit(ChatbotEventType.NewEvent, {
+      projectId,
+      ...chat,
+      contact,
+    });
 
     pubSub.publish(`chatsReceived:${projectId}`, {
       chatsReceived: {

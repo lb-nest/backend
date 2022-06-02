@@ -61,12 +61,43 @@ export class ChatbotGateway {
     });
   }
 
-  @SubscribeMessage(ChatbotEventType.NewMessage)
-  async handleOutgoingMessage(
+  @SubscribeMessage(ChatbotEventType.SendMessage)
+  async handleSendMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() body: any,
   ) {
-    this.eventEmitter.emit(ChatbotEventType.NewMessage, body);
-    socket.emit('???', body);
+    this.eventEmitter.emit(ChatbotEventType.SendMessage, body);
+  }
+
+  @SubscribeMessage(ChatbotEventType.AssignTag)
+  async handleAssignTag(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: any,
+  ) {
+    this.eventEmitter.emit(ChatbotEventType.AssignTag, body);
+  }
+
+  @SubscribeMessage(ChatbotEventType.TransferContact)
+  async handleTransferContact(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: any,
+  ) {
+    this.eventEmitter.emit(ChatbotEventType.TransferContact, body);
+  }
+
+  @SubscribeMessage(ChatbotEventType.CloseContact)
+  async handleCloseContact(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: any,
+  ) {
+    this.eventEmitter.emit(ChatbotEventType.CloseContact, body);
+  }
+
+  @SubscribeMessage(ChatbotEventType.Callback)
+  async handleCallback(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: any,
+  ) {
+    socket.emit(ChatbotEventType.Callback, body);
   }
 }

@@ -3,8 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ChatbotGateway } from './chatbot.gateway';
 import { ChatbotResolver } from './chatbot.resolver';
 import { ChatbotService } from './chatbot.service';
-import { NewAssignmentListener } from './listeners/new-assignment.listener';
-import { NewMessageListener } from './listeners/new-message.listener';
+import { NewEventListener } from './listeners/new-event.listener';
 
 @Module({
   imports: [ConfigModule],
@@ -12,8 +11,7 @@ import { NewMessageListener } from './listeners/new-message.listener';
     ChatbotResolver,
     ChatbotService,
     ChatbotGateway,
-    NewAssignmentListener,
-    NewMessageListener,
+    NewEventListener,
   ],
 })
 export class ChatbotModule {}

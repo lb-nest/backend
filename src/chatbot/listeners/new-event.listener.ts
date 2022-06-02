@@ -5,11 +5,11 @@ import { ChatbotEventType } from '../enums/chatbot-event-type.enum';
 import { NewAssignmentEvent } from '../events/new-assignment.event';
 
 @Injectable()
-export class NewMessageListener {
+export class NewEventListener {
   constructor(private readonly chatbotGateway: ChatbotGateway) {}
 
-  @OnEvent(ChatbotEventType.NewMessage)
-  handleNewMesage(projectId: number, event: NewAssignmentEvent) {
-    this.chatbotGateway.emit(projectId, ChatbotEventType.NewMessage, event);
+  @OnEvent(ChatbotEventType.NewEvent)
+  handleNewAssignment(projectId: number, event: NewAssignmentEvent) {
+    this.chatbotGateway.emit(projectId, ChatbotEventType.NewEvent, event);
   }
 }
