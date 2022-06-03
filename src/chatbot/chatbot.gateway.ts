@@ -6,7 +6,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { JwtPayload, verify } from 'jsonwebtoken';
+import { decode, JwtPayload, verify } from 'jsonwebtoken';
 import { Socket } from 'socket.io';
 import { ChatbotEventType } from './enums/chatbot-event-type.enum';
 
@@ -20,40 +20,41 @@ export class ChatbotGateway {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async handleConnection(socket: Socket) {
-    const init = socket.handshake.auth;
+  handleConnection(socket: Socket): void {
+    const { auth } = socket.handshake;
     try {
-      const payload = <JwtPayload>(
-        verify(init.token, this.configService.get<string>('SECRET'))
+      const token = <JwtPayload>(
+        verify(auth.token, this.configService.get<string>('SECRET'))
       );
 
-      if (!this.socket[payload.project.id]) {
-        this.socket[payload.project.id] = [];
+      if (!this.socket[token.project.id]) {
+        this.socket[token.project.id] = [];
       }
 
-      this.socket[payload.project.id].push(socket);
-    } catch {}
+      this.socket[token.project.id].push(socket);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  async handleDisconnect(socket: Socket) {
-    const init = socket.handshake.auth;
+  handleDisconnect(socket: Socket): void {
+    const { auth } = socket.handshake;
     try {
-      const payload = <JwtPayload>(
-        verify(init.token, this.configService.get<string>('SECRET'))
-      );
-
-      const index = this.socket[payload.project.id].findIndex(
+      const token = <JwtPayload>decode(auth.token);
+      const index = this.socket[token.project.id].findIndex(
         (value) => value === socket,
       );
 
       if (~index) {
-        this.socket[payload.project.id].splice(index, 1);
+        this.socket[token.project.id].splice(index, 1);
       }
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   emit(projectId: number, event: ChatbotEventType, data: any): void {
-    this.socket[projectId].map((socket) => {
+    this.socket[projectId]?.map((socket) => {
       socket.emit(event, data);
     });
   }
@@ -64,6 +65,20 @@ export class ChatbotGateway {
     @MessageBody() body: any,
   ) {
     this.eventEmitter.emit(ChatbotEventType.SendMessage, body);
+    socket.emit(ChatbotEventType.Callback, {
+      id: body.chatId,
+    });
+  }
+
+  @SubscribeMessage(ChatbotEventType.Transfer)
+  async handleTransfer(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: any,
+  ) {
+    this.eventEmitter.emit(ChatbotEventType.Transfer, body);
+    socket.emit(ChatbotEventType.Callback, {
+      id: body.chatId,
+    });
   }
 
   @SubscribeMessage(ChatbotEventType.AssignTag)
@@ -72,22 +87,20 @@ export class ChatbotGateway {
     @MessageBody() body: any,
   ) {
     this.eventEmitter.emit(ChatbotEventType.AssignTag, body);
-  }
-
-  @SubscribeMessage(ChatbotEventType.Transfer)
-  async handleTransferContact(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() body: any,
-  ) {
-    this.eventEmitter.emit(ChatbotEventType.Transfer, body);
+    socket.emit(ChatbotEventType.Callback, {
+      id: body.chatId,
+    });
   }
 
   @SubscribeMessage(ChatbotEventType.Close)
-  async handleCloseContact(
+  async handleClose(
     @ConnectedSocket() socket: Socket,
     @MessageBody() body: any,
   ) {
     this.eventEmitter.emit(ChatbotEventType.Close, body);
+    socket.emit(ChatbotEventType.Callback, {
+      id: body.chatId,
+    });
   }
 
   @SubscribeMessage(ChatbotEventType.Callback)
@@ -95,6 +108,8 @@ export class ChatbotGateway {
     @ConnectedSocket() socket: Socket,
     @MessageBody() body: any,
   ) {
-    socket.emit(ChatbotEventType.Callback, body);
+    socket.emit(ChatbotEventType.Callback, {
+      id: body.chatId,
+    });
   }
 }
