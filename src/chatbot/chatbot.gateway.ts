@@ -1,4 +1,3 @@
-import { ConfigService } from '@nestjs/config';
 import {
   ConnectedSocket,
   MessageBody,
@@ -16,10 +15,7 @@ export class ChatbotGateway {
   private readonly emitter = new EventEmitter();
   private readonly socket = new WeakMap<Socket, [string, Socket['emit']]>();
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly chatbotService: ChatbotService,
-  ) {}
+  constructor(private readonly chatbotService: ChatbotService) {}
 
   handleConnection(socket: Socket): void {
     this.chatbotService.handleConnection(socket);
