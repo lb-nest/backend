@@ -12,7 +12,7 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { pubSub } from 'src/app.service';
 import { Auth } from 'src/auth/auth.decorator';
 import { RoleType } from 'src/auth/enums/role-type.enum';
@@ -26,10 +26,16 @@ import { MessageService } from './message.service';
 
 @Resolver(() => Message)
 export class MessageResolver {
+  private readonly axios: AxiosInstance;
+
   constructor(
     private readonly messageService: MessageService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    this.axios = axios.create({
+      baseURL: this.configService.get<string>('CONTACTS_URL'),
+    });
+  }
 
   @UseGuards(JwtAuthGuard)
   @Mutation(() => [Message])
@@ -71,8 +77,7 @@ export class MessageResolver {
     @User() user: any,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
-    const url = this.configService.get<string>('CONTACTS_URL');
-    const res = await axios(url.concat(`/contacts/filter?chatIds=${chatId}`), {
+    const res = await this.axios(`/contacts/filter?chatIds=${chatId}`, {
       headers: {
         authorization,
       },

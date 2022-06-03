@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { ContactHistoryService } from './contact-history.service';
 import { TransferContactInput } from './dto/transfer-contact.input';
 import { ContactEventType } from './enums/contact-event-type.enum';
@@ -10,14 +10,16 @@ import { HistoryEventType } from './enums/history-event-type.enum';
 
 @Injectable()
 export class ContactFlowService {
-  private readonly contactsUrl: string;
+  private readonly axios: AxiosInstance;
 
   constructor(
     private readonly eventEmiter: EventEmitter2,
     private readonly contactHistoryService: ContactHistoryService,
     configService: ConfigService,
   ) {
-    this.contactsUrl = configService.get<string>('CONTACTS_URL');
+    this.axios = axios.create({
+      baseURL: configService.get<string>('CONTACTS_URL'),
+    });
   }
 
   async acceptContact(
@@ -26,8 +28,8 @@ export class ContactFlowService {
     userId: number,
   ): Promise<boolean> {
     try {
-      const res = await axios.patch(
-        this.contactsUrl.concat(`/contacts/${id}`),
+      const res = await this.axios.patch(
+        `/contacts/${id}`,
         {
           assignedTo: userId,
         },
@@ -56,8 +58,8 @@ export class ContactFlowService {
 
   async closeContact(authorization: string, id: number): Promise<boolean> {
     try {
-      const res = await axios.patch(
-        this.contactsUrl.concat(`/contacts/${id}`),
+      const res = await this.axios.patch(
+        `/contacts/${id}`,
         {
           assignedTo: null,
           status: ContactStatus.Closed,
@@ -88,15 +90,11 @@ export class ContactFlowService {
     input: TransferContactInput,
   ): Promise<boolean> {
     try {
-      const res = await axios.patch(
-        this.contactsUrl.concat(`/contacts/${input.id}`),
-        input,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.patch(`/contacts/${input.id}`, input, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       await this.contactHistoryService.create(
         authorization,
@@ -116,8 +114,8 @@ export class ContactFlowService {
 
   async returnContact(authorization: string, id: number): Promise<boolean> {
     try {
-      const res = await axios.patch(
-        this.contactsUrl.concat(`/contacts/${id}`),
+      const res = await this.axios.patch(
+        `/contacts/${id}`,
         {
           assignedTo: null,
           status: ContactStatus.Open,
@@ -149,8 +147,8 @@ export class ContactFlowService {
     userId: number,
   ): Promise<boolean> {
     try {
-      const res = await axios.patch(
-        this.contactsUrl.concat(`/contacts/${id}`),
+      const res = await this.axios.patch(
+        `/contacts/${id}`,
         {
           assignedTo: userId,
           status: ContactStatus.Open,
