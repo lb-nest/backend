@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { sign } from 'jsonwebtoken';
 import { Token } from 'src/auth/entities/token.entity';
 import { PrismaService } from 'src/prisma.service';
 
