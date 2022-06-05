@@ -65,10 +65,12 @@ export class AppService {
   }
 
   private handleMessages(projectId: number, messages: any[]): void {
-    messages.map((message) => {
-      pubSub.publish(`messagesReceived:${projectId}:${message.chat.id}`, {
-        messagesReceived: message,
+    messages
+      .sort((a, b) => a.id - b.id)
+      .map((message) => {
+        pubSub.publish(`messagesReceived:${projectId}:${message.chat.id}`, {
+          messagesReceived: message,
+        });
       });
-    });
   }
 }
