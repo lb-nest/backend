@@ -28,7 +28,7 @@ export class ContactUpdateListener {
       },
     });
 
-    if (contact.assignedTo) {
+    if (typeof contact.assignedTo === 'number') {
       const [user] = await this.projectService.getUsers(
         authorization,
         contact.assignedTo,

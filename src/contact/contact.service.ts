@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios, { AxiosInstance } from 'axios';
 import { ProjectService } from 'src/project/project.service';
 import { CreateContactInput } from './dto/create-contact.input';
 import { UpdateContactInput } from './dto/update-contact.input';
 import { Contact } from './entities/contact.entity';
+import { ContactEventType } from './enums/contact-event-type.enum';
 
 @Injectable()
 export class ContactService {
@@ -12,8 +14,9 @@ export class ContactService {
   private readonly cAxios: AxiosInstance;
 
   constructor(
-    private readonly projectService: ProjectService,
     configService: ConfigService,
+    private readonly projectService: ProjectService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.mAxios = axios.create({
       baseURL: configService.get<string>('MESSAGING_URL'),
@@ -135,8 +138,7 @@ export class ContactService {
         res.data.assignedTo = user;
       }
 
-      // TODO: оповещать вебсокеты
-
+      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);

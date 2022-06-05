@@ -13,7 +13,7 @@ export class ContactFlowService {
   private readonly axios: AxiosInstance;
 
   constructor(
-    private readonly eventEmiter: EventEmitter2,
+    private readonly eventEmitter: EventEmitter2,
     private readonly contactHistoryService: ContactHistoryService,
     configService: ConfigService,
   ) {
@@ -49,7 +49,7 @@ export class ContactFlowService {
         },
       );
 
-      this.eventEmiter.emit(ContactEventType.Update, authorization, res.data);
+      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
       return true;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -78,7 +78,7 @@ export class ContactFlowService {
         {},
       );
 
-      this.eventEmiter.emit(ContactEventType.Update, authorization, res.data);
+      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
       return true;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -105,7 +105,7 @@ export class ContactFlowService {
         },
       );
 
-      this.eventEmiter.emit(ContactEventType.Update, authorization, res.data);
+      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
       return true;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -134,7 +134,7 @@ export class ContactFlowService {
         {},
       );
 
-      this.eventEmiter.emit(ContactEventType.Update, authorization, res.data);
+      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
       return true;
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -169,7 +169,7 @@ export class ContactFlowService {
         },
       );
 
-      this.eventEmiter.emit(ContactEventType.Update, authorization, res.data);
+      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
       return true;
     } catch (e) {
       throw new BadRequestException(e.response.data);
