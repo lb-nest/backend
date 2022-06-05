@@ -21,7 +21,9 @@ import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({
+      maxListeners: Infinity,
+    }),
     ConfigModule.forRoot(),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,

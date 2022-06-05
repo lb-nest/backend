@@ -20,6 +20,8 @@ export class ChatbotService {
     this.axios = axios.create({
       baseURL: configService.get<string>('CHATBOTS_URL'),
     });
+
+    this.emitter.setMaxListeners(Infinity);
   }
 
   async create(
