@@ -21,7 +21,7 @@ export class Contact {
   name: string;
 
   @Field(() => String, { nullable: true })
-  avatarUrl: string;
+  avatarUrl: string | null;
 
   @Field(() => ContactStatus)
   status: ContactStatus;
