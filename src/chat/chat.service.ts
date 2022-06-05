@@ -72,7 +72,7 @@ export class ChatService {
       }
 
       return chats.data
-        .sort((a, b) => chatIds.indexOf(a) + chatIds.indexOf(b))
+        .sort((a, b) => chatIds.indexOf(a.id) - chatIds.indexOf(b.id))
         .map((chat) =>
           Object.assign(chat, {
             contact: contacts.data.find(
