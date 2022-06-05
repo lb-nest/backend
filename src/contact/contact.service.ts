@@ -27,7 +27,7 @@ export class ContactService {
     authorization: string,
     chatId: number,
     contact: CreateContactInput,
-  ): Promise<any> {
+  ): Promise<Contact> {
     try {
       const res = await this.cAxios.post(
         '/contacts',
@@ -41,6 +41,15 @@ export class ContactService {
           },
         },
       );
+
+      if (res.data.assignedTo) {
+        const [user] = await this.projectService.getUsers(
+          authorization,
+          res.data.assignedTo,
+        );
+
+        res.data.assignedTo = user;
+      }
 
       return res.data;
     } catch (e) {

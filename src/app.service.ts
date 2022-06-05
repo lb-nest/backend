@@ -4,7 +4,6 @@ import { PubSub } from 'graphql-subscriptions';
 import { ChatbotEventType } from './chatbot/enums/chatbot-event-type.enum';
 import { ContactService } from './contact/contact.service';
 import { ProjectTokenService } from './project/project-token.service';
-import { ProjectService } from './project/project.service';
 import { WebhookEventType } from './webhook/enums/webhook-event-type.enum';
 
 export const pubSub = new PubSub();
@@ -13,16 +12,22 @@ export const pubSub = new PubSub();
 export class AppService {
   constructor(
     private readonly contactService: ContactService,
-    private readonly projectService: ProjectService,
     private readonly projectTokenService: ProjectTokenService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  handleEvents(projectId: number, event: any) {
+  handleEvents(projectId: number, event: any): void {
     switch (event.type) {
       case WebhookEventType.IncomingChats:
-      case WebhookEventType.OutgoingChats:
         this.handleChats(projectId, event.payload).catch(() => undefined);
+        break;
+
+      case WebhookEventType.OutgoingChats:
+        this.handleChats(projectId, event.payload)
+          .then((chat) => {
+            this.eventEmitter.emit(ChatbotEventType.NewEvent, chat);
+          })
+          .catch(() => undefined);
         break;
 
       case WebhookEventType.IncomingMessages:
@@ -32,40 +37,34 @@ export class AppService {
     }
   }
 
-  private async handleChats(projectId: number, chat: any) {
-    const token = await this.projectTokenService.get(projectId);
-    const authorization = 'Bearer '.concat(token);
-
+  private async handleChats(
+    projectId: number,
+    chat: any,
+    silent = false,
+  ): Promise<any> {
     const contact = await this.contactService.create(
-      authorization,
+      'Bearer '.concat(await this.projectTokenService.get(projectId)),
       chat.id,
       chat.contact,
     );
 
-    if (contact.assignedTo) {
-      const [user] = await this.projectService.getUsers(
-        authorization,
-        contact.assignedTo,
-      );
-
-      contact.assignedTo = user;
+    if (!silent) {
+      pubSub.publish(`chatsReceived:${projectId}`, {
+        chatsReceived: {
+          ...chat,
+          contact,
+        },
+      });
     }
 
-    this.eventEmitter.emit(ChatbotEventType.NewEvent, {
+    return {
       projectId,
       ...chat,
       contact,
-    });
-
-    pubSub.publish(`chatsReceived:${projectId}`, {
-      chatsReceived: {
-        ...chat,
-        contact,
-      },
-    });
+    };
   }
 
-  private handleMessages(projectId: number, messages: any[]) {
+  private handleMessages(projectId: number, messages: any[]): void {
     messages.map((message) => {
       pubSub.publish(`messagesReceived:${projectId}:${message.chat.id}`, {
         messagesReceived: message,
