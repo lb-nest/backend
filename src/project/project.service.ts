@@ -100,15 +100,11 @@ export class ProjectService {
 
   async signIn(authorization: string, id: number): Promise<Token> {
     try {
-      const res = await this.axios.post<any>(
-        `/auth/projects/${id}/token`,
-        undefined,
-        {
-          headers: {
-            authorization,
-          },
+      const res = await this.axios.get<any>(`/projects/${id}/token`, {
+        headers: {
+          authorization,
         },
-      );
+      });
 
       return res.data;
     } catch (e) {
@@ -118,7 +114,7 @@ export class ProjectService {
 
   async invite(authorization: string, input: InviteInput): Promise<boolean> {
     try {
-      await this.axios.post<any>('/projects/@me/invites', input, {
+      await this.axios.post<any>('/projects/@me/users', input, {
         headers: {
           authorization,
         },

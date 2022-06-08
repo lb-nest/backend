@@ -25,7 +25,7 @@ export class AuthService {
 
   async signIn(input: SigninInput) {
     try {
-      const res = await this.axios.post('/auth/login', input);
+      const res = await this.axios.post('/auth/signin', input);
       return res.data;
     } catch (e) {
       throw new BadRequestException(e.response.data);

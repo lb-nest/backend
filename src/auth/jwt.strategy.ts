@@ -23,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(req: any, payload: any) {
     try {
-      await this.axios.post('/auth/projects/@me/token/verify', undefined, {
+      await this.axios.get('/projects/@me/token/verify', {
         headers: {
           authorization: req.headers.authorization,
         },
