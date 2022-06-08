@@ -13,12 +13,12 @@ export class ChatbotResolver {
   createChatbot(
     @Auth() authorization: string,
     @Args() createChatbotInput: CreateChatbotInput,
-  ) {
+  ): Promise<Chatbot> {
     return this.chatbotService.create(authorization, createChatbotInput);
   }
 
   @Query(() => [Chatbot], { name: 'chatbot' })
-  findAll(@Auth() authorization: string) {
+  findAll(@Auth() authorization: string): Promise<Chatbot[]> {
     return this.chatbotService.findAll(authorization);
   }
 
@@ -26,7 +26,7 @@ export class ChatbotResolver {
   findOne(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Chatbot> {
     return this.chatbotService.findOne(authorization, id);
   }
 
@@ -34,7 +34,7 @@ export class ChatbotResolver {
   updateChatbot(
     @Auth() authorization: string,
     @Args() input: UpdateChatbotInput,
-  ) {
+  ): Promise<Chatbot> {
     return this.chatbotService.update(authorization, input);
   }
 
@@ -42,7 +42,7 @@ export class ChatbotResolver {
   removeChatbot(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Chatbot> {
     return this.chatbotService.remove(authorization, id);
   }
 }

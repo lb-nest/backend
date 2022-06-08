@@ -22,42 +22,42 @@ export class ChatbotGateway {
   }
 
   @SubscribeMessage(ChatbotEventType.SendMessage)
-  async handleSendMessage(
+  handleSendMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
-  ) {
+  ): void {
     this.chatbotService.handleSendMessage(socket, message);
   }
 
   @SubscribeMessage(ChatbotEventType.Callback)
-  async handleCallback(
+  handleCallback(
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
-  ) {
+  ): void {
     this.chatbotService.handleSendMessage(socket, message);
   }
 
   @SubscribeMessage(ChatbotEventType.Transfer)
-  async handleTransfer(
+  handleTransfer(
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
-  ) {
+  ): void {
     this.chatbotService.handleSendMessage(socket, message);
   }
 
   @SubscribeMessage(ChatbotEventType.AssignTag)
-  async handleAssignTag(
+  handleAssignTag(
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
-  ) {
+  ): void {
     this.chatbotService.handleSendMessage(socket, message);
   }
 
   @SubscribeMessage(ChatbotEventType.Close)
-  async handleClose(
+  handleClose(
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
-  ) {
+  ): void {
     this.chatbotService.handleSendMessage(socket, message);
   }
 }

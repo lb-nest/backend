@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 import { CreateChannelInput } from './dto/create-channel.input';
 import { UpdateChannelInput } from './dto/update-channel.input';
+import { Channel } from './entities/channel.entity';
 
 @Injectable()
 export class ChannelService {
@@ -14,9 +15,12 @@ export class ChannelService {
     });
   }
 
-  async create(authorization: string, input: CreateChannelInput) {
+  async create(
+    authorization: string,
+    input: CreateChannelInput,
+  ): Promise<Channel> {
     try {
-      const res = await this.axios.post<any>('/channels', input, {
+      const res = await this.axios.post<Channel>('/channels', input, {
         headers: {
           authorization,
         },
@@ -28,9 +32,9 @@ export class ChannelService {
     }
   }
 
-  async findAll(authorization: string) {
+  async findAll(authorization: string): Promise<Channel[]> {
     try {
-      const res = await this.axios.get<any[]>('/channels', {
+      const res = await this.axios.get<Channel[]>('/channels', {
         headers: {
           authorization,
         },
@@ -42,9 +46,9 @@ export class ChannelService {
     }
   }
 
-  async findOne(authorization: string, id: number) {
+  async findOne(authorization: string, id: number): Promise<Channel> {
     try {
-      const res = await this.axios.get<any>(`/channels/${id}`, {
+      const res = await this.axios.get<Channel>(`/channels/${id}`, {
         headers: {
           authorization,
         },
@@ -56,13 +60,20 @@ export class ChannelService {
     }
   }
 
-  async update(authorization: string, input: UpdateChannelInput) {
+  async update(
+    authorization: string,
+    input: UpdateChannelInput,
+  ): Promise<Channel> {
     try {
-      const res = await this.axios.patch<any>(`/channels/${input.id}`, input, {
-        headers: {
-          authorization,
+      const res = await this.axios.patch<Channel>(
+        `/channels/${input.id}`,
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -70,9 +81,9 @@ export class ChannelService {
     }
   }
 
-  async remove(authorization: string, id: number) {
+  async remove(authorization: string, id: number): Promise<Channel> {
     try {
-      const res = await this.axios.delete<any>(`/channels/${id}`, {
+      const res = await this.axios.delete<Channel>(`/channels/${id}`, {
         headers: {
           authorization,
         },

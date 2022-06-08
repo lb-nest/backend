@@ -20,7 +20,7 @@ export class WebhookService {
     input: CreateWebhookInput,
   ): Promise<Webhook> {
     try {
-      const res = await this.axios.post<any>('/webhooks', input, {
+      const res = await this.axios.post<Webhook>('/webhooks', input, {
         headers: {
           authorization,
         },
@@ -34,7 +34,7 @@ export class WebhookService {
 
   async findAll(authorization: string): Promise<Webhook[]> {
     try {
-      const res = await this.axios.get<any[]>('/webhooks', {
+      const res = await this.axios.get<Webhook[]>('/webhooks', {
         headers: {
           authorization,
         },
@@ -48,7 +48,7 @@ export class WebhookService {
 
   async findOne(authorization: string, id: number): Promise<Webhook> {
     try {
-      const res = await this.axios.get<any>(`/webhooks/${id}`, {
+      const res = await this.axios.get<Webhook>(`/webhooks/${id}`, {
         headers: {
           authorization,
         },
@@ -65,11 +65,15 @@ export class WebhookService {
     input: UpdateWebhookInput,
   ): Promise<Webhook> {
     try {
-      const res = await this.axios.patch<any>(`/webhooks/${input.id}`, input, {
-        headers: {
-          authorization,
+      const res = await this.axios.patch<Webhook>(
+        `/webhooks/${input.id}`,
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -79,7 +83,7 @@ export class WebhookService {
 
   async remove(authorization: string, id: number): Promise<Webhook> {
     try {
-      const res = await this.axios.delete<any>(`/webhooks/${id}`, {
+      const res = await this.axios.delete<Webhook>(`/webhooks/${id}`, {
         headers: {
           authorization,
         },

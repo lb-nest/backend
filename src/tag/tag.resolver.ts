@@ -10,12 +10,15 @@ export class TagResolver {
   constructor(private readonly tagService: TagService) {}
 
   @Mutation(() => Tag)
-  createTag(@Auth() authorization: string, @Args() input: CreateTagInput) {
+  createTag(
+    @Auth() authorization: string,
+    @Args() input: CreateTagInput,
+  ): Promise<Tag> {
     return this.tagService.create(authorization, input);
   }
 
   @Query(() => [Tag])
-  tags(@Auth() authorization: string) {
+  tags(@Auth() authorization: string): Promise<Tag[]> {
     return this.tagService.findAll(authorization);
   }
 
@@ -23,12 +26,15 @@ export class TagResolver {
   tagById(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Tag> {
     return this.tagService.findOne(authorization, id);
   }
 
   @Mutation(() => Tag)
-  updateTag(@Auth() authorization: string, @Args() input: UpdateTagInput) {
+  updateTag(
+    @Auth() authorization: string,
+    @Args() input: UpdateTagInput,
+  ): Promise<Tag> {
     return this.tagService.update(authorization, input);
   }
 
@@ -36,7 +42,7 @@ export class TagResolver {
   removeTag(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Tag> {
     return this.tagService.remove(authorization, id);
   }
 }

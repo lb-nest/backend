@@ -20,7 +20,7 @@ export class ContactHistoryService {
     eventType: HistoryEventType,
     payload?: any,
   ): Promise<History> {
-    const res = await this.axios.post<any>(
+    const res = await this.axios.post<History>(
       `/contacts/${id}/history`,
       {
         eventType,
@@ -38,7 +38,7 @@ export class ContactHistoryService {
 
   async findAll(authorization: string, id: number): Promise<History[]> {
     try {
-      const res = await this.axios.get<any[]>(`/contacts/${id}/history`, {
+      const res = await this.axios.get<History[]>(`/contacts/${id}/history`, {
         headers: {
           authorization,
         },

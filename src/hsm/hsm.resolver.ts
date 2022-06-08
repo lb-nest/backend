@@ -10,12 +10,15 @@ export class HsmResolver {
   constructor(private readonly hsmService: HsmService) {}
 
   @Mutation(() => Hsm)
-  createHsm(@Auth() authorization: string, @Args() input: CreateHsmInput) {
+  createHsm(
+    @Auth() authorization: string,
+    @Args() input: CreateHsmInput,
+  ): Promise<Hsm> {
     return this.hsmService.create(authorization, input);
   }
 
   @Query(() => [Hsm])
-  hsm(@Auth() authorization: string) {
+  hsm(@Auth() authorization: string): Promise<Hsm[]> {
     return this.hsmService.findAll(authorization);
   }
 
@@ -23,12 +26,15 @@ export class HsmResolver {
   hsmById(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Hsm> {
     return this.hsmService.findOne(authorization, id);
   }
 
   @Mutation(() => Hsm)
-  updateHsm(@Auth() authorization: string, @Args() input: UpdateHsmInput) {
+  updateHsm(
+    @Auth() authorization: string,
+    @Args() input: UpdateHsmInput,
+  ): Promise<Hsm> {
     return this.hsmService.update(authorization, input);
   }
 
@@ -36,7 +42,7 @@ export class HsmResolver {
   removeHsm(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Hsm> {
     return this.hsmService.remove(authorization, id);
   }
 }

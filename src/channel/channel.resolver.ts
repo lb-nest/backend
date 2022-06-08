@@ -13,12 +13,12 @@ export class ChannelResolver {
   createChannel(
     @Auth() authorization: string,
     @Args() input: CreateChannelInput,
-  ) {
+  ): Promise<Channel> {
     return this.channelService.create(authorization, input);
   }
 
   @Query(() => [Channel])
-  channels(@Auth() authorization: string) {
+  channels(@Auth() authorization: string): Promise<Channel[]> {
     return this.channelService.findAll(authorization);
   }
 
@@ -26,7 +26,7 @@ export class ChannelResolver {
   channelById(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Channel> {
     return this.channelService.findOne(authorization, id);
   }
 
@@ -34,7 +34,7 @@ export class ChannelResolver {
   updateChannel(
     @Auth() authorization: string,
     @Args() input: UpdateChannelInput,
-  ) {
+  ): Promise<Channel> {
     return this.channelService.update(authorization, input);
   }
 
@@ -42,7 +42,7 @@ export class ChannelResolver {
   removeChannel(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Channel> {
     return this.channelService.remove(authorization, id);
   }
 }

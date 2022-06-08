@@ -1,5 +1,5 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsEnum, IsNotEmpty, ValidateIf } from 'class-validator';
 import { ChannelType } from '../enums/channel-type.enum';
 
@@ -7,7 +7,7 @@ import { ChannelType } from '../enums/channel-type.enum';
 export class CreateChannelInput {
   @Field(() => String)
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   name: string;
 
   @Field(() => ChannelType)
@@ -17,11 +17,11 @@ export class CreateChannelInput {
   @Field(() => String, { nullable: true })
   @ValidateIf((object) => object.type === ChannelType.Whatsapp)
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value?.trim())
   accountId?: string;
 
   @Field(() => String)
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   token: string;
 }

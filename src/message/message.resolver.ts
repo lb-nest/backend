@@ -43,7 +43,7 @@ export class MessageResolver {
     @Auth() authorization: string,
     @User() user: any,
     @Args() input: CreateMessageInput,
-  ) {
+  ): Promise<Message[]> {
     return this.messageService.create(authorization, user, input);
   }
 
@@ -53,7 +53,7 @@ export class MessageResolver {
     @Auth() authorization: string,
     @User() user: any,
     @Args('chatId', { type: () => Int }) chatId: number,
-  ) {
+  ): Promise<Message[]> {
     return this.messageService.findAll(authorization, user, chatId);
   }
 
@@ -61,12 +61,15 @@ export class MessageResolver {
   updateMessage(
     @Auth() authorization: string,
     @Args() input: UpdateMessageInput,
-  ) {
+  ): Promise<Message> {
     return this.messageService.update(authorization, input);
   }
 
   @Mutation(() => Message)
-  removeMessage(@Auth() authorization: string, @Args() input: RemoveChatInput) {
+  removeMessage(
+    @Auth() authorization: string,
+    @Args() input: RemoveChatInput,
+  ): Promise<Message> {
     return this.messageService.remove(authorization, input);
   }
 

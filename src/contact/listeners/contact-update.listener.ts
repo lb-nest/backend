@@ -21,7 +21,10 @@ export class ContactUpdateListener {
   }
 
   @OnEvent(ContactEventType.Update)
-  async handleContactUpdateEvent(authorization: string, contact: any) {
+  async handleContactUpdateEvent(
+    authorization: string,
+    contact: any,
+  ): Promise<void> {
     const chat = await this.axios.get<any>(`/chats/${contact.chatId}`, {
       headers: {
         authorization,

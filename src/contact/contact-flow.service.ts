@@ -28,7 +28,7 @@ export class ContactFlowService {
     userId: number,
   ): Promise<boolean> {
     try {
-      const res = await this.axios.patch(
+      const res = await this.axios.patch<any>(
         `/contacts/${id}`,
         {
           assignedTo: userId,
@@ -58,7 +58,7 @@ export class ContactFlowService {
 
   async closeContact(authorization: string, id: number): Promise<boolean> {
     try {
-      const res = await this.axios.patch(
+      const res = await this.axios.patch<any>(
         `/contacts/${id}`,
         {
           assignedTo: null,
@@ -90,7 +90,7 @@ export class ContactFlowService {
     input: TransferContactInput,
   ): Promise<boolean> {
     try {
-      const res = await this.axios.patch(`/contacts/${input.id}`, input, {
+      const res = await this.axios.patch<any>(`/contacts/${input.id}`, input, {
         headers: {
           authorization,
         },
@@ -114,7 +114,7 @@ export class ContactFlowService {
 
   async returnContact(authorization: string, id: number): Promise<boolean> {
     try {
-      const res = await this.axios.patch(
+      const res = await this.axios.patch<any>(
         `/contacts/${id}`,
         {
           assignedTo: null,
@@ -147,7 +147,7 @@ export class ContactFlowService {
     userId: number,
   ): Promise<boolean> {
     try {
-      const res = await this.axios.patch(
+      const res = await this.axios.patch<any>(
         `/contacts/${id}`,
         {
           assignedTo: userId,

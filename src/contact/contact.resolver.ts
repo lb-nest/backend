@@ -26,7 +26,7 @@ export class ContactResolver {
   ) {}
 
   @Query(() => [Contact])
-  contacts(@Auth() authorization: string) {
+  contacts(@Auth() authorization: string): Promise<Contact[]> {
     return this.contactService.findAll(authorization);
   }
 
@@ -34,7 +34,7 @@ export class ContactResolver {
   contactById(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Contact> {
     return this.contactService.findOne(authorization, id);
   }
 
@@ -43,7 +43,7 @@ export class ContactResolver {
   updateContact(
     @Auth() authorization: string,
     @Args() input: UpdateContactInput,
-  ) {
+  ): Promise<Contact> {
     return this.contactService.update(authorization, input);
   }
 
@@ -51,7 +51,7 @@ export class ContactResolver {
   removeContact(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Contact> {
     return this.contactService.remove(authorization, id);
   }
 
@@ -60,7 +60,7 @@ export class ContactResolver {
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
     @Args('tagId', { type: () => Int }) tagId: number,
-  ) {
+  ): Promise<TagWithoutParentAndChildren> {
     return this.contactTagService.create(authorization, id, tagId);
   }
 
@@ -69,7 +69,7 @@ export class ContactResolver {
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
     @Args('tagId', { type: () => Int }) tagId: number,
-  ) {
+  ): Promise<TagWithoutParentAndChildren> {
     return this.contactTagService.remove(authorization, id, tagId);
   }
 
@@ -77,7 +77,7 @@ export class ContactResolver {
   contactHistory(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<History[]> {
     return this.contactHistoryService.findAll(authorization, id);
   }
 
@@ -87,7 +87,7 @@ export class ContactResolver {
     @Auth() authorization: string,
     @User() user: any,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<boolean> {
     return this.contactFlowService.acceptContact(authorization, id, user.id);
   }
 
@@ -96,7 +96,7 @@ export class ContactResolver {
   closeContact(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<boolean> {
     return this.contactFlowService.closeContact(authorization, id);
   }
 
@@ -106,7 +106,7 @@ export class ContactResolver {
   transferContact(
     @Auth() authorization: string,
     @Args() input: TransferContactInput,
-  ) {
+  ): Promise<boolean> {
     return this.contactFlowService.transferContact(authorization, input);
   }
 
@@ -115,7 +115,7 @@ export class ContactResolver {
   returnContact(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<boolean> {
     return this.contactFlowService.returnContact(authorization, id);
   }
 
@@ -125,7 +125,7 @@ export class ContactResolver {
     @Auth() authorization: string,
     @User() user: any,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<boolean> {
     return this.contactFlowService.reopenContact(authorization, id, user.id);
   }
 }

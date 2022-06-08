@@ -17,7 +17,7 @@ export class HsmService {
 
   async create(authorization: string, input: CreateHsmInput): Promise<Hsm> {
     try {
-      const res = await this.axios.post<any>('/hsm', input, {
+      const res = await this.axios.post<Hsm>('/hsm', input, {
         headers: {
           authorization,
         },
@@ -31,7 +31,7 @@ export class HsmService {
 
   async findAll(authorization: string): Promise<Hsm[]> {
     try {
-      const res = await this.axios.get<any[]>('/hsm', {
+      const res = await this.axios.get<Hsm[]>('/hsm', {
         headers: {
           authorization,
         },
@@ -45,7 +45,7 @@ export class HsmService {
 
   async findOne(authorization: string, id: number): Promise<Hsm> {
     try {
-      const res = await this.axios.get<any>(`/hsm/${id}`, {
+      const res = await this.axios.get<Hsm>(`/hsm/${id}`, {
         headers: {
           authorization,
         },
@@ -59,7 +59,7 @@ export class HsmService {
 
   async update(authorization: string, input: UpdateHsmInput): Promise<Hsm> {
     try {
-      const res = await this.axios.patch<any>(`/hsm/${input.id}`, input, {
+      const res = await this.axios.patch<Hsm>(`/hsm/${input.id}`, input, {
         headers: {
           authorization,
         },
@@ -73,7 +73,7 @@ export class HsmService {
 
   async remove(authorization: string, id: number): Promise<Hsm> {
     try {
-      const res = await this.axios.delete<any>(`/hsm/${id}`, {
+      const res = await this.axios.delete<Hsm>(`/hsm/${id}`, {
         headers: {
           authorization,
         },

@@ -17,7 +17,7 @@ export class ProjectResolver {
   createProject(
     @Auth() authorization: string,
     @Args() input: CreateProjectInput,
-  ) {
+  ): Promise<ProjectWithToken> {
     return this.projectService.create(authorization, input);
   }
 
@@ -25,12 +25,12 @@ export class ProjectResolver {
   signInProject(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Token> {
     return this.projectService.signIn(authorization, id);
   }
 
   @Query(() => Project)
-  project(@Auth() authorization: string) {
+  project(@Auth() authorization: string): Promise<Project> {
     return this.projectService.getMe(authorization);
   }
 
@@ -38,22 +38,25 @@ export class ProjectResolver {
   updateProject(
     @Auth() authorization: string,
     @Args() input: UpdateProjectInput,
-  ) {
+  ): Promise<Project> {
     return this.projectService.update(authorization, input);
   }
 
   @Mutation(() => Project)
-  removeProject(@Auth() authorization: string) {
+  removeProject(@Auth() authorization: string): Promise<Project> {
     return this.projectService.remove(authorization);
   }
 
   @Mutation(() => Boolean)
-  invite(@Auth() authorization: string, @Args() input: InviteInput) {
+  invite(
+    @Auth() authorization: string,
+    @Args() input: InviteInput,
+  ): Promise<boolean> {
     return this.projectService.invite(authorization, input);
   }
 
   @Query(() => [User])
-  projectUsers(@Auth() authorization: string) {
+  projectUsers(@Auth() authorization: string): Promise<User[]> {
     return this.projectService.getUsers(authorization);
   }
 }

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 import { SigninInput } from './dto/signin.input';
 import { SignupInput } from './dto/signup.input';
+import { Token } from './entities/token.entity';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +15,7 @@ export class AuthService {
     });
   }
 
-  async signUp(input: SignupInput) {
+  async signUp(input: SignupInput): Promise<Token> {
     try {
       await this.axios.post('/users', input);
       return this.signIn(input);
@@ -23,7 +24,7 @@ export class AuthService {
     }
   }
 
-  async signIn(input: SigninInput) {
+  async signIn(input: SigninInput): Promise<Token> {
     try {
       const res = await this.axios.post('/auth/signin', input);
       return res.data;

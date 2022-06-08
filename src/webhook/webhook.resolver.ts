@@ -13,12 +13,12 @@ export class WebhookResolver {
   createWebhook(
     @Auth() authorization: string,
     @Args() input: CreateWebhookInput,
-  ) {
+  ): Promise<Webhook> {
     return this.webhookService.create(authorization, input);
   }
 
   @Query(() => [Webhook])
-  webhooks(@Auth() authorization: string) {
+  webhooks(@Auth() authorization: string): Promise<Webhook[]> {
     return this.webhookService.findAll(authorization);
   }
 
@@ -26,7 +26,7 @@ export class WebhookResolver {
   webhookById(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Webhook> {
     return this.webhookService.findOne(authorization, id);
   }
 
@@ -34,7 +34,7 @@ export class WebhookResolver {
   updateWebhook(
     @Auth() authorization: string,
     @Args() input: UpdateWebhookInput,
-  ) {
+  ): Promise<Webhook> {
     return this.webhookService.update(authorization, input);
   }
 
@@ -42,7 +42,7 @@ export class WebhookResolver {
   removeWebhook(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ) {
+  ): Promise<Webhook> {
     return this.webhookService.remove(authorization, id);
   }
 }

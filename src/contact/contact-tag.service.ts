@@ -19,7 +19,7 @@ export class ContactTagService {
     tagId: number,
   ): Promise<TagWithoutParentAndChildren> {
     try {
-      const res = await this.axios.post<any>(
+      const res = await this.axios.post<TagWithoutParentAndChildren>(
         `/contacts/${id}/tags`,
         {
           tagId,
@@ -43,7 +43,7 @@ export class ContactTagService {
     tagId: number,
   ): Promise<TagWithoutParentAndChildren> {
     try {
-      const res = await this.axios.delete<any>(
+      const res = await this.axios.delete<TagWithoutParentAndChildren>(
         `/contacts/${id}/tags/${tagId}`,
         {
           headers: {

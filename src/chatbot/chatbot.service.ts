@@ -29,7 +29,7 @@ export class ChatbotService {
     input: CreateChatbotInput,
   ): Promise<Chatbot> {
     try {
-      const res = await this.axios.post<any>('/chatbots', input, {
+      const res = await this.axios.post<Chatbot>('/chatbots', input, {
         headers: {
           authorization,
         },
@@ -43,7 +43,7 @@ export class ChatbotService {
 
   async findAll(authorization: string): Promise<Chatbot[]> {
     try {
-      const res = await this.axios.get<any[]>('/chatbots', {
+      const res = await this.axios.get<Chatbot[]>('/chatbots', {
         headers: {
           authorization,
         },
@@ -57,7 +57,7 @@ export class ChatbotService {
 
   async findOne(authorization: string, id: number): Promise<Chatbot> {
     try {
-      const res = await this.axios.get<any>(`/chatbots/${id}`, {
+      const res = await this.axios.get<Chatbot>(`/chatbots/${id}`, {
         headers: {
           authorization,
         },
@@ -74,11 +74,15 @@ export class ChatbotService {
     input: UpdateChatbotInput,
   ): Promise<Chatbot> {
     try {
-      const res = await this.axios.patch<any>(`/chatbots/${input.id}`, input, {
-        headers: {
-          authorization,
+      const res = await this.axios.patch<Chatbot>(
+        `/chatbots/${input.id}`,
+        input,
+        {
+          headers: {
+            authorization,
+          },
         },
-      });
+      );
 
       return res.data;
     } catch (e) {
@@ -88,7 +92,7 @@ export class ChatbotService {
 
   async remove(authorization: string, id: number): Promise<Chatbot> {
     try {
-      const res = await this.axios.delete<any>(`/chatbots/${id}`, {
+      const res = await this.axios.delete<Chatbot>(`/chatbots/${id}`, {
         headers: {
           authorization,
         },

@@ -17,7 +17,7 @@ export class TagService {
 
   async create(authorization: string, input: CreateTagInput): Promise<Tag> {
     try {
-      const res = await this.axios.post<any>('/tags', input, {
+      const res = await this.axios.post<Tag>('/tags', input, {
         headers: {
           authorization,
         },
@@ -31,7 +31,7 @@ export class TagService {
 
   async findAll(authorization: string): Promise<Tag[]> {
     try {
-      const res = await this.axios.get<any[]>('/tags', {
+      const res = await this.axios.get<Tag[]>('/tags', {
         headers: {
           authorization,
         },
@@ -45,7 +45,7 @@ export class TagService {
 
   async findOne(authorization: string, id: number): Promise<Tag> {
     try {
-      const res = await this.axios.get<any>(`/tags/${id}`, {
+      const res = await this.axios.get<Tag>(`/tags/${id}`, {
         headers: {
           authorization,
         },
@@ -59,7 +59,7 @@ export class TagService {
 
   async update(authorization: string, input: UpdateTagInput): Promise<Tag> {
     try {
-      const res = await this.axios.patch<any>(`/tags/${input.id}`, input, {
+      const res = await this.axios.patch<Tag>(`/tags/${input.id}`, input, {
         headers: {
           authorization,
         },
@@ -73,7 +73,7 @@ export class TagService {
 
   async remove(authorization: string, id: number): Promise<Tag> {
     try {
-      const res = await this.axios.delete<any>(`/tags/${id}`, {
+      const res = await this.axios.delete<Tag>(`/tags/${id}`, {
         headers: {
           authorization,
         },

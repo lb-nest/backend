@@ -21,7 +21,7 @@ export class UserService {
 
   async getMe(authorization: string): Promise<User> {
     try {
-      const res = await this.axios.get<any>('/users/@me', {
+      const res = await this.axios.get<User>('/users/@me', {
         headers: {
           authorization,
         },
@@ -35,7 +35,7 @@ export class UserService {
 
   async getProjects(authorization: string): Promise<Project[]> {
     try {
-      const res = await this.axios.get<any[]>('/users/@me/projects', {
+      const res = await this.axios.get<Project[]>('/users/@me/projects', {
         headers: {
           authorization,
         },
@@ -47,12 +47,9 @@ export class UserService {
     }
   }
 
-  async update(
-    authorization: string,
-    input: UpdateUserInput,
-  ): Promise<Project> {
+  async update(authorization: string, input: UpdateUserInput): Promise<User> {
     try {
-      const res = await this.axios.patch<any>('/users/@me', input, {
+      const res = await this.axios.patch<User>('/users/@me', input, {
         headers: {
           authorization,
         },
@@ -64,7 +61,7 @@ export class UserService {
     }
   }
 
-  async remove(authorization: string): Promise<Project> {
+  async remove(authorization: string): Promise<User> {
     throw new NotImplementedException();
   }
 }

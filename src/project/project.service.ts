@@ -12,6 +12,7 @@ import { WebhookEventType } from 'src/webhook/enums/webhook-event-type.enum';
 import { CreateProjectInput } from './dto/create-project.input';
 import { InviteInput } from './dto/invite.input';
 import { UpdateProjectInput } from './dto/update-project.input';
+import { ProjectWithToken } from './entities/project-with-token.entity';
 import { Project } from './entities/project.entity';
 import { ProjectTokenService } from './project-token.service';
 
@@ -31,9 +32,9 @@ export class ProjectService {
   async create(
     authorization: string,
     input: CreateProjectInput,
-  ): Promise<Project> {
+  ): Promise<ProjectWithToken> {
     try {
-      const res = await this.axios.post<any>('/projects', input, {
+      const res = await this.axios.post<Project>('/projects', input, {
         headers: {
           authorization,
         },
@@ -65,7 +66,7 @@ export class ProjectService {
 
   async getMe(authorization: string): Promise<Project> {
     try {
-      const res = await this.axios.get<any>('/projects/@me', {
+      const res = await this.axios.get<Project>('/projects/@me', {
         headers: {
           authorization,
         },
@@ -82,7 +83,7 @@ export class ProjectService {
     input: UpdateProjectInput,
   ): Promise<Project> {
     try {
-      const res = await this.axios.patch<any>('/projects/@me', input, {
+      const res = await this.axios.patch<Project>('/projects/@me', input, {
         headers: {
           authorization,
         },
@@ -100,7 +101,7 @@ export class ProjectService {
 
   async signIn(authorization: string, id: number): Promise<Token> {
     try {
-      const res = await this.axios.get<any>(`/projects/${id}/token`, {
+      const res = await this.axios.get<Token>(`/projects/${id}/token`, {
         headers: {
           authorization,
         },

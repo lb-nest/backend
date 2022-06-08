@@ -32,7 +32,7 @@ export class ContactService {
     contact: CreateContactInput,
   ): Promise<Contact> {
     try {
-      const res = await this.cAxios.post(
+      const res = await this.cAxios.post<any>(
         '/contacts',
         {
           chatId,

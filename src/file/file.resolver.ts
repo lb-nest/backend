@@ -10,7 +10,9 @@ export class FileResolver {
 
   @UseGuards(JwtAuthGuard)
   @Mutation(() => String)
-  upload(@Args('file', { type: () => GraphQLUpload }) file: FileUpload) {
+  upload(
+    @Args('file', { type: () => GraphQLUpload }) file: FileUpload,
+  ): Promise<string> {
     return this.fileService.upload(file);
   }
 }
