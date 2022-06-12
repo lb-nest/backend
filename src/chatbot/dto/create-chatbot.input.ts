@@ -1,4 +1,4 @@
-import { ArgsType, Field, Int } from '@nestjs/graphql';
+import { ArgsType, Field } from '@nestjs/graphql';
 import {
   IsBoolean,
   IsObject,
@@ -10,11 +10,11 @@ import { GraphQLJSON } from 'graphql-type-json';
 
 @ArgsType()
 export class CreateChatbotInput {
-  @Field(() => Int)
-  @IsString()
-  name: number;
-
   @Field(() => String)
+  @IsString()
+  name: string;
+
+  @Field(() => String, { nullable: true })
   @IsOptional()
   @IsSemVer()
   version?: string;
@@ -23,7 +23,7 @@ export class CreateChatbotInput {
   @IsObject()
   flow: any;
 
-  @Field(() => Boolean)
+  @Field(() => Boolean, { nullable: true })
   @IsOptional()
   @IsBoolean()
   enabled?: boolean;
