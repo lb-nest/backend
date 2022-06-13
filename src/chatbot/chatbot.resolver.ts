@@ -17,13 +17,13 @@ export class ChatbotResolver {
     return this.chatbotService.create(authorization, createChatbotInput);
   }
 
-  @Query(() => [Chatbot], { name: 'chatbot' })
-  findAll(@Auth() authorization: string): Promise<Chatbot[]> {
+  @Query(() => [Chatbot])
+  chatbots(@Auth() authorization: string): Promise<Chatbot[]> {
     return this.chatbotService.findAll(authorization);
   }
 
-  @Query(() => Chatbot, { name: 'chatbot' })
-  findOne(
+  @Query(() => Chatbot)
+  chatbotById(
     @Auth() authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Chatbot> {
