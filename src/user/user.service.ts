@@ -15,7 +15,7 @@ export class UserService {
 
   constructor(configService: ConfigService) {
     this.axios = axios.create({
-      baseURL: configService.get<string>('AUTH_URL'),
+      baseURL: configService.get<string>('AUTHORIZATION_URL'),
     });
   }
 

@@ -17,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     this.axios = axios.create({
-      baseURL: this.configService.get<string>('AUTH_URL'),
+      baseURL: this.configService.get<string>('AUTHORIZATION_URL'),
     });
   }
 
