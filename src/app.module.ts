@@ -29,6 +29,7 @@ import { WebhookModule } from './webhook/webhook.module';
       driver: ApolloDriver,
       useFactory: async () => ({
         autoSchemaFile: true,
+        cors: false,
         uploads: false,
         subscriptions: {
           'graphql-ws': {

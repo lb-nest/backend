@@ -8,7 +8,7 @@ services:
     build: .
     ports:
       - 3020:8080
-      - 3025:4040
+      - 4040:4040
     env_file:
       - .env
     depends_on:
