@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_PASSWORD=pwd
+  server:
+    build: .
+    ports:
+      - 3020:8080
+      - 3025:4040
+    env_file:
+      - .env
+    depends_on:
+      - db
