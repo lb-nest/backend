@@ -29,7 +29,6 @@
     "@nestjs/graphql": "^10.0.16",
     "@nestjs/jwt": "^8.0.1",
     "@nestjs/passport": "^8.2.2",
-    "@nestjs/platform-express": "^8.4.7",
     "@nestjs/platform-fastify": "^8.4.7",
     "@nestjs/platform-socket.io": "^8.4.7",
     "@nestjs/websockets": "^8.4.7",
