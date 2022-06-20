@@ -30,6 +30,7 @@ import { WebhookModule } from './webhook/webhook.module';
       useFactory: async () => ({
         autoSchemaFile: true,
         uploads: false,
+        persistedQueries: false,
         subscriptions: {
           'graphql-ws': {
             onConnect: async (context: Context<any>) => {
