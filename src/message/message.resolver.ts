@@ -19,7 +19,8 @@ import { RoleType } from 'src/auth/enums/role-type.enum';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { CreateMessageInput } from './dto/create-message.input';
-import { RemoveChatInput } from './dto/remove-chat.input';
+import { ReadMessagesInput } from './dto/read-messages.dto';
+import { RemoveMessageInput } from './dto/remove-message.input';
 import { UpdateMessageInput } from './dto/update-message.input';
 import { Message } from './entities/message.entity';
 import { MessageService } from './message.service';
@@ -68,9 +69,18 @@ export class MessageResolver {
   @Mutation(() => Message)
   removeMessage(
     @Auth() authorization: string,
-    @Args() input: RemoveChatInput,
+    @Args() input: RemoveMessageInput,
   ): Promise<Message> {
     return this.messageService.remove(authorization, input);
+  }
+
+  @Mutation(() => Boolean)
+  markMessagesAsRead(
+    @Auth() authorization: string,
+    @User() user: any,
+    @Args() input: ReadMessagesInput,
+  ): Promise<boolean> {
+    return this.messageService.markAsRead(authorization, user, input);
   }
 
   @UseGuards(JwtAuthGuard)

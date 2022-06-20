@@ -15,4 +15,7 @@ export class Chat {
 
   @Field(() => [MessageWithoutChatId])
   messages: MessageWithoutChatId[];
+
+  @Field(() => Int)
+  unreadCount: number;
 }

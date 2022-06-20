@@ -8,7 +8,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 import { CreateMessageInput } from './dto/create-message.input';
-import { RemoveChatInput } from './dto/remove-chat.input';
+import { ReadMessagesInput } from './dto/read-messages.dto';
+import { RemoveMessageInput } from './dto/remove-message.input';
 import { UpdateMessageInput } from './dto/update-message.input';
 import { Message } from './entities/message.entity';
 
@@ -111,8 +112,47 @@ export class MessageService {
 
   async remove(
     authorization: string,
-    input: RemoveChatInput,
+    input: RemoveMessageInput,
   ): Promise<Message> {
     throw new NotImplementedException();
+  }
+
+  async markAsRead(
+    authorization: string,
+    user: any,
+    input: ReadMessagesInput,
+  ): Promise<boolean> {
+    try {
+      const contacts = await this.cAxios.get<any[]>(
+        `/contacts/filter?chatIds=${input.chatId}`,
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
+
+      const [contact] = contacts.data;
+      if (![user.id, null].includes(contact?.assignedTo)) {
+        throw new ForbiddenException();
+      }
+
+      const res = await this.mAxios.put(
+        `/chats/${input.chatId}/messages/read`,
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
+
+      return res.data;
+    } catch (e) {
+      if (e instanceof HttpException) {
+        throw e;
+      }
+
+      throw new BadRequestException(e.response.data);
+    }
   }
 }
