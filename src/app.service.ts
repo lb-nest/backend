@@ -19,15 +19,15 @@ export class AppService {
   handleEvents(projectId: number, event: any): void {
     switch (event.type) {
       case WebhookEventType.IncomingChats:
-        this.handleChats(projectId, event.payload).catch(() => undefined);
-        break;
-
-      case WebhookEventType.OutgoingChats:
         this.handleChats(projectId, event.payload)
           .then((chat) => {
             this.eventEmitter.emit(ChatbotEventType.NewEvent, chat);
           })
           .catch(() => undefined);
+        break;
+
+      case WebhookEventType.OutgoingChats:
+        this.handleChats(projectId, event.payload).catch(() => undefined);
         break;
 
       case WebhookEventType.IncomingMessages:
