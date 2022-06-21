@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Context } from 'apollo-server-core';
+import Joi from 'joi';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -21,10 +22,27 @@ import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      validationSchema: Joi.object({
+        DATABASE_URL: Joi.string().uri().required(),
+        PORT: Joi.number().default(8080),
+        WEBSOCKET_PORT: Joi.number().default(4040),
+        ROOT_TOKEN: Joi.string().required(),
+        SECRET: Joi.string().required(),
+        S3_ENDPOINT: Joi.string().uri().required(),
+        S3_ACCESS_KEY: Joi.string().required(),
+        S3_SECRET_KEY: Joi.string().required(),
+        S3_BUCKET: Joi.string().required(),
+        AUTHORIZATION_URL: Joi.string().uri().required(),
+        BACKEND_URL: Joi.string().uri().required(),
+        CHATBOTS_URL: Joi.string().uri().required(),
+        CONTACTS_URL: Joi.string().uri().required(),
+        MESSAGING_URL: Joi.string().uri().required(),
+      }),
+    }),
     EventEmitterModule.forRoot({
       maxListeners: Infinity,
     }),
-    ConfigModule.forRoot(),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       useFactory: async () => ({
