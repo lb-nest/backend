@@ -19,7 +19,7 @@ import { RoleType } from 'src/auth/enums/role-type.enum';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { CreateMessageInput } from './dto/create-message.input';
-import { ReadMessagesInput } from './dto/read-messages.dto';
+import { ReadMessagesInput } from './dto/read-messages.input';
 import { RemoveMessageInput } from './dto/remove-message.input';
 import { UpdateMessageInput } from './dto/update-message.input';
 import { Message } from './entities/message.entity';
@@ -90,7 +90,7 @@ export class MessageResolver {
     @User() user: any,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
-    const res = await this.axios(`/contacts/filter?chatIds=${chatId}`, {
+    const res = await this.axios(`/contacts/findAllByChatId?chatId=${chatId}`, {
       headers: {
         authorization,
       },

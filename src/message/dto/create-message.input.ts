@@ -1,33 +1,14 @@
-import { ArgsType, Field, InputType, Int } from '@nestjs/graphql';
+import { ArgsType, Field, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
-  IsArray,
-  IsEnum,
   IsInt,
   IsNotEmpty,
+  IsObject,
   IsOptional,
-  IsString,
-  IsUrl,
   ValidateNested,
 } from 'class-validator';
 import GraphQLJSON from 'graphql-type-json';
-import { AttachmentType } from '../enums/attachment-type.enum';
-
-@InputType()
-class CreateAttachmentInput {
-  @Field(() => AttachmentType)
-  @IsEnum(AttachmentType)
-  type: AttachmentType;
-
-  @Field(() => String)
-  @IsUrl()
-  url: string;
-
-  @Field(() => String, { nullable: true })
-  @IsOptional()
-  @IsString()
-  name?: string;
-}
+import { CreateAttachmentInput } from './create-attachment.input';
 
 @ArgsType()
 export class CreateMessageInput {
@@ -43,12 +24,11 @@ export class CreateMessageInput {
   @Field(() => [CreateAttachmentInput], { nullable: true })
   @Type(() => CreateAttachmentInput)
   @IsOptional()
-  @IsArray()
   @ValidateNested({ each: true })
   attachments?: CreateAttachmentInput[];
 
   @Field(() => [GraphQLJSON], { nullable: true })
   @IsOptional()
-  @IsArray()
+  @IsObject({ each: true })
   buttons?: any[];
 }

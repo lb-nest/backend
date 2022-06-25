@@ -1,11 +1,11 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsNotEmpty } from 'class-validator';
 
 @ArgsType()
 export class CreateProjectInput {
   @Field(() => String)
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   name: string;
 }

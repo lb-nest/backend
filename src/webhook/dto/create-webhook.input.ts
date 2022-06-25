@@ -1,5 +1,5 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsEnum, IsNotEmpty, IsUrl } from 'class-validator';
 import { WebhookEventType } from '../enums/webhook-event-type.enum';
 
@@ -7,7 +7,7 @@ import { WebhookEventType } from '../enums/webhook-event-type.enum';
 export class CreateWebhookInput {
   @Field(() => String)
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   name: string;
 
   @Field(() => String)

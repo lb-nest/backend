@@ -1,5 +1,5 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 @ArgsType()
@@ -15,12 +15,12 @@ export class CreateChatInput {
   @Field(() => String)
   @IsOptional()
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   username?: string;
 
   @Field(() => String)
   @IsOptional()
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   name: string;
 }

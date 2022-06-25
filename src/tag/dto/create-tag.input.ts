@@ -1,16 +1,23 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { Transform, TransformFnParams } from 'class-transformer';
-import { IsHexColor, IsInt, IsNotEmpty, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  IsHexColor,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 @ArgsType()
 export class CreateTagInput {
   @Field(() => String)
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   name: string;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
+  @IsString()
   description?: string;
 
   @Field(() => String)

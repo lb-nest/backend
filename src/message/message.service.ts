@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 import { CreateMessageInput } from './dto/create-message.input';
-import { ReadMessagesInput } from './dto/read-messages.dto';
+import { ReadMessagesInput } from './dto/read-messages.input';
 import { RemoveMessageInput } from './dto/remove-message.input';
 import { UpdateMessageInput } from './dto/update-message.input';
 import { Message } from './entities/message.entity';
@@ -34,7 +34,7 @@ export class MessageService {
   ): Promise<Message[]> {
     try {
       const contacts = await this.cAxios.get<any>(
-        `/contacts/filter?chatIds=${input.chatId}`,
+        `/contacts/findAllByChatId?chatId=${input.chatId}`,
         {
           headers: {
             authorization,
@@ -74,7 +74,7 @@ export class MessageService {
   ): Promise<Message[]> {
     try {
       const contacts = await this.cAxios.get<any[]>(
-        `/contacts/filter?chatIds=${chatId}`,
+        `/contacts/findAllByChatId?chatId=${chatId}`,
         {
           headers: {
             authorization,
@@ -124,7 +124,7 @@ export class MessageService {
   ): Promise<boolean> {
     try {
       const contacts = await this.cAxios.get<any[]>(
-        `/contacts/filter?chatIds=${input.chatId}`,
+        `/contacts/findAllByChatId?chatId=${input.chatId}`,
         {
           headers: {
             authorization,
