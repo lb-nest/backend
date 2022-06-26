@@ -127,10 +127,10 @@ export class ProjectService {
     }
   }
 
-  async getUsers(authorization: string, ids?: string): Promise<User[]> {
+  async getUsers(authorization: string, ...ids: number[]): Promise<User[]> {
     const query = new URLSearchParams();
-    if (ids) {
-      query.set('ids', ids);
+    if (ids.length) {
+      query.set('ids', ids.join(','));
     }
 
     const res = await this.axios.get<any[]>(`/projects/@me/users?${query}`, {
@@ -149,7 +149,7 @@ export class ProjectService {
     const webhooks = [
       {
         name: 'system.backend',
-        url: backend.concat(`/projects/${id}/events`),
+        url: backend.concat(`/projects/${id}/webhook`),
         eventType: WebhookEventType.All,
       },
     ];

@@ -16,33 +16,32 @@ export class AppService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  handleEvents(projectId: number, event: any): void {
-    switch (event.type) {
+  async handleWebhook(projectId: number, payload: any): Promise<void> {
+    switch (payload.type) {
       case WebhookEventType.IncomingChats:
-        this.handleChats(projectId, event.payload)
-          .then((chat) => {
-            this.eventEmitter.emit(ChatbotEventType.NewEvent, chat);
-          })
-          .catch(() => undefined);
+        this.eventEmitter.emit(
+          ChatbotEventType.NewEvent,
+          await this.handleChatsReceived(projectId, payload.payload),
+        );
         break;
 
       case WebhookEventType.OutgoingChats:
-        this.handleChats(projectId, event.payload).catch(() => undefined);
+        await this.handleChatsReceived(projectId, payload.payload);
         break;
 
       case WebhookEventType.IncomingMessages:
       case WebhookEventType.OutgoingMessages:
-        this.handleMessages(projectId, event.payload);
+        await this.handleMessagesReceived(projectId, payload.payload);
         break;
     }
   }
 
-  private async handleChats(
+  private async handleChatsReceived(
     projectId: number,
     chat: any,
     silent = false,
   ): Promise<any> {
-    const contact = await this.contactService.create(
+    const contact = await this.contactService.createForChat(
       'Bearer '.concat(await this.projectTokenService.get(projectId)),
       chat.id,
       chat.contact,
@@ -64,7 +63,10 @@ export class AppService {
     };
   }
 
-  private handleMessages(projectId: number, messages: any[]): void {
+  private async handleMessagesReceived(
+    projectId: number,
+    messages: any[],
+  ): Promise<void> {
     messages
       .sort((a, b) => a.id - b.id)
       .map((message) => {

@@ -5,8 +5,11 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Post('api/projects/:id/events')
-  handleEvents(@Param('id') id: string, @Body() events: any): void {
-    this.appService.handleEvents(Number(id), events);
+  @Post('api/projects/:id/webhook')
+  async handleWebhook(
+    @Param('id') id: string,
+    @Body() payload: any,
+  ): Promise<void> {
+    return this.appService.handleWebhook(Number(id), payload);
   }
 }

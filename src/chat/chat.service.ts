@@ -40,7 +40,7 @@ export class ChatService {
       });
 
       if (input.assignedTo) {
-        query.set('assignedTo', String(input.assignedTo));
+        query.set('assignedTo', input.assignedTo.toString());
       }
 
       const contacts = await this.cAxios.get<any[]>(`/contacts?${query}`, {
@@ -59,11 +59,11 @@ export class ChatService {
         },
       );
 
-      const userIds = contacts.data.map((c) => c.assignedTo).filter(Boolean);
-      if (userIds.length > 0) {
+      const assignedTo = contacts.data.map((c) => c.assignedTo).filter(Boolean);
+      if (assignedTo.length > 0) {
         const users = await this.projectService.getUsers(
           authorization,
-          userIds.join(','),
+          ...assignedTo,
         );
 
         contacts.data.forEach((c) => {
@@ -95,7 +95,7 @@ export class ChatService {
 
   async count(authorization: string): Promise<Record<string, number>> {
     try {
-      const res = await this.cAxios.get<any>('/contacts/count', {
+      const res = await this.cAxios.get<any>('/contacts/countAll', {
         headers: {
           authorization,
         },
@@ -109,7 +109,7 @@ export class ChatService {
 
   async findOne(authorization: string, id: number): Promise<Chat> {
     const contacts = await this.cAxios.get<any[]>(
-      `/contacts/filter?chatIds=${id}`,
+      `/contacts/findAllByChatId?chatId=${id}`,
       {
         headers: {
           authorization,

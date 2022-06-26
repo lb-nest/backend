@@ -1,8 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotImplementedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios, { AxiosInstance } from 'axios';
 import { ProjectService } from 'src/project/project.service';
+import { CreateContactWithoutChannelId } from './dto/create-contact-without-channel-id.input';
 import { CreateContactInput } from './dto/create-contact.input';
 import { UpdateContactInput } from './dto/update-contact.input';
 import { Contact } from './entities/contact.entity';
@@ -28,8 +33,15 @@ export class ContactService {
 
   async create(
     authorization: string,
+    input: CreateContactInput,
+  ): Promise<Contact> {
+    throw new NotImplementedException();
+  }
+
+  async createForChat(
+    authorization: string,
     chatId: number,
-    contact: CreateContactInput,
+    contact: CreateContactWithoutChannelId,
   ): Promise<Contact> {
     try {
       const res = await this.cAxios.post<any>(
@@ -63,7 +75,7 @@ export class ContactService {
   async findAll(authorization: string): Promise<Contact[]> {
     try {
       const contacts = await this.cAxios.get<any[]>(
-        '/contacts?assignedTo=all',
+        '/contacts?assignedTo=null',
         {
           headers: {
             authorization,
@@ -71,11 +83,11 @@ export class ContactService {
         },
       );
 
-      const userIds = contacts.data.map((c) => c.assignedTo).filter(Boolean);
-      if (userIds.length > 0) {
+      const assignedTo = contacts.data.map((c) => c.assignedTo).filter(Boolean);
+      if (assignedTo.length > 0) {
         const users = await this.projectService.getUsers(
           authorization,
-          userIds.join(','),
+          ...assignedTo,
         );
 
         contacts.data.forEach((c) => {

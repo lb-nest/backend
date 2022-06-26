@@ -11,6 +11,7 @@ import { ContactFlowService } from './contact-flow.service';
 import { ContactHistoryService } from './contact-history.service';
 import { ContactTagService } from './contact-tag.service';
 import { ContactService } from './contact.service';
+import { CreateContactInput } from './dto/create-contact.input';
 import { TransferContactInput } from './dto/transfer-contact.input';
 import { UpdateContactInput } from './dto/update-contact.input';
 import { Contact } from './entities/contact.entity';
@@ -24,6 +25,14 @@ export class ContactResolver {
     private readonly contactHistoryService: ContactHistoryService,
     private readonly contactTagService: ContactTagService,
   ) {}
+
+  @Mutation(() => [Contact])
+  createContact(
+    @Auth() authorization: string,
+    @Args() input: CreateContactInput,
+  ): Promise<Contact> {
+    return this.contactService.create(authorization, input);
+  }
 
   @Query(() => [Contact])
   contacts(@Auth() authorization: string): Promise<Contact[]> {

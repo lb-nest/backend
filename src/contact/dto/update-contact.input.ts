@@ -1,7 +1,6 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
-  IsArray,
   IsBoolean,
   IsInt,
   IsNotEmpty,
@@ -18,13 +17,13 @@ export class UpdateContactInput {
   @Field(() => String, { nullable: true })
   @IsOptional()
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   username?: string;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
   @IsNotEmpty()
-  @Transform(({ value }: TransformFnParams) => value.trim())
+  @Transform(({ value }) => value.trim())
   name?: string;
 
   @Field(() => String, { nullable: true })
@@ -34,7 +33,7 @@ export class UpdateContactInput {
 
   @Field(() => [Int], { nullable: true })
   @IsOptional()
-  @IsArray()
+  @IsInt({ each: true })
   tags?: number[];
 
   @Field(() => Boolean, { nullable: true })
