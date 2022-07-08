@@ -12,6 +12,7 @@ import { ContactHistoryService } from './contact-history.service';
 import { ContactTagService } from './contact-tag.service';
 import { ContactService } from './contact.service';
 import { CreateContactInput } from './dto/create-contact.input';
+import { ImportContactsInput } from './dto/import-contacts.input';
 import { TransferContactInput } from './dto/transfer-contact.input';
 import { UpdateContactInput } from './dto/update-contact.input';
 import { Contact } from './entities/contact.entity';
@@ -62,6 +63,14 @@ export class ContactResolver {
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Contact> {
     return this.contactService.remove(authorization, id);
+  }
+
+  @Mutation(() => Boolean)
+  importContacts(
+    @Auth() authorization: string,
+    input: ImportContactsInput,
+  ): Promise<boolean> {
+    return this.contactService.import(authorization, input);
   }
 
   @Mutation(() => TagWithoutParentAndChildren)

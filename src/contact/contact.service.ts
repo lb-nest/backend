@@ -9,6 +9,7 @@ import axios, { AxiosInstance } from 'axios';
 import { ProjectService } from 'src/project/project.service';
 import { CreateContactWithoutChannelId } from './dto/create-contact-without-channel-id.input';
 import { CreateContactInput } from './dto/create-contact.input';
+import { ImportContactsInput } from './dto/import-contacts.input';
 import { UpdateContactInput } from './dto/update-contact.input';
 import { Contact } from './entities/contact.entity';
 import { ContactEventType } from './enums/contact-event-type.enum';
@@ -186,5 +187,34 @@ export class ContactService {
     } catch (e) {
       throw new BadRequestException(e.response.data);
     }
+  }
+
+  async import(
+    authorization: string,
+    input: ImportContactsInput,
+  ): Promise<boolean> {
+    const chats = await this.mAxios.post<any[]>('/chats/import', input, {
+      headers: {
+        authorization,
+      },
+    });
+
+    await this.cAxios.post<any[]>(
+      '/contacts/import',
+      {
+        channelId: input.channelId,
+        contacts: chats.data.map(({ id, contact }) => ({
+          chatId: id,
+          ...contact,
+        })),
+      },
+      {
+        headers: {
+          authorization,
+        },
+      },
+    );
+
+    return true;
   }
 }
