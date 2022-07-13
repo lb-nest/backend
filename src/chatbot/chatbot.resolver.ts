@@ -1,5 +1,7 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { ChatbotService } from './chatbot.service';
 import { CreateChatbotInput } from './dto/create-chatbot.input';
 import { UpdateChatbotInput } from './dto/update-chatbot.input';
@@ -9,40 +11,45 @@ import { Chatbot } from './entities/chatbot.entity';
 export class ChatbotResolver {
   constructor(private readonly chatbotService: ChatbotService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   createChatbot(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() createChatbotInput: CreateChatbotInput,
   ): Promise<Chatbot> {
-    return this.chatbotService.create(authorization, createChatbotInput);
+    return this.chatbotService.create(user, createChatbotInput);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Chatbot])
-  chatbots(@Auth() authorization: string): Promise<Chatbot[]> {
-    return this.chatbotService.findAll(authorization);
+  chatbots(@User() user: any): Promise<Chatbot[]> {
+    return this.chatbotService.findAll(user);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Chatbot)
   chatbotById(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Chatbot> {
-    return this.chatbotService.findOne(authorization, id);
+    return this.chatbotService.findOne(user, id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   updateChatbot(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: UpdateChatbotInput,
   ): Promise<Chatbot> {
-    return this.chatbotService.update(authorization, input);
+    return this.chatbotService.update(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   removeChatbot(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Chatbot> {
-    return this.chatbotService.remove(authorization, id);
+    return this.chatbotService.remove(user, id);
   }
 }

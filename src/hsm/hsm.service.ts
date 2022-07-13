@@ -1,87 +1,79 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
+import { MESSAGING_SERVICE } from 'src/shared/rabbitmq/constants';
 import { CreateHsmInput } from './dto/create-hsm.input';
 import { UpdateHsmInput } from './dto/update-hsm.input';
 import { Hsm } from './entities/hsm.entity';
 
 @Injectable()
 export class HsmService {
-  private readonly axios: AxiosInstance;
+  constructor(
+    @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
+  ) {}
 
-  constructor(configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
-    });
-  }
-
-  async create(authorization: string, input: CreateHsmInput): Promise<Hsm> {
+  async create(user: any, input: CreateHsmInput): Promise<Hsm> {
     try {
-      const res = await this.axios.post<Hsm>('/hsm', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
+      return await lastValueFrom(
+        this.client.send('hsm.create', {
+          user,
+          data: input,
+        }),
+      );
     } catch (e) {
-      throw new BadRequestException(e.responsde.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async findAll(authorization: string): Promise<Hsm[]> {
+  async findAll(user: any): Promise<Hsm[]> {
     try {
-      const res = await this.axios.get<Hsm[]>('/hsm', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
+      return await lastValueFrom(
+        this.client.send<any[]>('hsm.findAll', {
+          user,
+          data: {},
+        }),
+      );
     } catch (e) {
-      throw new BadRequestException(e.responsde.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async findOne(authorization: string, id: number): Promise<Hsm> {
+  async findOne(user: any, id: number): Promise<Hsm> {
     try {
-      const res = await this.axios.get<Hsm>(`/hsm/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
+      return await lastValueFrom(
+        this.client.send('hsm.findOne', {
+          user,
+          data: id,
+        }),
+      );
     } catch (e) {
-      throw new BadRequestException(e.responsde.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async update(authorization: string, input: UpdateHsmInput): Promise<Hsm> {
+  async update(user: any, input: UpdateHsmInput): Promise<Hsm> {
     try {
-      const res = await this.axios.patch<Hsm>(`/hsm/${input.id}`, input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
+      return await lastValueFrom(
+        this.client.send('hsm.update', {
+          user,
+          data: input,
+        }),
+      );
     } catch (e) {
-      throw new BadRequestException(e.responsde.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async remove(authorization: string, id: number): Promise<Hsm> {
+  async remove(user: any, id: number): Promise<Hsm> {
     try {
-      const res = await this.axios.delete<Hsm>(`/hsm/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
+      return await lastValueFrom(
+        this.client.send('hsm.remove', {
+          user,
+          data: id,
+        }),
+      );
     } catch (e) {
-      throw new BadRequestException(e.responsde.data);
+      throw new BadRequestException(e);
     }
   }
 }

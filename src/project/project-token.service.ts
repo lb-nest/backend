@@ -6,22 +6,22 @@ import { PrismaService } from 'src/prisma.service';
 export class ProjectTokenService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async save(projectId: number, token: Token): Promise<void> {
+  async save(projectId: number, token: Token): Promise<Token> {
     await this.prismaService.projectToken.create({
       data: {
         projectId,
         token: token.token,
       },
     });
+
+    return token;
   }
 
-  async get(projectId: number): Promise<string> {
-    const res = await this.prismaService.projectToken.findUnique({
+  get(projectId: number): Promise<Token> {
+    return this.prismaService.projectToken.findUnique({
       where: {
         projectId,
       },
     });
-
-    return res.token;
   }
 }

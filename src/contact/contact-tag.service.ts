@@ -1,60 +1,49 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 import { TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
 
 @Injectable()
 export class ContactTagService {
-  private readonly axios: AxiosInstance;
-
-  constructor(configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
-    });
-  }
+  constructor(@Inject('CONTACTS') private readonly client: ClientProxy) {}
 
   async create(
-    authorization: string,
-    id: number,
+    user: any,
+    contactId: number,
     tagId: number,
   ): Promise<TagWithoutParentAndChildren> {
     try {
-      const res = await this.axios.post<TagWithoutParentAndChildren>(
-        `/contacts/${id}/tags`,
-        {
-          tagId,
-        },
-        {
-          headers: {
-            authorization,
+      return await lastValueFrom(
+        this.client.send('contacts.tags.create', {
+          user,
+          data: {
+            contactId,
+            tagId,
           },
-        },
+        }),
       );
-
-      return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
   async remove(
-    authorization: string,
-    id: number,
+    user: any,
+    contactId: number,
     tagId: number,
   ): Promise<TagWithoutParentAndChildren> {
     try {
-      const res = await this.axios.delete<TagWithoutParentAndChildren>(
-        `/contacts/${id}/tags/${tagId}`,
-        {
-          headers: {
-            authorization,
+      return await lastValueFrom(
+        this.client.send('contacts.tags.remove', {
+          user,
+          data: {
+            contactId,
+            tagId,
           },
-        },
+        }),
       );
-
-      return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 }

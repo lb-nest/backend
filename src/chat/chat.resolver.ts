@@ -8,8 +8,7 @@ import {
   Subscription,
 } from '@nestjs/graphql';
 import { pubSub } from 'src/app.service';
-import { Auth } from 'src/auth/auth.decorator';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { ChatService } from './chat.service';
 import { ChatsInput } from './dto/chats.input';
@@ -21,39 +20,40 @@ import { ChatsCount } from './entities/chats-count.entity';
 export class ChatResolver {
   constructor(private readonly chatService: ChatService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chat)
-  createChat(@Auth() authorization: string, @Args() input: CreateChatInput) {
-    return this.chatService.create(authorization, input);
+  createChat(@User() user: any, @Args() input: CreateChatInput) {
+    return this.chatService.create(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Chat])
-  chats(@Auth() authorization: string, @Args() input: ChatsInput) {
-    return this.chatService.findAll(authorization, input);
+  chats(@User() user: any, @Args() input: ChatsInput) {
+    return this.chatService.findAll(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Chat])
   chatsByQuery(
-    @Auth() authorization: string,
     @User() user: any,
     @Args('query', { type: () => String }) query: string,
   ) {
-    return this.chatService.findWithQuery(authorization, user, query);
+    return this.chatService.findWithQuery(user, query);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => ChatsCount)
-  chatsCount(@Auth() authorization: string) {
-    return this.chatService.count(authorization);
+  chatsCount(@User() user: any) {
+    return this.chatService.count(user);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Chat)
-  chatById(
-    @Auth() authorization: string,
-    @Args('id', { type: () => Int }) id: number,
-  ) {
-    return this.chatService.findOne(authorization, id);
+  chatById(@User() user: any, @Args('id', { type: () => Int }) id: number) {
+    return this.chatService.findOne(user, id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Subscription(() => Chat, {
     filter(payload, _, context) {
       const userId = payload.chatsReceived.contact.assignedTo?.id;

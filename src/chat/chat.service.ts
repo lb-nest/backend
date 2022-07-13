@@ -1,144 +1,134 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   NotImplementedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 import { ProjectService } from 'src/project/project.service';
-import { URLSearchParams } from 'url';
 import { ChatsInput } from './dto/chats.input';
 import { CreateChatInput } from './dto/create-chat.input';
 import { Chat } from './entities/chat.entity';
 
 @Injectable()
 export class ChatService {
-  private readonly mAxios: AxiosInstance;
-  private readonly cAxios: AxiosInstance;
-
   constructor(
+    @Inject('CONTACTS') private readonly contactsClient: ClientProxy,
+    @Inject('MESSAGING') private readonly messagingClient: ClientProxy,
     private readonly projectService: ProjectService,
-    configService: ConfigService,
-  ) {
-    this.mAxios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
-    });
-    this.cAxios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
-    });
-  }
+  ) {}
 
-  async create(authorization: string, input: CreateChatInput): Promise<Chat> {
+  async create(user: any, input: CreateChatInput): Promise<Chat> {
     throw new NotImplementedException();
   }
 
-  async findAll(authorization: string, input: ChatsInput): Promise<Chat[]> {
+  async findAll(user: any, input: ChatsInput): Promise<Chat[]> {
     try {
-      const query = new URLSearchParams({
-        status: input.status,
-      });
-
-      if (input.assignedTo) {
-        query.set('assignedTo', input.assignedTo.toString());
-      }
-
-      const contacts = await this.cAxios.get<any[]>(`/contacts?${query}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      const chatIds = contacts.data.map((c) => c.chatId);
-      const chats = await this.mAxios.get<any[]>(
-        `/chats?ids=${chatIds.join(',')}`,
-        {
-          headers: {
-            authorization,
-          },
-        },
+      const contacts = await lastValueFrom(
+        this.contactsClient.send<any[]>('contacts.findAll', {
+          user,
+          data: input,
+        }),
       );
 
-      const assignedTo = contacts.data.map((c) => c.assignedTo).filter(Boolean);
+      const chatIds = contacts.map(({ chatId }) => chatId);
+
+      const chats = await lastValueFrom(
+        this.messagingClient.send<any[]>('chats.findAll', {
+          user,
+          data: chatIds,
+        }),
+      );
+
+      const assignedTo = contacts.map((c) => c.assignedTo).filter(Boolean);
       if (assignedTo.length > 0) {
-        const users = await this.projectService.getUsers(
-          authorization,
+        const users = await this.projectService.findAllUsers(
+          user,
           ...assignedTo,
         );
 
-        contacts.data.forEach((c) => {
+        contacts.forEach((c) => {
           c.assignedTo = users.find((u) => u.id === c.assignedTo);
         });
       }
 
-      return chats.data
+      return chats
         .sort((a, b) => chatIds.indexOf(a.id) - chatIds.indexOf(b.id))
-        .map((chat) =>
-          Object.assign(chat, {
-            contact: contacts.data.find(
-              (contact) => contact.chatId === chat.id,
-            ),
-          }),
-        );
+        .map((chat) => ({
+          ...chat,
+          contact: contacts.find(({ chatId }) => chatId === chat.id),
+        }));
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async findWithQuery(
-    authorization: string,
-    user: any,
-    query: string,
-  ): Promise<Chat[]> {
+  async findWithQuery(user: any, query: string): Promise<Chat[]> {
     throw new NotImplementedException();
   }
 
-  async count(authorization: string): Promise<Record<string, number>> {
+  async count(user: any): Promise<Record<string, number>> {
     try {
-      const res = await this.cAxios.get<any>('/contacts/countAll', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
+      return await lastValueFrom(
+        this.contactsClient.send('contacts.countAll', {
+          user,
+          data: {},
+        }),
+      );
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async findOne(authorization: string, id: number): Promise<Chat> {
-    const contacts = await this.cAxios.get<any[]>(
-      `/contacts/findAllByChatId?chatId=${id}`,
-      {
-        headers: {
-          authorization,
-        },
-      },
+  async findOne(user: any, id: number): Promise<Chat> {
+    const [contact] = await lastValueFrom(
+      this.contactsClient.send('contacts.forChat', {
+        user,
+        data: [id],
+      }),
     );
 
-    const [contact] = contacts.data;
     if (!contact) {
       throw new NotFoundException();
     }
 
-    const chat = await this.mAxios.get<any>(`/chats/${id}`, {
-      headers: {
-        authorization,
-      },
-    });
+    const chat = await lastValueFrom(
+      this.messagingClient.send('chats.findOne', {
+        user,
+        data: id,
+      }),
+    );
 
     if (contact.assignedTo) {
-      const [user] = await this.projectService.getUsers(
-        authorization,
+      const [assignedTo] = await this.projectService.findAllUsers(
+        user,
         contact.assignedTo,
       );
 
-      contact.assignedTo = user;
+      contact.assignedTo = assignedTo;
     }
 
-    return Object.assign(chat.data, {
+    return {
+      ...chat,
       contact,
-    });
+    };
+  }
+
+  async received(projectId: number, chat: any): Promise<any> {
+    // const contact = await this.contactService.createForChat(
+    //   'Bearer '.concat(await this.projectTokenService.get(projectId)),
+    //   chat.id,
+    //   chat.contact,
+    // );
+    // if (!silent) {
+    //   pubSub.publish(`chatsReceived:${projectId}`, {
+    //     chatsReceived: {
+    //       ...chat,
+    //       contact,
+    //     },
+    //   });
+    // }
   }
 }

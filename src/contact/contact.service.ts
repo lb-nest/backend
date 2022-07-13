@@ -1,11 +1,12 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotImplementedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import axios, { AxiosInstance } from 'axios';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 import { ProjectService } from 'src/project/project.service';
 import { CreateContactWithoutChannelId } from './dto/create-contact-without-channel-id.input';
 import { CreateContactInput } from './dto/create-contact.input';
@@ -16,203 +17,181 @@ import { ContactEventType } from './enums/contact-event-type.enum';
 
 @Injectable()
 export class ContactService {
-  private readonly mAxios: AxiosInstance;
-  private readonly cAxios: AxiosInstance;
-
   constructor(
-    configService: ConfigService,
-    private readonly projectService: ProjectService,
+    @Inject('CONTACTS') private readonly contactsClient: ClientProxy,
+    @Inject('MESSAGING') private readonly messagingClient: ClientProxy,
     private readonly eventEmitter: EventEmitter2,
-  ) {
-    this.mAxios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
-    });
-    this.cAxios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
-    });
-  }
+    private readonly projectService: ProjectService,
+  ) {}
 
-  async create(
-    authorization: string,
-    input: CreateContactInput,
-  ): Promise<Contact> {
+  async create(user: any, input: CreateContactInput): Promise<Contact> {
     throw new NotImplementedException();
   }
 
   async createForChat(
-    authorization: string,
+    user: any,
     chatId: number,
     contact: CreateContactWithoutChannelId,
   ): Promise<Contact> {
     try {
-      const res = await this.cAxios.post<any>(
-        '/contacts',
-        {
-          chatId,
-          ...contact,
-        },
-        {
-          headers: {
-            authorization,
+      const contacts = await lastValueFrom(
+        this.contactsClient.send('contacts.create', {
+          user,
+          data: {
+            chatId,
+            ...contact,
           },
-        },
+        }),
       );
 
-      if (res.data.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          res.data.assignedTo,
+      if (contacts.assignedTo) {
+        const [assignedTo] = await this.projectService.findAllUsers(
+          user,
+          contacts.assignedTo,
         );
 
-        res.data.assignedTo = user;
+        contacts.assignedTo = assignedTo;
       }
 
-      return res.data;
+      return contacts;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async findAll(authorization: string): Promise<Contact[]> {
+  async findAll(user: any): Promise<Contact[]> {
     try {
-      const contacts = await this.cAxios.get<any[]>(
-        '/contacts?assignedTo=null',
-        {
-          headers: {
-            authorization,
+      const contacts = await lastValueFrom(
+        this.contactsClient.send<any[]>('contacts.findAll', {
+          user,
+          data: {
+            assignedto: null,
           },
-        },
+        }),
       );
 
-      const assignedTo = contacts.data.map((c) => c.assignedTo).filter(Boolean);
+      const assignedTo = contacts.map((c) => c.assignedTo).filter(Boolean);
       if (assignedTo.length > 0) {
-        const users = await this.projectService.getUsers(
-          authorization,
+        const users = await this.projectService.findAllUsers(
+          user,
           ...assignedTo,
         );
 
-        contacts.data.forEach((c) => {
+        contacts.forEach((c) => {
           c.assignedTo = users.find((u) => u.id === c.assignedTo);
         });
       }
 
-      return contacts.data;
+      return contacts;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async findOne(authorization: string, id: number): Promise<Contact> {
+  async findOne(user: any, id: number): Promise<Contact> {
     try {
-      const res = await this.cAxios.get<any>(`/contacts/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
+      const contact = await lastValueFrom(
+        this.contactsClient.send('contacts.findOne', {
+          user,
+          data: id,
+        }),
+      );
 
-      if (res.data.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          res.data.assignedTo,
+      if (contact.assignedTo) {
+        const [assignedTo] = await this.projectService.findAllUsers(
+          user,
+          contact.assignedTo,
         );
 
-        res.data.assignedTo = user;
+        contact.assignedTo = assignedTo;
       }
 
-      return res.data;
+      return contact;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async update(
-    authorization: string,
-    input: UpdateContactInput,
-  ): Promise<Contact> {
+  async update(user: string, input: UpdateContactInput): Promise<Contact> {
     try {
-      const res = await this.cAxios.patch<any>(`/contacts/${input.id}`, input, {
-        headers: {
-          authorization,
-        },
-      });
+      const contact = await lastValueFrom(
+        this.contactsClient.send('contacts.update', {
+          user,
+          data: input,
+        }),
+      );
 
-      await this.mAxios.patch<any>(`/chats/${res.data.chatId}`, input, {
-        headers: {
-          authorization,
-        },
-      });
+      await lastValueFrom(
+        this.messagingClient.send('chats.update', {
+          user,
+          data: input,
+        }),
+      );
 
-      if (res.data.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          res.data.assignedTo,
+      if (contact.assignedTo) {
+        const [assignedTo] = await this.projectService.findAllUsers(
+          user,
+          contact.assignedTo,
         );
 
-        res.data.assignedTo = user;
+        contact.assignedTo = assignedTo;
       }
 
-      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
-      return res.data;
+      this.eventEmitter.emit(ContactEventType.Update, user, contact);
+      return contact;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async remove(authorization: string, id: number): Promise<Contact> {
+  async remove(user: any, id: number): Promise<Contact> {
     try {
-      const res = await this.cAxios.delete<any>(`/contacts/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
+      const contact = await lastValueFrom(
+        this.contactsClient.send('contacts.remove', {
+          user,
+          data: id,
+        }),
+      );
 
-      await this.mAxios.delete<any>(`/chats/${res.data.chatId}`, {
-        headers: {
-          authorization,
-        },
-      });
+      await lastValueFrom(
+        this.messagingClient.send('chats.remove', {
+          user,
+          data: contact.chatId,
+        }),
+      );
 
-      if (res.data.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          res.data.assignedTo,
+      if (contact.assignedTo) {
+        const [assignedTo] = await this.projectService.findAllUsers(
+          user,
+          contact.assignedTo,
         );
 
-        res.data.assignedTo = user;
+        contact.assignedTo = assignedTo;
       }
 
       // TODO: оповещать вебсокеты
-
-      return res.data;
+      return contact;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async import(
-    authorization: string,
-    input: ImportContactsInput,
-  ): Promise<boolean> {
-    const chats = await this.mAxios.post<any[]>('/chats/import', input, {
-      headers: {
-        authorization,
-      },
-    });
+  async import(user: any, input: ImportContactsInput): Promise<boolean> {
+    const chats = await lastValueFrom(
+      this.messagingClient.send<any[]>('chats.import', {
+        user,
+        data: input,
+      }),
+    );
 
-    await this.cAxios.post<any[]>(
-      '/contacts/import',
-      {
-        channelId: input.channelId,
-        contacts: chats.data.map(({ id, contact }) => ({
+    await lastValueFrom(
+      this.contactsClient.send('contacts.import', {
+        user,
+        data: chats.map(({ id, contact }) => ({
           chatId: id,
           ...contact,
         })),
-      },
-      {
-        headers: {
-          authorization,
-        },
-      },
+      }),
     );
 
     return true;

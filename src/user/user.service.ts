@@ -1,67 +1,37 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotImplementedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
+import { Inject, Injectable, NotImplementedException } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
 import { Project } from 'src/project/entities/project.entity';
+import { AUTH_SERVICE } from 'src/shared/rabbitmq/constants';
 import { UpdateUserInput } from './dto/update-user.input';
 import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
-  private readonly axios: AxiosInstance;
+  constructor(@Inject(AUTH_SERVICE) private readonly client: ClientProxy) {}
 
-  constructor(configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('AUTHORIZATION_URL'),
+  findMe(user: any): Observable<User> {
+    return this.client.send<User>('users.@me', {
+      user,
+      data: {},
     });
   }
 
-  async getMe(authorization: string): Promise<User> {
-    try {
-      const res = await this.axios.get<User>('/users/@me', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+  findAllProjects(user: any): Observable<Project[]> {
+    return this.client.send('users.@me.projects', {
+      user,
+      data: {},
+    });
   }
 
-  async getProjects(authorization: string): Promise<Project[]> {
-    try {
-      const res = await this.axios.get<Project[]>('/users/@me/projects', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+  update(user: any, input: UpdateUserInput): Observable<User> {
+    return this.client.send('users.@me.update', {
+      user,
+      data: input,
+    });
   }
 
-  async update(authorization: string, input: UpdateUserInput): Promise<User> {
-    try {
-      const res = await this.axios.patch<User>('/users/@me', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async remove(authorization: string): Promise<User> {
+  remove(user: any): Observable<User> {
     throw new NotImplementedException();
   }
 }

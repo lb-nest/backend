@@ -1,5 +1,7 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { CreateWebhookInput } from './dto/create-webhook.input';
 import { UpdateWebhookInput } from './dto/update-webhook.input';
 import { Webhook } from './entities/webhook.entity';
@@ -9,40 +11,45 @@ import { WebhookService } from './webhook.service';
 export class WebhookResolver {
   constructor(private readonly webhookService: WebhookService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Webhook)
   createWebhook(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: CreateWebhookInput,
   ): Promise<Webhook> {
-    return this.webhookService.create(authorization, input);
+    return this.webhookService.create(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Webhook])
-  webhooks(@Auth() authorization: string): Promise<Webhook[]> {
-    return this.webhookService.findAll(authorization);
+  webhooks(@User() user: any): Promise<Webhook[]> {
+    return this.webhookService.findAll(user);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Webhook)
   webhookById(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Webhook> {
-    return this.webhookService.findOne(authorization, id);
+    return this.webhookService.findOne(user, id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Webhook)
   updateWebhook(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: UpdateWebhookInput,
   ): Promise<Webhook> {
-    return this.webhookService.update(authorization, input);
+    return this.webhookService.update(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Webhook)
   removeWebhook(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Webhook> {
-    return this.webhookService.remove(authorization, id);
+    return this.webhookService.remove(user, id);
   }
 }

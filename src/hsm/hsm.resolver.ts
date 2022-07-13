@@ -1,5 +1,7 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { CreateHsmInput } from './dto/create-hsm.input';
 import { UpdateHsmInput } from './dto/update-hsm.input';
 import { Hsm } from './entities/hsm.entity';
@@ -9,40 +11,39 @@ import { HsmService } from './hsm.service';
 export class HsmResolver {
   constructor(private readonly hsmService: HsmService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Hsm)
-  createHsm(
-    @Auth() authorization: string,
-    @Args() input: CreateHsmInput,
-  ): Promise<Hsm> {
-    return this.hsmService.create(authorization, input);
+  createHsm(@User() user: any, @Args() input: CreateHsmInput): Promise<Hsm> {
+    return this.hsmService.create(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Hsm])
-  hsm(@Auth() authorization: string): Promise<Hsm[]> {
-    return this.hsmService.findAll(authorization);
+  hsm(@User() user: any): Promise<Hsm[]> {
+    return this.hsmService.findAll(user);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Hsm)
   hsmById(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Hsm> {
-    return this.hsmService.findOne(authorization, id);
+    return this.hsmService.findOne(user, id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Hsm)
-  updateHsm(
-    @Auth() authorization: string,
-    @Args() input: UpdateHsmInput,
-  ): Promise<Hsm> {
-    return this.hsmService.update(authorization, input);
+  updateHsm(@User() user: any, @Args() input: UpdateHsmInput): Promise<Hsm> {
+    return this.hsmService.update(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Hsm)
   removeHsm(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Hsm> {
-    return this.hsmService.remove(authorization, id);
+    return this.hsmService.remove(user, id);
   }
 }

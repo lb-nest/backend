@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { ProjectModule } from 'src/project/project.module';
 import { ContactFlowService } from './contact-flow.service';
 import { ContactHistoryService } from './contact-history.service';
@@ -9,7 +8,7 @@ import { ContactService } from './contact.service';
 import { ContactUpdateListener } from './listeners/contact-update.listener';
 
 @Module({
-  imports: [ConfigModule, ProjectModule],
+  imports: [ProjectModule],
   providers: [
     ContactResolver,
     ContactService,
@@ -18,6 +17,6 @@ import { ContactUpdateListener } from './listeners/contact-update.listener';
     ContactTagService,
     ContactUpdateListener,
   ],
-  exports: [ContactService],
+  exports: [ContactResolver, ContactService],
 })
 export class ContactModule {}

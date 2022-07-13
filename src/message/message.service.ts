@@ -2,11 +2,13 @@ import {
   BadRequestException,
   ForbiddenException,
   HttpException,
+  Inject,
   Injectable,
   NotImplementedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
+import { pubSub } from 'src/app.module';
 import { CreateMessageInput } from './dto/create-message.input';
 import { ReadMessagesInput } from './dto/read-messages.input';
 import { RemoveMessageInput } from './dto/remove-message.input';
@@ -15,144 +17,110 @@ import { Message } from './entities/message.entity';
 
 @Injectable()
 export class MessageService {
-  private readonly mAxios: AxiosInstance;
-  private readonly cAxios: AxiosInstance;
+  constructor(
+    @Inject('CONTACTS') private readonly contactClient: ClientProxy,
+    @Inject('MESSAGING') private readonly messagingClient: ClientProxy,
+  ) {}
 
-  constructor(configService: ConfigService) {
-    this.mAxios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
-    });
-    this.cAxios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
-    });
-  }
-
-  async create(
-    authorization: string,
-    user: any,
-    input: CreateMessageInput,
-  ): Promise<Message[]> {
+  async create(user: any, input: CreateMessageInput): Promise<Message[]> {
     try {
-      const contacts = await this.cAxios.get<any>(
-        `/contacts/findAllByChatId?chatId=${input.chatId}`,
-        {
-          headers: {
-            authorization,
-          },
-        },
+      const [contact] = await lastValueFrom(
+        this.contactClient.send('contacts.forChat', {
+          user,
+          data: [input.chatId],
+        }),
       );
 
-      const [contact] = contacts.data;
       if (![user.id].includes(contact?.assignedTo)) {
         throw new ForbiddenException();
       }
 
-      const res = await this.mAxios.post<any[]>(
-        `/chats/${input.chatId}/messages`,
-        input,
-        {
-          headers: {
-            authorization,
-          },
-        },
+      return await lastValueFrom(
+        this.messagingClient.send('chats.messages.create', {
+          user,
+          data: input,
+        }),
       );
-
-      return res.data;
     } catch (e) {
       if (e instanceof HttpException) {
         throw e;
       }
 
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e);
     }
   }
 
-  async findAll(
-    authorization: string,
-    user: any,
-    chatId: number,
-  ): Promise<Message[]> {
+  async findAll(user: any, chatId: number): Promise<Message[]> {
     try {
-      const contacts = await this.cAxios.get<any[]>(
-        `/contacts/findAllByChatId?chatId=${chatId}`,
-        {
-          headers: {
-            authorization,
-          },
-        },
+      const [contact] = await lastValueFrom(
+        this.contactClient.send('contacts.forChat', {
+          user,
+          data: [chatId],
+        }),
       );
 
-      const [contact] = contacts.data;
       if (![user.id, null].includes(contact?.assignedTo)) {
         throw new ForbiddenException();
       }
 
-      const res = await this.mAxios.get(`/chats/${chatId}/messages`, {
-        headers: {
-          authorization,
-        },
+      return await lastValueFrom(
+        this.messagingClient.send('chats.messages.findAll', {
+          user,
+          data: chatId,
+        }),
+      );
+    } catch (e) {
+      if (e instanceof HttpException) {
+        throw e;
+      }
+
+      throw new BadRequestException(e);
+    }
+  }
+
+  async update(user: any, input: UpdateMessageInput): Promise<Message> {
+    throw new NotImplementedException();
+  }
+
+  async remove(user: any, input: RemoveMessageInput): Promise<Message> {
+    throw new NotImplementedException();
+  }
+
+  async markAsRead(user: any, input: ReadMessagesInput): Promise<boolean> {
+    try {
+      const [contact] = await lastValueFrom(
+        this.contactClient.send('contacts.forChat', {
+          user,
+          data: [input.chatId],
+        }),
+      );
+
+      if (![user.id, null].includes(contact?.assignedTo)) {
+        throw new ForbiddenException();
+      }
+
+      return await lastValueFrom(
+        this.contactClient.send('chats.messages.markAsRead', {
+          user,
+          data: input,
+        }),
+      );
+    } catch (e) {
+      if (e instanceof HttpException) {
+        throw e;
+      }
+
+      throw new BadRequestException(e);
+    }
+  }
+
+  async received(projectId: number, messages: any[]): Promise<any> {
+    messages
+      .sort((a, b) => a.id - b.id)
+      .map((message) => {
+        pubSub.publish(`messagesReceived:${projectId}:${message.chat.id}`, {
+          messagesReceived: message,
+        });
       });
-
-      return res.data;
-    } catch (e) {
-      if (e instanceof HttpException) {
-        throw e;
-      }
-
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async update(
-    authorization: string,
-    input: UpdateMessageInput,
-  ): Promise<Message> {
-    throw new NotImplementedException();
-  }
-
-  async remove(
-    authorization: string,
-    input: RemoveMessageInput,
-  ): Promise<Message> {
-    throw new NotImplementedException();
-  }
-
-  async markAsRead(
-    authorization: string,
-    user: any,
-    input: ReadMessagesInput,
-  ): Promise<boolean> {
-    try {
-      const contacts = await this.cAxios.get<any[]>(
-        `/contacts/findAllByChatId?chatId=${input.chatId}`,
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      const [contact] = contacts.data;
-      if (![user.id, null].includes(contact?.assignedTo)) {
-        throw new ForbiddenException();
-      }
-
-      const res = await this.mAxios.put(
-        `/chats/${input.chatId}/messages/read`,
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data;
-    } catch (e) {
-      if (e instanceof HttpException) {
-        throw e;
-      }
-
-      throw new BadRequestException(e.response.data);
-    }
   }
 }

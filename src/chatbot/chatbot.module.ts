@@ -1,17 +1,23 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { CHATBOTS_SERVICE } from 'src/shared/rabbitmq/constants';
+import { RabbitMQModule } from 'src/shared/rabbitmq/rabbitmq.module';
 import { ChatbotGateway } from './chatbot.gateway';
 import { ChatbotResolver } from './chatbot.resolver';
 import { ChatbotService } from './chatbot.service';
-import { NewEventListener } from './listeners/new-event.listener';
+import { ChatbotEventListener } from './listeners/chatbot-event.listener';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [
+    RabbitMQModule.register({
+      name: CHATBOTS_SERVICE,
+    }),
+  ],
   providers: [
     ChatbotResolver,
     ChatbotService,
     ChatbotGateway,
-    NewEventListener,
+    ChatbotEventListener,
   ],
+  exports: [ChatbotResolver, ChatbotService],
 })
 export class ChatbotModule {}

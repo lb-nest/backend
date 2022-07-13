@@ -1,9 +1,9 @@
 import {
-  BadRequestException,
+  ForbiddenException,
+  Inject,
   NotFoundException,
   UseGuards,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
   Args,
   Int,
@@ -12,11 +12,11 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
-import axios, { AxiosInstance } from 'axios';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
 import { pubSub } from 'src/app.service';
-import { Auth } from 'src/auth/auth.decorator';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
 import { RoleType } from 'src/auth/enums/role-type.enum';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/auth/user.decorator';
 import { CreateMessageInput } from './dto/create-message.input';
 import { ReadMessagesInput } from './dto/read-messages.input';
@@ -27,76 +27,69 @@ import { MessageService } from './message.service';
 
 @Resolver(() => Message)
 export class MessageResolver {
-  private readonly axios: AxiosInstance;
-
   constructor(
+    @Inject('CONTACTS') private readonly client: ClientProxy,
     private readonly messageService: MessageService,
-    private readonly configService: ConfigService,
-  ) {
-    this.axios = axios.create({
-      baseURL: this.configService.get<string>('CONTACTS_URL'),
-    });
-  }
+  ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => [Message])
   createMessage(
-    @Auth() authorization: string,
     @User() user: any,
     @Args() input: CreateMessageInput,
   ): Promise<Message[]> {
-    return this.messageService.create(authorization, user, input);
+    return this.messageService.create(user, input);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Message])
   messages(
-    @Auth() authorization: string,
     @User() user: any,
     @Args('chatId', { type: () => Int }) chatId: number,
   ): Promise<Message[]> {
-    return this.messageService.findAll(authorization, user, chatId);
+    return this.messageService.findAll(user, chatId);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Message)
   updateMessage(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: UpdateMessageInput,
   ): Promise<Message> {
-    return this.messageService.update(authorization, input);
+    return this.messageService.update(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Message)
   removeMessage(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: RemoveMessageInput,
   ): Promise<Message> {
-    return this.messageService.remove(authorization, input);
+    return this.messageService.remove(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   markMessagesAsRead(
-    @Auth() authorization: string,
     @User() user: any,
     @Args() input: ReadMessagesInput,
   ): Promise<boolean> {
-    return this.messageService.markAsRead(authorization, user, input);
+    return this.messageService.markAsRead(user, input);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Subscription(() => Message)
   async messagesReceived(
-    @Auth() authorization: string,
     @User() user: any,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
-    const res = await this.axios(`/contacts/findAllByChatId?chatId=${chatId}`, {
-      headers: {
-        authorization,
-      },
-    });
+    const [contact] = await lastValueFrom(
+      this.client.send('contacts.forChat', {
+        user,
+        data: [chatId],
+      }),
+    );
 
-    const [contact] = res.data;
     if (!contact) {
       throw new NotFoundException();
     }
@@ -106,7 +99,7 @@ export class MessageResolver {
     );
 
     if (!isAdmin && contact.assignedTo !== user.id) {
-      throw new BadRequestException();
+      throw new ForbiddenException();
     }
 
     const projectId = user.project.id;

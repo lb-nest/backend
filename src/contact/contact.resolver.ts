@@ -1,11 +1,10 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
-import { RoleType } from 'src/auth/enums/role-type.enum';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { User } from 'src/auth/user.decorator';
+import { RoleType } from 'src/project/enums/role-type.enum';
 import { TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
 import { ContactFlowService } from './contact-flow.service';
 import { ContactHistoryService } from './contact-history.service';
@@ -27,123 +26,129 @@ export class ContactResolver {
     private readonly contactTagService: ContactTagService,
   ) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => [Contact])
   createContact(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: CreateContactInput,
   ): Promise<Contact> {
-    return this.contactService.create(authorization, input);
+    return this.contactService.create(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Contact])
-  contacts(@Auth() authorization: string): Promise<Contact[]> {
-    return this.contactService.findAll(authorization);
+  contacts(@User() user: any): Promise<Contact[]> {
+    return this.contactService.findAll(user);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Contact)
   contactById(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Contact> {
-    return this.contactService.findOne(authorization, id);
+    return this.contactService.findOne(user, id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Contact)
   updateContact(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: UpdateContactInput,
   ): Promise<Contact> {
-    return this.contactService.update(authorization, input);
+    return this.contactService.update(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Contact)
   removeContact(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Contact> {
-    return this.contactService.remove(authorization, id);
+    return this.contactService.remove(user, id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   importContacts(
-    @Auth() authorization: string,
+    @User() user: any,
     input: ImportContactsInput,
   ): Promise<boolean> {
-    return this.contactService.import(authorization, input);
+    return this.contactService.import(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => TagWithoutParentAndChildren)
   createContactTag(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
     @Args('tagId', { type: () => Int }) tagId: number,
   ): Promise<TagWithoutParentAndChildren> {
-    return this.contactTagService.create(authorization, id, tagId);
+    return this.contactTagService.create(user, id, tagId);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => TagWithoutParentAndChildren)
   removeContactTag(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
     @Args('tagId', { type: () => Int }) tagId: number,
   ): Promise<TagWithoutParentAndChildren> {
-    return this.contactTagService.remove(authorization, id, tagId);
+    return this.contactTagService.remove(user, id, tagId);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [History])
   contactHistory(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<History[]> {
-    return this.contactHistoryService.findAll(authorization, id);
+    return this.contactHistoryService.findAll(user, id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   acceptContact(
-    @Auth() authorization: string,
     @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<boolean> {
-    return this.contactFlowService.acceptContact(authorization, id, user.id);
+    return this.contactFlowService.acceptContact(user, id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   closeContact(
-    @Auth() authorization: string,
-    @Args('id', { type: () => Int }) id: number,
-  ): Promise<boolean> {
-    return this.contactFlowService.closeContact(authorization, id);
-  }
-
-  @Roles(RoleType.Owner, RoleType.Admin)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Mutation(() => Boolean)
-  transferContact(
-    @Auth() authorization: string,
-    @Args() input: TransferContactInput,
-  ): Promise<boolean> {
-    return this.contactFlowService.transferContact(authorization, input);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Mutation(() => Boolean)
-  returnContact(
-    @Auth() authorization: string,
-    @Args('id', { type: () => Int }) id: number,
-  ): Promise<boolean> {
-    return this.contactFlowService.returnContact(authorization, id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Mutation(() => Boolean)
-  reopenContact(
-    @Auth() authorization: string,
     @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<boolean> {
-    return this.contactFlowService.reopenContact(authorization, id, user.id);
+    return this.contactFlowService.closeContact(user, id);
+  }
+
+  @Roles(RoleType.Admin, RoleType.Owner)
+  @UseGuards(BearerAuthGuard, RolesGuard)
+  @Mutation(() => Boolean)
+  transferContact(
+    @User() user: any,
+    @Args() input: TransferContactInput,
+  ): Promise<boolean> {
+    return this.contactFlowService.transferContact(user, input);
+  }
+
+  @UseGuards(BearerAuthGuard)
+  @Mutation(() => Boolean)
+  returnContact(
+    @User() user: any,
+    @Args('id', { type: () => Int }) id: number,
+  ): Promise<boolean> {
+    return this.contactFlowService.returnContact(user, id);
+  }
+
+  @UseGuards(BearerAuthGuard)
+  @Mutation(() => Boolean)
+  reopenContact(
+    @User() user: any,
+    @Args('id', { type: () => Int }) id: number,
+  ): Promise<boolean> {
+    return this.contactFlowService.reopenContact(user, id);
   }
 }

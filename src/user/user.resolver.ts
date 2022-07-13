@@ -1,34 +1,41 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
+import { Observable } from 'rxjs';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { Project } from 'src/project/entities/project.entity';
 import { UpdateUserInput } from './dto/update-user.input';
-import { User } from './entities/user.entity';
+import { User as UserEntity } from './entities/user.entity';
 import { UserService } from './user.service';
 
-@Resolver(() => User)
+@Resolver(() => UserEntity)
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
-  @Query(() => User)
-  user(@Auth() authorization: string): Promise<User> {
-    return this.userService.getMe(authorization);
+  @UseGuards(BearerAuthGuard)
+  @Query(() => UserEntity)
+  user(@User() user: any): Observable<UserEntity> {
+    return this.userService.findMe(user);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Project])
-  userProjects(@Auth() authorization: string): Promise<Project[]> {
-    return this.userService.getProjects(authorization);
+  userProjects(@User() user: any): Observable<Project[]> {
+    return this.userService.findAllProjects(user);
   }
 
-  @Mutation(() => User)
+  @UseGuards(BearerAuthGuard)
+  @Mutation(() => UserEntity)
   updateUser(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: UpdateUserInput,
-  ): Promise<User> {
-    return this.userService.update(authorization, input);
+  ): Observable<UserEntity> {
+    return this.userService.update(user, input);
   }
 
-  @Mutation(() => User)
-  removeUser(@Auth() authorization: string): Promise<User> {
-    return this.userService.remove(authorization);
+  @UseGuards(BearerAuthGuard)
+  @Mutation(() => UserEntity)
+  removeUser(@User() user: any): Observable<UserEntity> {
+    return this.userService.remove(user);
   }
 }

@@ -1,11 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { AUTH_SERVICE } from 'src/shared/rabbitmq/constants';
+import { RabbitMQModule } from 'src/shared/rabbitmq/rabbitmq.module';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [
+    RabbitMQModule.register({
+      name: AUTH_SERVICE,
+    }),
+  ],
   providers: [UserResolver, UserService],
-  exports: [UserService],
+  exports: [UserResolver, UserService],
 })
 export class UserModule {}

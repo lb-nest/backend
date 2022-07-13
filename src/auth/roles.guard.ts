@@ -9,9 +9,8 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   getRequest(context: ExecutionContext) {
-    const ctx = GqlExecutionContext.create(context);
-
-    const { req, connection } = ctx.getContext();
+    const { req, connection } =
+      GqlExecutionContext.create(context).getContext();
     return connection ? connection.context : req;
   }
 

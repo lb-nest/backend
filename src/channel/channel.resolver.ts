@@ -1,5 +1,7 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
+import { User } from 'src/auth/user.decorator';
 import { ChannelService } from './channel.service';
 import { CreateChannelInput } from './dto/create-channel.input';
 import { UpdateChannelInput } from './dto/update-channel.input';
@@ -9,40 +11,45 @@ import { Channel } from './entities/channel.entity';
 export class ChannelResolver {
   constructor(private readonly channelService: ChannelService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Channel)
   createChannel(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: CreateChannelInput,
   ): Promise<Channel> {
-    return this.channelService.create(authorization, input);
+    return this.channelService.create(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Channel])
-  channels(@Auth() authorization: string): Promise<Channel[]> {
-    return this.channelService.findAll(authorization);
+  channels(@User() user: any): Promise<Channel[]> {
+    return this.channelService.findAll(user);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Channel)
   channelById(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Channel> {
-    return this.channelService.findOne(authorization, id);
+    return this.channelService.findOne(user, id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Channel)
   updateChannel(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args() input: UpdateChannelInput,
   ): Promise<Channel> {
-    return this.channelService.update(authorization, input);
+    return this.channelService.update(user, input);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Channel)
   removeChannel(
-    @Auth() authorization: string,
+    @User() user: any,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Channel> {
-    return this.channelService.remove(authorization, id);
+    return this.channelService.remove(user, id);
   }
 }

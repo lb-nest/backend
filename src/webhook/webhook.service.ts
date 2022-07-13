@@ -1,97 +1,27 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
+import { Injectable, NotImplementedException } from '@nestjs/common';
 import { CreateWebhookInput } from './dto/create-webhook.input';
 import { UpdateWebhookInput } from './dto/update-webhook.input';
 import { Webhook } from './entities/webhook.entity';
 
 @Injectable()
 export class WebhookService {
-  private readonly axios: AxiosInstance;
-
-  constructor(configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
-    });
+  async create(user: any, input: CreateWebhookInput): Promise<Webhook> {
+    throw new NotImplementedException();
   }
 
-  async create(
-    authorization: string,
-    input: CreateWebhookInput,
-  ): Promise<Webhook> {
-    try {
-      const res = await this.axios.post<Webhook>('/webhooks', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.request.body);
-    }
+  async findAll(user: any): Promise<Webhook[]> {
+    throw new NotImplementedException();
   }
 
-  async findAll(authorization: string): Promise<Webhook[]> {
-    try {
-      const res = await this.axios.get<Webhook[]>('/webhooks', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.request.body);
-    }
+  async findOne(user: any, id: number): Promise<Webhook> {
+    throw new NotImplementedException();
   }
 
-  async findOne(authorization: string, id: number): Promise<Webhook> {
-    try {
-      const res = await this.axios.get<Webhook>(`/webhooks/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.request.body);
-    }
+  async update(user: any, input: UpdateWebhookInput): Promise<Webhook> {
+    throw new NotImplementedException();
   }
 
-  async update(
-    authorization: string,
-    input: UpdateWebhookInput,
-  ): Promise<Webhook> {
-    try {
-      const res = await this.axios.patch<Webhook>(
-        `/webhooks/${input.id}`,
-        input,
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.request.body);
-    }
-  }
-
-  async remove(authorization: string, id: number): Promise<Webhook> {
-    try {
-      const res = await this.axios.delete<Webhook>(`/webhooks/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.request.body);
-    }
+  async remove(user: any, id: number): Promise<Webhook> {
+    throw new NotImplementedException();
   }
 }
