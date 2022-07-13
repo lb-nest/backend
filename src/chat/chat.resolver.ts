@@ -7,10 +7,10 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
-import { pubSub } from 'src/app.service';
 import { Auth } from 'src/auth/auth.decorator';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
 import { User } from 'src/auth/user.decorator';
+import { pubSub } from 'src/pubsub';
 import { ChatService } from './chat.service';
 import { ChatsInput } from './dto/chats.input';
 import { CreateChatInput } from './dto/create-chat.input';
@@ -53,7 +53,7 @@ export class ChatResolver {
     return this.chatService.findOne(authorization, id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Subscription(() => Chat, {
     filter(payload, _, context) {
       const userId = payload.chatsReceived.contact.assignedTo?.id;

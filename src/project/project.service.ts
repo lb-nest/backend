@@ -4,9 +4,12 @@ import {
   NotImplementedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import axios, { AxiosInstance } from 'axios';
-import { decode, JwtPayload } from 'jsonwebtoken';
 import { Token } from 'src/auth/entities/token.entity';
+import { ChatbotEventType } from 'src/chatbot/enums/chatbot-event-type.enum';
+import { ContactService } from 'src/contact/contact.service';
+import { pubSub } from 'src/pubsub';
 import { User } from 'src/user/entities/user.entity';
 import { WebhookEventType } from 'src/webhook/enums/webhook-event-type.enum';
 import { CreateProjectInput } from './dto/create-project.input';
@@ -23,6 +26,8 @@ export class ProjectService {
   constructor(
     private readonly projectTokenService: ProjectTokenService,
     private readonly configService: ConfigService,
+    private readonly contactService: ContactService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     this.axios = axios.create({
       baseURL: configService.get<string>('AUTHORIZATION_URL'),
@@ -40,24 +45,13 @@ export class ProjectService {
         },
       });
 
-      const token = await this.signIn(authorization, res.data.id);
-
       await this.createWebhooks(authorization, res.data.id);
-
-      const rootToken = this.configService.get<string>('ROOT_TOKEN');
-      const root = <JwtPayload>decode(rootToken);
-      await this.invite('Bearer '.concat(token.token), {
-        email: root.email,
-      });
-
-      await this.projectTokenService.save(
-        res.data.id,
-        await this.signIn('Bearer '.concat(rootToken), res.data.id),
-      );
-
       return {
         ...res.data,
-        token,
+        token: await this.projectTokenService.save(
+          res.data.id,
+          await this.signIn(authorization, res.data.id),
+        ),
       };
     } catch (e) {
       throw new BadRequestException(e.response.data);
@@ -164,5 +158,65 @@ export class ProjectService {
         }),
       ),
     );
+  }
+
+  async handleWebhook(projectId: number, payload: any): Promise<void> {
+    switch (payload.type) {
+      case WebhookEventType.IncomingChats:
+        this.eventEmitter.emit(
+          ChatbotEventType.NewEvent,
+          await this.handleChatsReceived(projectId, payload.payload),
+        );
+        break;
+
+      case WebhookEventType.OutgoingChats:
+        await this.handleChatsReceived(projectId, payload.payload);
+        break;
+
+      case WebhookEventType.IncomingMessages:
+      case WebhookEventType.OutgoingMessages:
+        await this.handleMessagesReceived(projectId, payload.payload);
+        break;
+    }
+  }
+
+  private async handleChatsReceived(
+    projectId: number,
+    chat: any,
+    silent = false,
+  ): Promise<any> {
+    const contact = await this.contactService.createForChat(
+      'Bearer '.concat(await this.projectTokenService.get(projectId)),
+      chat.id,
+      chat.contact,
+    );
+
+    if (!silent) {
+      pubSub.publish(`chatsReceived:${projectId}`, {
+        chatsReceived: {
+          ...chat,
+          contact,
+        },
+      });
+    }
+
+    return {
+      projectId,
+      ...chat,
+      contact,
+    };
+  }
+
+  private async handleMessagesReceived(
+    projectId: number,
+    messages: any[],
+  ): Promise<void> {
+    messages
+      .sort((a, b) => a.id - b.id)
+      .map((message) => {
+        pubSub.publish(`messagesReceived:${projectId}:${message.chat.id}`, {
+          messagesReceived: message,
+        });
+      });
   }
 }

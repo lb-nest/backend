@@ -3,8 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import axios, { AxiosInstance } from 'axios';
 import { decode, JwtPayload } from 'jsonwebtoken';
-import { pubSub } from 'src/app.service';
 import { ProjectService } from 'src/project/project.service';
+import { pubSub } from 'src/pubsub';
 import { ContactEventType } from '../enums/contact-event-type.enum';
 
 @Injectable()

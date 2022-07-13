@@ -5,8 +5,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Context } from 'apollo-server-core';
 import Joi from 'joi';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ChannelModule } from './channel/channel.module';
 import { ChatModule } from './chat/chat.module';
@@ -27,7 +25,6 @@ import { WebhookModule } from './webhook/webhook.module';
         DATABASE_URL: Joi.string().uri().required(),
         PORT: Joi.number().default(8080),
         WEBSOCKET_PORT: Joi.number().default(4040),
-        ROOT_TOKEN: Joi.string().required(),
         SECRET: Joi.string().required(),
         S3_ENDPOINT: Joi.string().uri().required(),
         S3_ACCESS_KEY: Joi.string().required(),
@@ -84,7 +81,5 @@ import { WebhookModule } from './webhook/webhook.module';
     FileModule,
     ChatbotModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

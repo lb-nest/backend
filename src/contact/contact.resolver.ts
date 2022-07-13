@@ -1,8 +1,8 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Auth } from 'src/auth/auth.decorator';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
 import { RoleType } from 'src/auth/enums/role-type.enum';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { User } from 'src/auth/user.decorator';
@@ -48,7 +48,7 @@ export class ContactResolver {
     return this.contactService.findOne(authorization, id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Contact)
   updateContact(
     @Auth() authorization: string,
@@ -99,7 +99,7 @@ export class ContactResolver {
     return this.contactHistoryService.findAll(authorization, id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   acceptContact(
     @Auth() authorization: string,
@@ -109,7 +109,7 @@ export class ContactResolver {
     return this.contactFlowService.acceptContact(authorization, id, user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   closeContact(
     @Auth() authorization: string,
@@ -119,7 +119,7 @@ export class ContactResolver {
   }
 
   @Roles(RoleType.Owner, RoleType.Admin)
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(BearerAuthGuard, RolesGuard)
   @Mutation(() => Boolean)
   transferContact(
     @Auth() authorization: string,
@@ -128,7 +128,7 @@ export class ContactResolver {
     return this.contactFlowService.transferContact(authorization, input);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   returnContact(
     @Auth() authorization: string,
@@ -137,7 +137,7 @@ export class ContactResolver {
     return this.contactFlowService.returnContact(authorization, id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   reopenContact(
     @Auth() authorization: string,

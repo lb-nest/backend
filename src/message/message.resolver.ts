@@ -13,11 +13,11 @@ import {
   Subscription,
 } from '@nestjs/graphql';
 import axios, { AxiosInstance } from 'axios';
-import { pubSub } from 'src/app.service';
 import { Auth } from 'src/auth/auth.decorator';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
 import { RoleType } from 'src/auth/enums/role-type.enum';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/auth/user.decorator';
+import { pubSub } from 'src/pubsub';
 import { CreateMessageInput } from './dto/create-message.input';
 import { ReadMessagesInput } from './dto/read-messages.input';
 import { RemoveMessageInput } from './dto/remove-message.input';
@@ -38,7 +38,7 @@ export class MessageResolver {
     });
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => [Message])
   createMessage(
     @Auth() authorization: string,
@@ -48,7 +48,7 @@ export class MessageResolver {
     return this.messageService.create(authorization, user, input);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Message])
   messages(
     @Auth() authorization: string,
@@ -83,7 +83,7 @@ export class MessageResolver {
     return this.messageService.markAsRead(authorization, user, input);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BearerAuthGuard)
   @Subscription(() => Message)
   async messagesReceived(
     @Auth() authorization: string,
