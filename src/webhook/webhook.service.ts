@@ -28,7 +28,7 @@ export class WebhookService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.body);
     }
   }
 
@@ -42,7 +42,7 @@ export class WebhookService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.body);
     }
   }
 
@@ -56,7 +56,7 @@ export class WebhookService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.body);
     }
   }
 
@@ -77,7 +77,7 @@ export class WebhookService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.body);
     }
   }
 
@@ -91,7 +91,7 @@ export class WebhookService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.body);
     }
   }
 }

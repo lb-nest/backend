@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotImplementedException,
 } from '@nestjs/common';
@@ -26,8 +28,9 @@ export class ProjectService {
   constructor(
     private readonly projectTokenService: ProjectTokenService,
     private readonly configService: ConfigService,
-    private readonly contactService: ContactService,
     private readonly eventEmitter: EventEmitter2,
+    @Inject(forwardRef(() => ContactService))
+    private readonly contactService: ContactService,
   ) {
     this.axios = axios.create({
       baseURL: configService.get<string>('AUTHORIZATION_URL'),
@@ -45,16 +48,21 @@ export class ProjectService {
         },
       });
 
-      await this.createWebhooks(authorization, res.data.id);
+      const token = await this.projectTokenService.save(
+        res.data.id,
+        await this.signIn(authorization, res.data.id),
+      );
+
+      await this.createWebhooks(`Bearer ${token.token}`, res.data.id);
+
+      console.log(3);
+
       return {
         ...res.data,
-        token: await this.projectTokenService.save(
-          res.data.id,
-          await this.signIn(authorization, res.data.id),
-        ),
+        token,
       };
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -68,7 +76,7 @@ export class ProjectService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -85,7 +93,7 @@ export class ProjectService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -103,7 +111,7 @@ export class ProjectService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -117,7 +125,7 @@ export class ProjectService {
 
       return true;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -148,12 +156,11 @@ export class ProjectService {
       },
     ];
 
-    const token = await this.signIn(authorization, id);
     await Promise.all(
       webhooks.map((webhook) =>
         axios.post<any>(messaging.concat('/webhooks'), webhook, {
           headers: {
-            authorization: 'Bearer '.concat(token.token),
+            authorization,
           },
         }),
       ),
@@ -190,7 +197,6 @@ export class ProjectService {
       chat.id,
       chat.contact,
     );
-
     if (!silent) {
       pubSub.publish(`chatsReceived:${projectId}`, {
         chatsReceived: {
@@ -199,7 +205,6 @@ export class ProjectService {
         },
       });
     }
-
     return {
       projectId,
       ...chat,

@@ -25,7 +25,7 @@ export class TagService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -39,7 +39,7 @@ export class TagService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -53,7 +53,7 @@ export class TagService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -67,7 +67,7 @@ export class TagService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -81,7 +81,7 @@ export class TagService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 }

@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { PassportModule } from '@nestjs/passport';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
-import { BearerAuthGuard } from './bearer-auth.guard';
+import { BearerStrategy } from './bearer.strategy';
 
 @Module({
-  imports: [ConfigModule, PassportModule],
-  providers: [BearerAuthGuard, AuthResolver, AuthService],
+  providers: [AuthResolver, AuthService, BearerStrategy],
+  exports: [AuthService],
 })
 export class AuthModule {}

@@ -81,7 +81,7 @@ export class ChatService {
           }),
         );
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -103,42 +103,46 @@ export class ChatService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
   async findOne(authorization: string, id: number): Promise<Chat> {
-    const contacts = await this.cAxios.get<any[]>(
-      `/contacts/findAllByChatId?chatId=${id}`,
-      {
+    try {
+      const contacts = await this.cAxios.get<any[]>(
+        `/contacts/findAllByChatId?chatId=${id}`,
+        {
+          headers: {
+            authorization,
+          },
+        },
+      );
+
+      const [contact] = contacts.data;
+      if (!contact) {
+        throw new NotFoundException();
+      }
+
+      const chat = await this.mAxios.get<any>(`/chats/${id}`, {
         headers: {
           authorization,
         },
-      },
-    );
+      });
 
-    const [contact] = contacts.data;
-    if (!contact) {
-      throw new NotFoundException();
+      if (contact.assignedTo) {
+        const [user] = await this.projectService.getUsers(
+          authorization,
+          contact.assignedTo,
+        );
+
+        contact.assignedTo = user;
+      }
+
+      return Object.assign(chat.data, {
+        contact,
+      });
+    } catch (e) {
+      throw new BadRequestException(e.response?.data);
     }
-
-    const chat = await this.mAxios.get<any>(`/chats/${id}`, {
-      headers: {
-        authorization,
-      },
-    });
-
-    if (contact.assignedTo) {
-      const [user] = await this.projectService.getUsers(
-        authorization,
-        contact.assignedTo,
-      );
-
-      contact.assignedTo = user;
-    }
-
-    return Object.assign(chat.data, {
-      contact,
-    });
   }
 }

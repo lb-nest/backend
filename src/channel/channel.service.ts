@@ -28,7 +28,7 @@ export class ChannelService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -42,7 +42,7 @@ export class ChannelService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -56,7 +56,7 @@ export class ChannelService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -77,7 +77,7 @@ export class ChannelService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -91,7 +91,7 @@ export class ChannelService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.request.body);
+      throw new BadRequestException(e.response?.data);
     }
   }
 }

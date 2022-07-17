@@ -1,17 +1,16 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { ChatbotGateway } from './chatbot.gateway';
 import { ChatbotResolver } from './chatbot.resolver';
 import { ChatbotService } from './chatbot.service';
-import { NewEventListener } from './listeners/new-event.listener';
+import { ChatbotEventListener } from './listeners/chatbot-event.listener';
 
 @Module({
-  imports: [ConfigModule],
   providers: [
     ChatbotResolver,
-    ChatbotService,
     ChatbotGateway,
-    NewEventListener,
+    ChatbotService,
+    ChatbotEventListener,
   ],
+  exports: [ChatbotService],
 })
 export class ChatbotModule {}

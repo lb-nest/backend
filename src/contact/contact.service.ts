@@ -69,7 +69,7 @@ export class ContactService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -98,7 +98,7 @@ export class ContactService {
 
       return contacts.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -121,7 +121,7 @@ export class ContactService {
 
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -154,7 +154,7 @@ export class ContactService {
       this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -182,10 +182,9 @@ export class ContactService {
       }
 
       // TODO: оповещать вебсокеты
-
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 

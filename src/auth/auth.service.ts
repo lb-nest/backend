@@ -20,7 +20,7 @@ export class AuthService {
       await this.axios.post('/users', input);
       return this.signIn(input);
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -29,7 +29,7 @@ export class AuthService {
       const res = await this.axios.post('/auth/signin', input);
       return res.data;
     } catch (e) {
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 }

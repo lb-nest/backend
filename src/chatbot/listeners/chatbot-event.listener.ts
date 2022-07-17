@@ -4,7 +4,7 @@ import { ChatbotService } from '../chatbot.service';
 import { ChatbotEventType } from '../enums/chatbot-event-type.enum';
 
 @Injectable()
-export class NewEventListener {
+export class ChatbotEventListener {
   constructor(private readonly chatbotService: ChatbotService) {}
 
   @OnEvent(ChatbotEventType.NewEvent)

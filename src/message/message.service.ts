@@ -63,7 +63,7 @@ export class MessageService {
         throw e;
       }
 
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -99,7 +99,7 @@ export class MessageService {
         throw e;
       }
 
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 
@@ -152,7 +152,7 @@ export class MessageService {
         throw e;
       }
 
-      throw new BadRequestException(e.response.data);
+      throw new BadRequestException(e.response?.data);
     }
   }
 }

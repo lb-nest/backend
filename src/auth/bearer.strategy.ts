@@ -5,7 +5,7 @@ import axios, { AxiosInstance } from 'axios';
 import { Strategy } from 'passport-http-bearer';
 
 @Injectable()
-export class BearerStrategy extends PassportStrategy(Strategy) {
+export class BearerStrategy extends PassportStrategy(Strategy, 'bearer') {
   private readonly axios: AxiosInstance;
 
   constructor(private readonly configService: ConfigService) {
