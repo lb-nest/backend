@@ -12,8 +12,6 @@ async function bootstrap() {
   const prismaServive = app.get(PrismaService);
   await prismaServive.enableShutdownHooks(app);
 
-  const configService = app.get(ConfigService);
-
   app.enableCors({
     origin: '*',
   });
@@ -28,6 +26,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
+  const configService = app.get(ConfigService);
   await app.listen(configService.get<number>('PORT'), '0.0.0.0');
 }
 bootstrap();
