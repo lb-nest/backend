@@ -18,7 +18,7 @@ export class ProjectTokenService {
   }
 
   get(projectId: number): Promise<Token> {
-    return this.prismaService.projectToken.findUnique({
+    return this.prismaService.projectToken.findUniqueOrThrow({
       where: {
         projectId,
       },

@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from 'src/prisma.service';
 import { AUTH_SERVICE } from 'src/shared/rabbitmq/constants';
 import { RabbitMQModule } from 'src/shared/rabbitmq/rabbitmq.module';
@@ -9,17 +8,16 @@ import { ProjectService } from './project.service';
 
 @Module({
   imports: [
-    ConfigModule,
     RabbitMQModule.register({
       name: AUTH_SERVICE,
     }),
   ],
   providers: [
+    PrismaService,
+    ProjectTokenService,
     ProjectResolver,
     ProjectService,
-    ProjectTokenService,
-    PrismaService,
   ],
-  exports: [ProjectResolver, ProjectService, ProjectTokenService],
+  exports: [ProjectTokenService, ProjectService],
 })
 export class ProjectModule {}

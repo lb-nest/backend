@@ -1,9 +1,9 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { IsEmail } from 'class-validator';
+import { IsString } from 'class-validator';
 
 @ArgsType()
-export class InviteInput {
+export class InviteUserArgs {
   @Field(() => String)
-  @IsEmail()
+  @IsString()
   email: string;
 }

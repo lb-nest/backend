@@ -3,8 +3,7 @@ import { FileResolver } from './file.resolver';
 import { FileService } from './file.service';
 
 @Module({
-  imports: [],
   providers: [FileResolver, FileService],
-  exports: [FileResolver, FileService],
+  exports: [FileService],
 })
 export class FileModule {}

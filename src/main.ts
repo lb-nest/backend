@@ -5,6 +5,7 @@ import { graphqlUploadExpress } from 'graphql-upload';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma.service';
+import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -26,6 +27,7 @@ async function bootstrap() {
     }),
   );
 
+  app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   await app.listen(configService.get<number>('PORT'), '0.0.0.0');

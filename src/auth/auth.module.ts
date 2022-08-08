@@ -14,6 +14,6 @@ import { BearerStrategy } from './bearer.strategy';
     }),
   ],
   providers: [AuthResolver, AuthService, BearerStrategy],
-  exports: [AuthResolver, AuthService],
+  exports: [AuthService],
 })
 export class AuthModule {}

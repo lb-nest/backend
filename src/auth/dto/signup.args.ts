@@ -1,27 +1,19 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUrl,
-} from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 @ArgsType()
-export class SignupInput {
+export class SignupArgs {
   @Field(() => String)
-  @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
+  @IsString()
   name: string;
 
   @Field(() => String, { nullable: true })
-  @IsUrl()
   @IsOptional()
+  @IsString()
   avatarUrl?: string;
 
   @Field(() => String)
-  @IsEmail()
+  @IsString()
   email: string;
 
   @Field(() => String)

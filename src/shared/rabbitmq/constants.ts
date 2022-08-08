@@ -1,7 +1,7 @@
-export const ADMIN_SERVICE = 'admin.service';
-export const AUTH_SERVICE = 'auth.service';
-export const CHATBOTS_SERVICE = 'chatbots.service';
-export const CONTACTS_SERVICE = 'contacts.service';
-export const INTEGRATIONS_SERVICE = 'integrations.service';
-export const MAILINGS_SERVICE = 'mailings.service';
-export const MESSAGING_SERVICE = 'messaging.service';
+export const ADMIN_SERVICE = 'ADMIN_SERVICE';
+export const AUTH_SERVICE = 'AUTH_SERVICE';
+export const CHATBOTS_SERVICE = 'CHATBOTS_SERVICE';
+export const CONTACTS_SERVICE = 'CONTACTS_SERVICE';
+export const INTEGRATIONS_SERVICE = 'INTEGRATIONS_SERVICE';
+export const MAILINGS_SERVICE = 'MAILINGS_SERVICE';
+export const MESSAGING_SERVICE = 'MESSAGING_SERVICE';
