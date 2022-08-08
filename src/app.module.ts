@@ -4,8 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Context } from 'apollo-server-core';
-import { PubSub } from 'graphql-subscriptions';
 import Joi from 'joi';
+import mapObject from 'map-obj';
 import { AuthModule } from './auth/auth.module';
 import { ChannelModule } from './channel/channel.module';
 import { ChatModule } from './chat/chat.module';
@@ -18,8 +18,6 @@ import { ProjectModule } from './project/project.module';
 import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
 import { WebhookModule } from './webhook/webhook.module';
-
-export const pubSub = new PubSub();
 
 @Module({
   imports: [
@@ -46,19 +44,22 @@ export const pubSub = new PubSub();
         subscriptions: {
           'graphql-ws': {
             onConnect: async (context: Context<any>) => {
-              const connectionParams = Object.fromEntries(
-                Object.entries(context.connectionParams).map(([key, val]) => [
-                  key.toLowerCase(),
-                  val,
-                ]),
+              Object.assign(
+                context.extra.request.headers,
+                mapObject(
+                  context.connectionParams,
+                  (key: string, value) => [key.toLowerCase(), value],
+                  {
+                    deep: true,
+                  },
+                ),
               );
-
-              Object.assign(context.extra.request.headers, connectionParams);
               context.req = context.extra.request;
             },
           },
-          context: ({ req, extra }) => ({
+          context: ({ req, res, extra }) => ({
             req,
+            res,
             extra,
           }),
         },
@@ -82,5 +83,19 @@ export const pubSub = new PubSub();
     WebhookModule,
   ],
   providers: [],
+  exports: [
+    AuthModule,
+    ChannelModule,
+    ChatModule,
+    ChatbotModule,
+    ContactModule,
+    FileModule,
+    HsmModule,
+    MessageModule,
+    ProjectModule,
+    TagModule,
+    UserModule,
+    WebhookModule,
+  ],
 })
 export class AppModule {}

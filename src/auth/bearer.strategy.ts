@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-http-bearer';
 import { lastValueFrom } from 'rxjs';
 import { AUTH_SERVICE } from 'src/shared/rabbitmq/constants';
+import { TokenPayload } from './entities/token-payload.entity';
 
 @Injectable()
 export class BearerStrategy extends PassportStrategy(Strategy) {
@@ -11,11 +12,14 @@ export class BearerStrategy extends PassportStrategy(Strategy) {
     super();
   }
 
-  async validate(token: string): Promise<any> {
+  async validate(token: string): Promise<TokenPayload> {
     try {
       return await lastValueFrom(
-        this.client.send('projects.@me.token.verify', {
-          token,
+        this.client.send('auth.validateToken', {
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+          payload: null,
         }),
       );
     } catch {

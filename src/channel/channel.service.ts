@@ -1,9 +1,9 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { Observable } from 'rxjs';
 import { MESSAGING_SERVICE } from 'src/shared/rabbitmq/constants';
-import { CreateChannelInput } from './dto/create-channel.input';
-import { UpdateChannelInput } from './dto/update-channel.input';
+import { CreateChannelArgs } from './dto/create-channel.args';
+import { UpdateChannelArgs } from './dto/update-channel.args';
 import { Channel } from './entities/channel.entity';
 
 @Injectable()
@@ -12,68 +12,48 @@ export class ChannelService {
     @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
   ) {}
 
-  async create(user: any, input: CreateChannelInput): Promise<Channel> {
-    try {
-      return await lastValueFrom(
-        this.client.send('channels.create', {
-          user,
-          data: input,
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  create(authorization: string, args: CreateChannelArgs): Observable<Channel> {
+    return this.client.send<Channel>('channels.create', {
+      headers: {
+        authorization,
+      },
+      payload: args,
+    });
   }
 
-  async findAll(user: any): Promise<Channel[]> {
-    try {
-      return await lastValueFrom(
-        this.client.send('channels.findAll', {
-          user,
-          data: {},
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  findAll(authorization: string): Observable<Channel[]> {
+    return this.client.send<Channel[]>('channels.findAll', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
   }
 
-  async findOne(user: any, id: number): Promise<Channel> {
-    try {
-      return await lastValueFrom(
-        this.client.send('channels.findOne', {
-          user,
-          data: id,
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  findOne(authorization: string, id: number): Observable<Channel> {
+    return this.client.send<Channel>('channels.findOne', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 
-  async update(user: any, input: UpdateChannelInput): Promise<Channel> {
-    try {
-      return await lastValueFrom(
-        this.client.send('channels.update', {
-          user,
-          data: input,
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  update(authorization: string, args: UpdateChannelArgs): Observable<Channel> {
+    return this.client.send<Channel>('channels.update', {
+      headers: {
+        authorization,
+      },
+      payload: args,
+    });
   }
 
-  async remove(user: any, id: number): Promise<Channel> {
-    try {
-      return await lastValueFrom(
-        this.client.send('channels.remove', {
-          user,
-          data: id,
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  remove(authorization: string, id: number): Observable<Channel> {
+    return this.client.send<Channel>('channels.remove', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 }

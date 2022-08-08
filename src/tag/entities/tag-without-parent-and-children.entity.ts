@@ -1,21 +1,18 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class User {
+export class TagWithoutParentAndChildren {
   @Field(() => Int)
   id: number;
 
   @Field(() => String)
   name: string;
 
-  @Field(() => String, { nullable: true })
-  avatarUrl: string | null;
+  @Field(() => String)
+  description: string;
 
   @Field(() => String)
-  email: string;
-
-  @Field(() => Boolean)
-  confirmed: boolean;
+  color: string;
 
   @Field(() => String)
   createdAt: string;

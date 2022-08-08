@@ -1,27 +1,34 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
-import { CreateWebhookInput } from './dto/create-webhook.input';
-import { UpdateWebhookInput } from './dto/update-webhook.input';
+import { Observable } from 'rxjs';
+import { CreateWebhookArgs } from './dto/create-webhook.args';
+import { UpdateWebhookArgs } from './dto/update-webhook.args';
 import { Webhook } from './entities/webhook.entity';
 
 @Injectable()
 export class WebhookService {
-  async create(user: any, input: CreateWebhookInput): Promise<Webhook> {
+  create(
+    projectId: number,
+    createWebhookArgs: CreateWebhookArgs,
+  ): Observable<Webhook> {
     throw new NotImplementedException();
   }
 
-  async findAll(user: any): Promise<Webhook[]> {
+  findAll(projectId: number): Observable<Webhook[]> {
     throw new NotImplementedException();
   }
 
-  async findOne(user: any, id: number): Promise<Webhook> {
+  findOne(projectId: number, id: number): Observable<Webhook> {
     throw new NotImplementedException();
   }
 
-  async update(user: any, input: UpdateWebhookInput): Promise<Webhook> {
+  update(
+    projectId: number,
+    updateWebhookArgs: UpdateWebhookArgs,
+  ): Observable<Webhook> {
     throw new NotImplementedException();
   }
 
-  async remove(user: any, id: number): Promise<Webhook> {
+  remove(projectId: number, id: number): Observable<Webhook> {
     throw new NotImplementedException();
   }
 }

@@ -1,10 +1,10 @@
 import { ArgsType, Field, Int, PartialType, PickType } from '@nestjs/graphql';
 import { IsInt } from 'class-validator';
-import { CreateChannelInput } from './create-channel.input';
+import { CreateChannelArgs } from './create-channel.args';
 
 @ArgsType()
-export class UpdateChannelInput extends PartialType(
-  PickType(CreateChannelInput, ['name']),
+export class UpdateChannelArgs extends PartialType(
+  PickType(CreateChannelArgs, ['name'] as const),
 ) {
   @Field(() => Int)
   @IsInt()

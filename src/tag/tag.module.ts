@@ -11,6 +11,6 @@ import { TagService } from './tag.service';
     }),
   ],
   providers: [TagResolver, TagService],
-  exports: [TagResolver, TagService],
+  exports: [TagService],
 })
 export class TagModule {}

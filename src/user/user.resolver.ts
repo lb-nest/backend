@@ -1,41 +1,39 @@
-import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
-import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
-import { User } from 'src/auth/user.decorator';
 import { Project } from 'src/project/entities/project.entity';
-import { UpdateUserInput } from './dto/update-user.input';
-import { User as UserEntity } from './entities/user.entity';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { UpdateUserArgs } from './dto/update-user.args';
+import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 
-@Resolver(() => UserEntity)
+@Resolver(() => User)
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(BearerAuthGuard)
-  @Query(() => UserEntity)
-  user(@User() user: any): Observable<UserEntity> {
-    return this.userService.findMe(user);
+  @Query(() => User)
+  user(@GqlHeaders('authorization') authorization: string): Observable<User> {
+    return this.userService.findMe(authorization);
   }
 
-  @UseGuards(BearerAuthGuard)
-  @Query(() => [Project])
-  userProjects(@User() user: any): Observable<Project[]> {
-    return this.userService.findAllProjects(user);
-  }
-
-  @UseGuards(BearerAuthGuard)
-  @Mutation(() => UserEntity)
+  @Mutation(() => User)
   updateUser(
-    @User() user: any,
-    @Args() input: UpdateUserInput,
-  ): Observable<UserEntity> {
-    return this.userService.update(user, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateUserArgs: UpdateUserArgs,
+  ): Observable<User> {
+    return this.userService.update(authorization, updateUserArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
-  @Mutation(() => UserEntity)
-  removeUser(@User() user: any): Observable<UserEntity> {
-    return this.userService.remove(user);
+  @Mutation(() => User)
+  removeUser(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<User> {
+    return this.userService.remove(authorization);
+  }
+
+  @Query(() => [Project])
+  userProjects(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<Project[]> {
+    return this.userService.findAllProjects(authorization);
   }
 }

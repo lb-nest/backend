@@ -1,17 +1,15 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsUrl } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 @ArgsType()
-export class UpdateUserInput {
+export class UpdateUserArgs {
   @Field(() => String, { nullable: true })
   @IsOptional()
-  @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
+  @IsString()
   name?: string;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
-  @IsUrl()
+  @IsString()
   avatarUrl?: string;
 }

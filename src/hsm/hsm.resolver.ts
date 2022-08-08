@@ -1,9 +1,8 @@
-import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
-import { User } from 'src/auth/user.decorator';
-import { CreateHsmInput } from './dto/create-hsm.input';
-import { UpdateHsmInput } from './dto/update-hsm.input';
+import { Observable } from 'rxjs';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { CreateHsmArgs } from './dto/create-hsm.args';
+import { UpdateHsmArgs } from './dto/update-hsm.args';
 import { Hsm } from './entities/hsm.entity';
 import { HsmService } from './hsm.service';
 
@@ -11,39 +10,40 @@ import { HsmService } from './hsm.service';
 export class HsmResolver {
   constructor(private readonly hsmService: HsmService) {}
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Hsm)
-  createHsm(@User() user: any, @Args() input: CreateHsmInput): Promise<Hsm> {
-    return this.hsmService.create(user, input);
+  createHsm(
+    @GqlHeaders('authorization') authorization: string,
+    @Args() createHsmArgs: CreateHsmArgs,
+  ): Observable<Hsm> {
+    return this.hsmService.create(authorization, createHsmArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Query(() => [Hsm])
-  hsm(@User() user: any): Promise<Hsm[]> {
-    return this.hsmService.findAll(user);
+  hsm(@GqlHeaders('authorization') authorization: string): Observable<Hsm[]> {
+    return this.hsmService.findAll(authorization);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Query(() => Hsm)
   hsmById(
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Hsm> {
-    return this.hsmService.findOne(user, id);
+  ): Observable<Hsm> {
+    return this.hsmService.findOne(authorization, id);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Hsm)
-  updateHsm(@User() user: any, @Args() input: UpdateHsmInput): Promise<Hsm> {
-    return this.hsmService.update(user, input);
+  updateHsm(
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateHsmArgs: UpdateHsmArgs,
+  ): Observable<Hsm> {
+    return this.hsmService.update(authorization, updateHsmArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Hsm)
   removeHsm(
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Hsm> {
-    return this.hsmService.remove(user, id);
+  ): Observable<Hsm> {
+    return this.hsmService.remove(authorization, id);
   }
 }

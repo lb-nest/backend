@@ -1,10 +1,10 @@
 import { ArgsType, Field, Int, OmitType, PartialType } from '@nestjs/graphql';
 import { IsInt } from 'class-validator';
-import { CreateHsmInput } from './create-hsm.input';
+import { CreateHsmArgs } from './create-hsm.args';
 
 @ArgsType()
-export class UpdateHsmInput extends PartialType(
-  OmitType(CreateHsmInput, ['code']),
+export class UpdateHsmArgs extends PartialType(
+  OmitType(CreateHsmArgs, ['code'] as const),
 ) {
   @Field(() => Int)
   @IsInt()

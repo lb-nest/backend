@@ -1,16 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 import GraphQLJSON from 'graphql-type-json';
-import { Channel } from 'src/channel/entities/channel.entity';
-import { ApprovalStatus } from '../enums/approval-status.enum';
-
-@ObjectType()
-class Approval {
-  @Field(() => Channel)
-  channel: Channel;
-
-  @Field(() => ApprovalStatus)
-  status: ApprovalStatus;
-}
+import { Approval } from './approval.entity';
 
 @ObjectType()
 export class Hsm {
@@ -24,7 +14,10 @@ export class Hsm {
   text: string;
 
   @Field(() => [GraphQLJSON], { nullable: true })
-  buttons?: any[];
+  attachments: any[] | null;
+
+  @Field(() => [GraphQLJSON], { nullable: true })
+  buttons: any[] | null;
 
   @Field(() => [Approval])
   approval: Approval[];

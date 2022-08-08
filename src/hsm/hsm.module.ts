@@ -11,6 +11,6 @@ import { HsmService } from './hsm.service';
     }),
   ],
   providers: [HsmResolver, HsmService],
-  exports: [HsmResolver, HsmService],
+  exports: [HsmService],
 })
 export class HsmModule {}

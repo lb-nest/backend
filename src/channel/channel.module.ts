@@ -11,6 +11,6 @@ import { ChannelService } from './channel.service';
     }),
   ],
   providers: [ChannelResolver, ChannelService],
-  exports: [ChannelResolver, ChannelService],
+  exports: [ChannelService],
 })
 export class ChannelModule {}

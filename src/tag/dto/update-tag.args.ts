@@ -1,9 +1,9 @@
 import { ArgsType, Field, Int, PartialType } from '@nestjs/graphql';
 import { IsInt } from 'class-validator';
-import { CreateTagInput } from './create-tag.input';
+import { CreateTagArgs } from './create-tag.args';
 
 @ArgsType()
-export class UpdateTagInput extends PartialType(CreateTagInput) {
+export class UpdateTagArgs extends PartialType(CreateTagArgs) {
   @Field(() => Int)
   @IsInt()
   id: number;
