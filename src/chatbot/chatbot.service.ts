@@ -1,12 +1,13 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
 import { EventEmitter } from 'events';
 import { JwtPayload, verify } from 'jsonwebtoken';
-import { lastValueFrom } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Socket } from 'socket.io';
-import { CreateChatbotInput } from './dto/create-chatbot.input';
-import { UpdateChatbotInput } from './dto/update-chatbot.input';
+import { CHATBOTS_SERVICE } from 'src/shared/rabbitmq/constants';
+import { CreateChatbotArgs } from './dto/create-chatbot.args';
+import { UpdateChatbotArgs } from './dto/update-chatbot.args';
 import { Chatbot } from './entities/chatbot.entity';
 import { ChatbotEventType } from './enums/chatbot-event-type.enum';
 
@@ -16,89 +17,73 @@ export class ChatbotService {
   private readonly sockets = new WeakMap<Socket, [string, Socket['emit']]>();
 
   constructor(
+    @Inject(CHATBOTS_SERVICE) private readonly client: ClientProxy,
     private readonly configService: ConfigService,
-    @Inject('CHATBOTS') private readonly client: ClientProxy,
   ) {
     this.emitter.setMaxListeners(Infinity);
   }
 
-  async create(user: any, input: CreateChatbotInput): Promise<Chatbot> {
-    try {
-      return await lastValueFrom(
-        this.client.send<Chatbot>('chatbots.create', {
-          user,
-          data: input,
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  create(
+    authorization: string,
+    createChatbotArgs: CreateChatbotArgs,
+  ): Observable<Chatbot> {
+    return this.client.send<Chatbot>('chatbots.create', {
+      headers: {
+        authorization,
+      },
+      payload: createChatbotArgs,
+    });
   }
 
-  async findAll(user: any): Promise<Chatbot[]> {
-    try {
-      return await lastValueFrom(
-        this.client.send<Chatbot[]>('chatbots.findAll', {
-          user,
-          data: {},
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  findAll(authorization: string): Observable<Chatbot[]> {
+    return this.client.send<Chatbot[]>('chatbots.findAll', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
   }
 
-  async findOne(user: any, id: number): Promise<Chatbot> {
-    try {
-      return await lastValueFrom(
-        this.client.send<Chatbot>('chatbots.findOne', {
-          user,
-          data: id,
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+  findOne(authorization: string, id: number): Observable<Chatbot> {
+    return this.client.send<Chatbot>('chatbots.findOne', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 
-  async update(user: any, input: UpdateChatbotInput): Promise<Chatbot> {
-    try {
-      return await lastValueFrom(
-        this.client.send<Chatbot>('chatbots.update', {
-          user,
-          data: input,
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  update(
+    authorization: string,
+    updateChatbotArgs: UpdateChatbotArgs,
+  ): Observable<Chatbot> {
+    return this.client.send<Chatbot>('chatbots.update', {
+      headers: {
+        authorization,
+      },
+      payload: updateChatbotArgs,
+    });
   }
 
-  async remove(user: any, id: number): Promise<Chatbot> {
-    try {
-      return await lastValueFrom(
-        this.client.send('chatbots.remove', {
-          user,
-          data: id,
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  remove(authorization: string, id: number): Observable<Chatbot> {
+    return this.client.send<Chatbot>('chatbots.remove', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 
   handleConnection(socket: Socket): void {
-    const { auth } = socket.handshake;
     try {
-      const token = <JwtPayload>(
-        verify(auth.token, this.configService.get<string>('SECRET'))
-      );
+      const token = verify(
+        socket.handshake.auth.token,
+        this.configService.get<string>('SECRET'),
+      ) as JwtPayload;
 
       this.sockets.set(socket, [token.project.id, socket.emit.bind(socket)]);
       this.emitter.on(...this.sockets.get(socket));
-    } catch (e) {
-      console.error(e);
-    }
+    } catch {}
   }
 
   handleDisconnect(socket: Socket): void {
@@ -107,7 +92,7 @@ export class ChatbotService {
   }
 
   emit(projectId: number, event: any): void {
-    this.emitter.emit(String(projectId), ChatbotEventType.NewEvent, event);
+    this.emitter.emit(projectId.toString(), ChatbotEventType.NewEvent, event);
   }
 
   handleSendMessage(socket: Socket, message: any): void {

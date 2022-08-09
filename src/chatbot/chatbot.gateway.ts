@@ -14,11 +14,11 @@ export class ChatbotGateway {
   constructor(private readonly chatbotService: ChatbotService) {}
 
   handleConnection(socket: Socket): void {
-    this.chatbotService.handleConnection(socket);
+    return this.chatbotService.handleConnection(socket);
   }
 
   handleDisconnect(socket: Socket): void {
-    this.chatbotService.handleDisconnect(socket);
+    return this.chatbotService.handleDisconnect(socket);
   }
 
   @SubscribeMessage(ChatbotEventType.SendMessage)
@@ -26,7 +26,7 @@ export class ChatbotGateway {
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
   ): void {
-    this.chatbotService.handleSendMessage(socket, message);
+    return this.chatbotService.handleSendMessage(socket, message);
   }
 
   @SubscribeMessage(ChatbotEventType.Callback)
@@ -34,7 +34,7 @@ export class ChatbotGateway {
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
   ): void {
-    this.chatbotService.handleSendMessage(socket, message);
+    return this.chatbotService.handleSendMessage(socket, message);
   }
 
   @SubscribeMessage(ChatbotEventType.Transfer)
@@ -42,7 +42,7 @@ export class ChatbotGateway {
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
   ): void {
-    this.chatbotService.handleSendMessage(socket, message);
+    return this.chatbotService.handleSendMessage(socket, message);
   }
 
   @SubscribeMessage(ChatbotEventType.AssignTag)
@@ -50,7 +50,7 @@ export class ChatbotGateway {
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
   ): void {
-    this.chatbotService.handleSendMessage(socket, message);
+    return this.chatbotService.handleSendMessage(socket, message);
   }
 
   @SubscribeMessage(ChatbotEventType.Close)
@@ -58,6 +58,6 @@ export class ChatbotGateway {
     @ConnectedSocket() socket: Socket,
     @MessageBody() message: any,
   ): void {
-    this.chatbotService.handleSendMessage(socket, message);
+    return this.chatbotService.handleSendMessage(socket, message);
   }
 }

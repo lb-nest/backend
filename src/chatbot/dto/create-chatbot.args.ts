@@ -1,22 +1,16 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import {
-  IsBoolean,
-  IsObject,
-  IsOptional,
-  IsSemVer,
-  IsString,
-} from 'class-validator';
+import { IsBoolean, IsObject, IsOptional, IsString } from 'class-validator';
 import { GraphQLJSON } from 'graphql-type-json';
 
 @ArgsType()
-export class CreateChatbotInput {
+export class CreateChatbotArgs {
   @Field(() => String)
   @IsString()
   name: string;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
-  @IsSemVer()
+  @IsString()
   version?: string;
 
   @Field(() => GraphQLJSON)

@@ -1,9 +1,9 @@
 import { ArgsType, Field, Int, PartialType } from '@nestjs/graphql';
 import { IsInt } from 'class-validator';
-import { CreateChatbotInput } from './create-chatbot.input';
+import { CreateChatbotArgs } from './create-chatbot.args';
 
 @ArgsType()
-export class UpdateChatbotInput extends PartialType(CreateChatbotInput) {
+export class UpdateChatbotArgs extends PartialType(CreateChatbotArgs) {
   @Field(() => Int)
   @IsInt()
   id: number;

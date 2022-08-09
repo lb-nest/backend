@@ -14,10 +14,10 @@ import { ChatbotEventListener } from './listeners/chatbot-event.listener';
   ],
   providers: [
     ChatbotResolver,
-    ChatbotService,
-    ChatbotGateway,
     ChatbotEventListener,
+    ChatbotGateway,
+    ChatbotService,
   ],
-  exports: [ChatbotResolver, ChatbotService],
+  exports: [ChatbotService],
 })
 export class ChatbotModule {}

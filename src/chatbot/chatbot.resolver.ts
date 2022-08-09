@@ -1,55 +1,52 @@
-import { UseGuards } from '@nestjs/common';
+import { Headers } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
-import { User } from 'src/auth/user.decorator';
+import { Observable } from 'rxjs';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
 import { ChatbotService } from './chatbot.service';
-import { CreateChatbotInput } from './dto/create-chatbot.input';
-import { UpdateChatbotInput } from './dto/update-chatbot.input';
+import { CreateChatbotArgs } from './dto/create-chatbot.args';
+import { UpdateChatbotArgs } from './dto/update-chatbot.args';
 import { Chatbot } from './entities/chatbot.entity';
 
 @Resolver(() => Chatbot)
 export class ChatbotResolver {
   constructor(private readonly chatbotService: ChatbotService) {}
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   createChatbot(
-    @User() user: any,
-    @Args() createChatbotInput: CreateChatbotInput,
-  ): Promise<Chatbot> {
-    return this.chatbotService.create(user, createChatbotInput);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() createChatbotArgs: CreateChatbotArgs,
+  ): Observable<Chatbot> {
+    return this.chatbotService.create(authorization, createChatbotArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Query(() => [Chatbot])
-  chatbots(@User() user: any): Promise<Chatbot[]> {
-    return this.chatbotService.findAll(user);
+  chatbots(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<Chatbot[]> {
+    return this.chatbotService.findAll(authorization);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Query(() => Chatbot)
   chatbotById(
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Chatbot> {
-    return this.chatbotService.findOne(user, id);
+  ): Observable<Chatbot> {
+    return this.chatbotService.findOne(authorization, id);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   updateChatbot(
-    @User() user: any,
-    @Args() input: UpdateChatbotInput,
-  ): Promise<Chatbot> {
-    return this.chatbotService.update(user, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateChatbotArgs: UpdateChatbotArgs,
+  ): Observable<Chatbot> {
+    return this.chatbotService.update(authorization, updateChatbotArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   removeChatbot(
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Chatbot> {
-    return this.chatbotService.remove(user, id);
+  ): Observable<Chatbot> {
+    return this.chatbotService.remove(authorization, id);
   }
 }
