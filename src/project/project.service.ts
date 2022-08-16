@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, Observable } from 'rxjs';
 import { Token } from 'src/auth/entities/token.entity';
-import { AUTH_SERVICE } from 'src/shared/rabbitmq/constants';
+import { AUTH_SERVICE } from 'src/shared/constants/broker';
 import { User } from 'src/user/entities/user.entity';
 import { CreateProjectArgs } from './dto/create-project.args';
 import { InviteUserArgs } from './dto/invite-user.args';

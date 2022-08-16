@@ -1,8 +1,9 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Context } from 'apollo-server-core';
 import Joi from 'joi';
 import mapObject from 'map-obj';
@@ -14,7 +15,14 @@ import { ContactModule } from './contact/contact.module';
 import { FileModule } from './file/file.module';
 import { HsmModule } from './hsm/hsm.module';
 import { MessageModule } from './message/message.module';
+import { PrismaService } from './prisma.service';
 import { ProjectModule } from './project/project.module';
+import {
+  AUTH_SERVICE,
+  CHATBOTS_SERVICE,
+  CONTACTS_SERVICE,
+  MESSAGING_SERVICE,
+} from './shared/constants/broker';
 import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
 import { WebhookModule } from './webhook/webhook.module';
@@ -69,6 +77,52 @@ import { WebhookModule } from './webhook/webhook.module';
     EventEmitterModule.forRoot({
       maxListeners: Infinity,
     }),
+    ClientsModule.registerAsync([
+      {
+        name: AUTH_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${AUTH_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: CHATBOTS_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${CHATBOTS_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: CONTACTS_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${CONTACTS_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: MESSAGING_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${MESSAGING_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
     AuthModule,
     ChannelModule,
     ChatModule,
@@ -82,20 +136,7 @@ import { WebhookModule } from './webhook/webhook.module';
     UserModule,
     WebhookModule,
   ],
-  providers: [],
-  exports: [
-    AuthModule,
-    ChannelModule,
-    ChatModule,
-    ChatbotModule,
-    ContactModule,
-    FileModule,
-    HsmModule,
-    MessageModule,
-    ProjectModule,
-    TagModule,
-    UserModule,
-    WebhookModule,
-  ],
+  providers: [PrismaService],
+  exports: [ClientsModule, ContactModule, ProjectModule],
 })
 export class AppModule {}

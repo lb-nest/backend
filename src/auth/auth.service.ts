@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { concat, Observable } from 'rxjs';
-import { AUTH_SERVICE } from 'src/shared/rabbitmq/constants';
+import { AUTH_SERVICE } from 'src/shared/constants/broker';
 import { SigninArgs } from './dto/signin.args';
 import { SignupArgs } from './dto/signup.args';
 import { Token } from './entities/token.entity';

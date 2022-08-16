@@ -1,4 +1,3 @@
-import { Headers } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
 import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';

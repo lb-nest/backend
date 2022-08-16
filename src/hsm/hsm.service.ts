@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
-import { MESSAGING_SERVICE } from 'src/shared/rabbitmq/constants';
+import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
 import { CreateHsmArgs } from './dto/create-hsm.args';
 import { UpdateHsmArgs } from './dto/update-hsm.args';
 import { Hsm } from './entities/hsm.entity';

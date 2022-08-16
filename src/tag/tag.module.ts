@@ -1,16 +1,10 @@
-import { Module } from '@nestjs/common';
-import { CONTACTS_SERVICE } from 'src/shared/rabbitmq/constants';
-import { RabbitMQModule } from 'src/shared/rabbitmq/rabbitmq.module';
+import { forwardRef, Module } from '@nestjs/common';
+import { AppModule } from 'src/app.module';
 import { TagResolver } from './tag.resolver';
 import { TagService } from './tag.service';
 
 @Module({
-  imports: [
-    RabbitMQModule.register({
-      name: CONTACTS_SERVICE,
-    }),
-  ],
+  imports: [forwardRef(() => AppModule)],
   providers: [TagResolver, TagService],
-  exports: [TagService],
 })
 export class TagModule {}

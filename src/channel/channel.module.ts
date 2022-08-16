@@ -1,16 +1,10 @@
-import { Module } from '@nestjs/common';
-import { MESSAGING_SERVICE } from 'src/shared/rabbitmq/constants';
-import { RabbitMQModule } from 'src/shared/rabbitmq/rabbitmq.module';
+import { forwardRef, Module } from '@nestjs/common';
+import { AppModule } from 'src/app.module';
 import { ChannelResolver } from './channel.resolver';
 import { ChannelService } from './channel.service';
 
 @Module({
-  imports: [
-    RabbitMQModule.register({
-      name: MESSAGING_SERVICE,
-    }),
-  ],
+  imports: [forwardRef(() => AppModule)],
   providers: [ChannelResolver, ChannelService],
-  exports: [ChannelService],
 })
 export class ChannelModule {}

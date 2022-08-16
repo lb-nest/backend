@@ -5,7 +5,7 @@ import { EventEmitter } from 'events';
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { Observable } from 'rxjs';
 import { Socket } from 'socket.io';
-import { CHATBOTS_SERVICE } from 'src/shared/rabbitmq/constants';
+import { CHATBOTS_SERVICE } from 'src/shared/constants/broker';
 import { CreateChatbotArgs } from './dto/create-chatbot.args';
 import { UpdateChatbotArgs } from './dto/update-chatbot.args';
 import { Chatbot } from './entities/chatbot.entity';

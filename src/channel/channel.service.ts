@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
-import { MESSAGING_SERVICE } from 'src/shared/rabbitmq/constants';
+import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
 import { CreateChannelArgs } from './dto/create-channel.args';
 import { UpdateChannelArgs } from './dto/update-channel.args';
 import { Channel } from './entities/channel.entity';

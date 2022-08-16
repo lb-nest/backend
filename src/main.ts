@@ -1,10 +1,12 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { graphqlUploadExpress } from 'graphql-upload';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma.service';
+import { BACKEND } from './shared/constants/broker';
 import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 
 async function bootstrap() {
@@ -30,6 +32,20 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
+  app.connectMicroservice<MicroserviceOptions>(
+    {
+      transport: Transport.RMQ,
+      options: {
+        urls: [configService.get<string>('BROKER_URL')],
+        queue: `${BACKEND}_QUEUE`,
+      },
+    },
+    {
+      inheritAppConfig: true,
+    },
+  );
+
+  await app.startAllMicroservices();
   await app.listen(configService.get<number>('PORT'), '0.0.0.0');
 }
 bootstrap();

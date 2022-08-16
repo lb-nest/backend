@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
-import { CONTACTS_SERVICE } from 'src/shared/rabbitmq/constants';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
 import { CreateTagArgs } from './dto/create-tag.args';
 import { UpdateTagArgs } from './dto/update-tag.args';
 import { Tag } from './entities/tag.entity';

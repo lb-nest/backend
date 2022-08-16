@@ -3,7 +3,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-http-bearer';
 import { lastValueFrom } from 'rxjs';
-import { AUTH_SERVICE } from 'src/shared/rabbitmq/constants';
+import { AUTH_SERVICE } from 'src/shared/constants/broker';
 import { TokenPayload } from './entities/token-payload.entity';
 
 @Injectable()
