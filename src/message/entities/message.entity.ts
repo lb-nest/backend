@@ -1,36 +1,7 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import GraphQLJSON from 'graphql-type-json';
 import { MessageStatus } from '../enums/message-status.enum';
-
-@ObjectType()
-class ChatId {
-  @Field(() => Int)
-  id: number;
-}
-
-@ObjectType()
-class Attachment {
-  @Field(() => String)
-  type: string;
-
-  @Field(() => String)
-  url: string;
-
-  @Field(() => String, { nullable: true })
-  name?: string;
-}
-
-@ObjectType()
-class Content {
-  @Field(() => String, { nullable: true })
-  text?: string;
-
-  @Field(() => [Attachment])
-  attachments: Attachment[];
-
-  @Field(() => [GraphQLJSON], { nullable: true })
-  buttons: any[];
-}
+import { ChatId } from '../../chat/entities/chat-id.entity';
+import { Content } from './content.entity';
 
 @ObjectType()
 export class Message {

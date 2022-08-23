@@ -1,5 +1,5 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { Module } from '@nestjs/common';
+import { CacheModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -42,6 +42,9 @@ import { WebhookModule } from './webhook/webhook.module';
         S3_SECRET_KEY: Joi.string().required(),
         S3_BUCKET: Joi.string().required(),
       }),
+    }),
+    CacheModule.register({
+      isGlobal: true,
     }),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -137,6 +140,12 @@ import { WebhookModule } from './webhook/webhook.module';
     WebhookModule,
   ],
   providers: [PrismaService],
-  exports: [ClientsModule, ContactModule, ProjectModule],
+  exports: [
+    ClientsModule,
+    ChannelModule,
+    ChatModule,
+    ContactModule,
+    ProjectModule,
+  ],
 })
 export class AppModule {}

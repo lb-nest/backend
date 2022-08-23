@@ -1,47 +1,38 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { Observable } from 'rxjs';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
 import { History } from './entities/history.entity';
 import { HistoryEventType } from './enums/history-event-type.enum';
 
 @Injectable()
 export class ContactHistoryService {
-  constructor(@Inject('CONTACTS') private readonly client: ClientProxy) {}
+  constructor(@Inject(CONTACTS_SERVICE) private readonly client: ClientProxy) {}
 
-  async create(
-    user: any,
+  create(
+    authorization: string,
     contactId: number,
     eventType: HistoryEventType,
     payload?: any,
-  ): Promise<History> {
-    try {
-      return await lastValueFrom(
-        this.client.send('contacts.history.create', {
-          user,
-          data: {
-            contactId,
-            eventType,
-            payload,
-          },
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  ): Observable<History> {
+    return this.client.send<History>('contacts.createHistory', {
+      headers: {
+        authorization,
+      },
+      payload: {
+        contactId,
+        eventType,
+        payload,
+      },
+    });
   }
 
-  async findAll(user: any, contactId: number): Promise<History[]> {
-    try {
-      return await lastValueFrom(
-        this.client.send<any[]>('contacts.history.findAll', {
-          user,
-          data: {
-            contactId,
-          },
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  findAll(authorization: string, contactId: number): Observable<History[]> {
+    return this.client.send<History[]>('contacts.findAllHistory', {
+      headers: {
+        authorization,
+      },
+      payload: contactId,
+    });
   }
 }

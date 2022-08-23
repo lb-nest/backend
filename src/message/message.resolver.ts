@@ -1,6 +1,5 @@
 import {
   ForbiddenException,
-  Inject,
   NotFoundException,
   UseGuards,
 } from '@nestjs/common';
@@ -12,97 +11,91 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
-import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
-import { pubSub } from 'src/app.service';
+import { Auth } from 'src/auth/auth.decorator';
 import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
-import { RoleType } from 'src/auth/enums/role-type.enum';
-import { User } from 'src/auth/user.decorator';
-import { CreateMessageInput } from './dto/create-message.input';
-import { ReadMessagesInput } from './dto/read-messages.input';
-import { RemoveMessageInput } from './dto/remove-message.input';
-import { UpdateMessageInput } from './dto/update-message.input';
+import { TokenPayload } from 'src/auth/entities/token-payload.entity';
+import { ContactService } from 'src/contact/contact.service';
+import { RoleType } from 'src/project/enums/role-type.enum';
+import { pubSub } from 'src/pubsub';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { CreateMessageArgs } from './dto/create-message.args';
+import { ReadMessagesArgs } from './dto/read-messages.args';
+import { UpdateMessageArgs } from './dto/update-message.args';
 import { Message } from './entities/message.entity';
 import { MessageService } from './message.service';
 
 @Resolver(() => Message)
 export class MessageResolver {
   constructor(
-    @Inject('CONTACTS') private readonly client: ClientProxy,
     private readonly messageService: MessageService,
+    private readonly contactService: ContactService,
   ) {}
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => [Message])
   createMessage(
-    @User() user: any,
-    @Args() input: CreateMessageInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() createMessageArgs: CreateMessageArgs,
   ): Promise<Message[]> {
-    return this.messageService.create(user, input);
+    return this.messageService.create(authorization, createMessageArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Query(() => [Message])
   messages(
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
     @Args('chatId', { type: () => Int }) chatId: number,
   ): Promise<Message[]> {
-    return this.messageService.findAll(user, chatId);
+    return this.messageService.findAll(authorization, chatId);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Message)
   updateMessage(
-    @User() user: any,
-    @Args() input: UpdateMessageInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateMessageArgs: UpdateMessageArgs,
   ): Promise<Message> {
-    return this.messageService.update(user, input);
+    return this.messageService.update(authorization, updateMessageArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Message)
   removeMessage(
-    @User() user: any,
-    @Args() input: RemoveMessageInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args('id', { type: () => Int }) id: number,
   ): Promise<Message> {
-    return this.messageService.remove(user, input);
+    return this.messageService.remove(authorization, id);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   markMessagesAsRead(
-    @User() user: any,
-    @Args() input: ReadMessagesInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() readMessagesArgs: ReadMessagesArgs,
   ): Promise<boolean> {
-    return this.messageService.markAsRead(user, input);
+    return this.messageService.markAsRead(authorization, readMessagesArgs);
   }
 
   @UseGuards(BearerAuthGuard)
   @Subscription(() => Message)
   async messagesReceived(
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
+    @Auth() auth: Required<TokenPayload>,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
-    const [contact] = await lastValueFrom(
-      this.client.send('contacts.forChat', {
-        user,
-        data: [chatId],
-      }),
+    const [contact] = await this.contactService.findAllForChat(
+      authorization,
+      chatId,
     );
 
     if (!contact) {
       throw new NotFoundException();
     }
 
-    const isAdmin = user.project.roles.some(({ role }) =>
+    const isAdmin = auth.project.roles.some(({ role }) =>
       [RoleType.Admin, RoleType.Owner].includes(role),
     );
 
-    if (!isAdmin && contact.assignedTo !== user.id) {
+    if (!isAdmin && contact.assignedTo?.id !== auth.id) {
       throw new ForbiddenException();
     }
 
-    const projectId = user.project.id;
+    const projectId = auth.project.id;
     return pubSub.asyncIterator(`messagesReceived:${projectId}:${chatId}`);
   }
 }

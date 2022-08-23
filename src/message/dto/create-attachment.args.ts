@@ -1,7 +1,8 @@
-import { Field, InputType } from '@nestjs/graphql';
-import { IsEnum, IsOptional, IsString, IsUrl } from 'class-validator';
+import { ArgsType, Field, InputType } from '@nestjs/graphql';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { AttachmentType } from '../enums/attachment-type.enum';
 
+@ArgsType()
 @InputType()
 export class CreateAttachmentInput {
   @Field(() => AttachmentType)
@@ -9,7 +10,7 @@ export class CreateAttachmentInput {
   type: AttachmentType;
 
   @Field(() => String)
-  @IsUrl()
+  @IsString()
   url: string;
 
   @Field(() => String, { nullable: true })

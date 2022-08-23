@@ -1,9 +1,13 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
+import { decode } from 'jsonwebtoken';
 import { lastValueFrom } from 'rxjs';
+import { TokenPayload } from 'src/auth/entities/token-payload.entity';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
 import { ContactHistoryService } from './contact-history.service';
-import { TransferContactInput } from './dto/transfer-contact.input';
+import { TransferContactArgs } from './dto/transfer-contact.args';
+import { AssigneeType } from './enums/assignee-type.enum';
 import { ContactEventType } from './enums/contact-event-type.enum';
 import { ContactStatus } from './enums/contact-status.enum';
 import { HistoryEventType } from './enums/history-event-type.enum';
@@ -11,147 +15,163 @@ import { HistoryEventType } from './enums/history-event-type.enum';
 @Injectable()
 export class ContactFlowService {
   constructor(
-    @Inject('CONTACTS') private readonly client: ClientProxy,
+    @Inject(CONTACTS_SERVICE) private readonly client: ClientProxy,
     private readonly eventEmitter: EventEmitter2,
     private readonly contactHistoryService: ContactHistoryService,
   ) {}
 
-  async acceptContact(user: any, id: number): Promise<boolean> {
-    try {
-      const contact = await lastValueFrom(
-        this.client.send('contacts.update', {
-          user,
-          data: {
-            id,
-            assignedTo: user.id,
-          },
-        }),
-      );
-
-      await this.contactHistoryService.create(
-        user,
-        id,
-        HistoryEventType.Accepted,
-        {
-          assignedTo: user.id,
+  async accept(authorization: string, id: number): Promise<boolean> {
+    const user = <Required<TokenPayload>>decode(authorization.slice(7));
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
         },
-      );
-
-      this.eventEmitter.emit(ContactEventType.Update, user, contact);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
-  }
-
-  async closeContact(user: any, id: number): Promise<boolean> {
-    try {
-      const contact = await lastValueFrom(
-        this.client.send('contacts.update', {
-          user,
-          data: {
-            id,
-            assignedTo: null,
-            status: ContactStatus.Closed,
+        payload: {
+          id,
+          assignedTo: {
+            id: user.id,
           },
-        }),
-      );
+        },
+      }),
+    );
 
-      await this.contactHistoryService.create(
-        user,
+    await lastValueFrom(
+      this.contactHistoryService.create(
+        authorization,
         id,
-        HistoryEventType.Closed,
-        {},
-      );
+        HistoryEventType.Assign,
+        {
+          assignedTo: {
+            id: user.id,
+          },
+        },
+      ),
+    );
 
-      this.eventEmitter.emit(ContactEventType.Update, user, contact);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
   }
 
-  async transferContact(
-    user: any,
-    input: TransferContactInput,
+  async close(authorization: string, id: number): Promise<boolean> {
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
+        },
+        payload: {
+          id,
+          assignedTo: null,
+          status: ContactStatus.Closed,
+        },
+      }),
+    );
+
+    await lastValueFrom(
+      this.contactHistoryService.create(
+        authorization,
+        id,
+        HistoryEventType.Close,
+        {},
+      ),
+    );
+
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
+  }
+
+  async transfer(
+    authorization: string,
+    transferContactArgs: TransferContactArgs,
   ): Promise<boolean> {
-    try {
-      const contact = await lastValueFrom(
-        this.client.send('contacts.update', {
-          user,
-          data: input,
-        }),
-      );
-
-      await this.contactHistoryService.create(
-        user,
-        input.id,
-        HistoryEventType.Transferred,
-        {
-          assignedTo: input.assignedTo,
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
         },
-      );
+        payload: {
+          id: transferContactArgs.id,
+          assignedTo: {
+            id: transferContactArgs.assignedTo,
+            type: transferContactArgs.type,
+          },
+        },
+      }),
+    );
 
-      this.eventEmitter.emit(ContactEventType.Update, user, contact);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+    await lastValueFrom(
+      this.contactHistoryService.create(
+        authorization,
+        transferContactArgs.id,
+        HistoryEventType.Assign,
+        {
+          assignedTo: transferContactArgs.assignedTo,
+        },
+      ),
+    );
+
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
   }
 
-  async returnContact(user: any, id: number): Promise<boolean> {
-    try {
-      const contact = await lastValueFrom(
-        this.client.send('contacts.update', {
-          user,
-          data: {
-            id,
-            assignedTo: null,
-            status: ContactStatus.Open,
-          },
-        }),
-      );
+  async return(authorization: string, id: number): Promise<boolean> {
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
+        },
+        payload: {
+          id,
+          assignedTo: null,
+          status: ContactStatus.Open,
+        },
+      }),
+    );
 
-      await this.contactHistoryService.create(
-        user,
+    await lastValueFrom(
+      this.contactHistoryService.create(
+        authorization,
         id,
-        HistoryEventType.Returned,
+        HistoryEventType.BackToQueue,
         {},
-      );
+      ),
+    );
 
-      this.eventEmitter.emit(ContactEventType.Update, user, contact);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
   }
 
-  async reopenContact(user: any, id: number): Promise<boolean> {
-    try {
-      const contact = await lastValueFrom(
-        this.client.send('contacts.update', {
-          user,
-          data: {
-            id,
-            assignedTo: user.id,
-            status: ContactStatus.Open,
-          },
-        }),
-      );
+  async reopen(authorization: string, id: number): Promise<boolean> {
+    const user = <Required<TokenPayload>>decode(authorization.slice(7));
 
-      await this.contactHistoryService.create(
-        user,
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
+        },
+        payload: {
+          id,
+          assignedTo: {
+            id: user.id,
+            // TODO: type
+          },
+          status: ContactStatus.Open,
+        },
+      }),
+    );
+
+    await lastValueFrom(
+      this.contactHistoryService.create(
+        authorization,
         id,
-        HistoryEventType.Reopened,
+        HistoryEventType.Assign,
         {
           assignedTo: user.id,
         },
-      );
+      ),
+    );
 
-      this.eventEmitter.emit(ContactEventType.Update, user, contact);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
   }
 }

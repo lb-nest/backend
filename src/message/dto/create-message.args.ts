@@ -2,23 +2,23 @@ import { ArgsType, Field, Int } from '@nestjs/graphql';
 import { Type } from 'class-transformer';
 import {
   IsInt,
-  IsNotEmpty,
   IsObject,
   IsOptional,
+  IsString,
   ValidateNested,
 } from 'class-validator';
 import GraphQLJSON from 'graphql-type-json';
-import { CreateAttachmentInput } from './create-attachment.input';
+import { CreateAttachmentInput } from './create-attachment.args';
 
 @ArgsType()
-export class CreateMessageInput {
+export class CreateMessageArgs {
   @Field(() => Int)
   @IsInt()
   chatId: number;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
-  @IsNotEmpty()
+  @IsString()
   text?: string;
 
   @Field(() => [CreateAttachmentInput], { nullable: true })

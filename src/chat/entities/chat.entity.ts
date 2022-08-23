@@ -1,15 +1,10 @@
-import { Field, Int, ObjectType, OmitType } from '@nestjs/graphql';
+import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { Contact } from 'src/contact/entities/contact.entity';
-import { Message } from 'src/message/entities/message.entity';
+import { MessageWithoutChatId } from 'src/message/entities/message-without-chat-id.entity';
+import { ChatId } from './chat-id.entity';
 
 @ObjectType()
-class MessageWithoutChatId extends OmitType(Message, ['chat']) {}
-
-@ObjectType()
-export class Chat {
-  @Field(() => Int)
-  id: number;
-
+export class Chat extends ChatId {
   @Field(() => Contact)
   contact: Contact;
 

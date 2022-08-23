@@ -1,49 +1,48 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
-import { TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
+import { Observable } from 'rxjs';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
+import { TagWithoutParentAndChildren } from 'src/tag/entities/tag-without-parent-and-children.entity';
 
 @Injectable()
 export class ContactTagService {
-  constructor(@Inject('CONTACTS') private readonly client: ClientProxy) {}
+  constructor(@Inject(CONTACTS_SERVICE) private readonly client: ClientProxy) {}
 
-  async create(
-    user: any,
+  create(
+    authorization: string,
     contactId: number,
     tagId: number,
-  ): Promise<TagWithoutParentAndChildren> {
-    try {
-      return await lastValueFrom(
-        this.client.send('contacts.tags.create', {
-          user,
-          data: {
-            contactId,
-            tagId,
-          },
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  ): Observable<TagWithoutParentAndChildren> {
+    return this.client.send<TagWithoutParentAndChildren>(
+      'contacts.tags.create',
+      {
+        headers: {
+          authorization,
+        },
+        payload: {
+          contactId,
+          tagId,
+        },
+      },
+    );
   }
 
-  async remove(
-    user: any,
+  remove(
+    authorization: string,
     contactId: number,
     tagId: number,
-  ): Promise<TagWithoutParentAndChildren> {
-    try {
-      return await lastValueFrom(
-        this.client.send('contacts.tags.remove', {
-          user,
-          data: {
-            contactId,
-            tagId,
-          },
-        }),
-      );
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  ): Observable<TagWithoutParentAndChildren> {
+    return this.client.send<TagWithoutParentAndChildren>(
+      'contacts.tags.remove',
+      {
+        headers: {
+          authorization,
+        },
+        payload: {
+          contactId,
+          tagId,
+        },
+      },
+    );
   }
 }
