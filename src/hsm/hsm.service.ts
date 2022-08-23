@@ -1,87 +1,59 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
-import { CreateHsmInput } from './dto/create-hsm.input';
-import { UpdateHsmInput } from './dto/update-hsm.input';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
+import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
+import { CreateHsmArgs } from './dto/create-hsm.args';
+import { UpdateHsmArgs } from './dto/update-hsm.args';
 import { Hsm } from './entities/hsm.entity';
 
 @Injectable()
 export class HsmService {
-  private readonly axios: AxiosInstance;
+  constructor(
+    @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
+  ) {}
 
-  constructor(configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
+  create(authorization: string, createHsmArgs: CreateHsmArgs): Observable<Hsm> {
+    return this.client.send<Hsm>('hsm.create', {
+      headers: {
+        authorization,
+      },
+      payload: createHsmArgs,
     });
   }
 
-  async create(authorization: string, input: CreateHsmInput): Promise<Hsm> {
-    try {
-      const res = await this.axios.post<Hsm>('/hsm', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  findAll(authorization: string): Observable<Hsm[]> {
+    return this.client.send<Hsm[]>('hsm.findAll', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
   }
 
-  async findAll(authorization: string): Promise<Hsm[]> {
-    try {
-      const res = await this.axios.get<Hsm[]>('/hsm', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  findOne(authorization: string, id: number): Observable<Hsm> {
+    return this.client.send<Hsm>('hsm.findOne', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 
-  async findOne(authorization: string, id: number): Promise<Hsm> {
-    try {
-      const res = await this.axios.get<Hsm>(`/hsm/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  update(authorization: string, updateHsmArgs: UpdateHsmArgs): Observable<Hsm> {
+    return this.client.send<Hsm>('hsm.update', {
+      headers: {
+        authorization,
+      },
+      payload: updateHsmArgs,
+    });
   }
 
-  async update(authorization: string, input: UpdateHsmInput): Promise<Hsm> {
-    try {
-      const res = await this.axios.patch<Hsm>(`/hsm/${input.id}`, input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async remove(authorization: string, id: number): Promise<Hsm> {
-    try {
-      const res = await this.axios.delete<Hsm>(`/hsm/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  remove(authorization: string, id: number): Observable<Hsm> {
+    return this.client.send<Hsm>('hsm.remove', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 }

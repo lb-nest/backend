@@ -8,7 +8,7 @@ export class ChatbotEventListener {
   constructor(private readonly chatbotService: ChatbotService) {}
 
   @OnEvent(ChatbotEventType.NewEvent)
-  handleNewEvent(event: any) {
-    this.chatbotService.sendNewEvent(event.projectId, event);
+  handleEvent(event: any): void {
+    return this.chatbotService.emit(event.projectId, event);
   }
 }

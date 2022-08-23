@@ -1,7 +1,11 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Observable } from 'rxjs';
 import { Auth } from 'src/auth/auth.decorator';
-import { CreateWebhookInput } from './dto/create-webhook.input';
-import { UpdateWebhookInput } from './dto/update-webhook.input';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
+import { TokenPayload } from 'src/auth/entities/token-payload.entity';
+import { CreateWebhookArgs } from './dto/create-webhook.args';
+import { UpdateWebhookArgs } from './dto/update-webhook.args';
 import { Webhook } from './entities/webhook.entity';
 import { WebhookService } from './webhook.service';
 
@@ -9,40 +13,45 @@ import { WebhookService } from './webhook.service';
 export class WebhookResolver {
   constructor(private readonly webhookService: WebhookService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Webhook)
   createWebhook(
-    @Auth() authorization: string,
-    @Args() input: CreateWebhookInput,
-  ): Promise<Webhook> {
-    return this.webhookService.create(authorization, input);
+    @Auth() auth: Required<TokenPayload>,
+    @Args() createWebhookArgs: CreateWebhookArgs,
+  ): Observable<Webhook> {
+    return this.webhookService.create(auth.project.id, createWebhookArgs);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Webhook])
-  webhooks(@Auth() authorization: string): Promise<Webhook[]> {
-    return this.webhookService.findAll(authorization);
+  webhooks(@Auth() auth: Required<TokenPayload>): Observable<Webhook[]> {
+    return this.webhookService.findAll(auth.project.id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Webhook)
   webhookById(
-    @Auth() authorization: string,
+    @Auth() auth: Required<TokenPayload>,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Webhook> {
-    return this.webhookService.findOne(authorization, id);
+  ): Observable<Webhook> {
+    return this.webhookService.findOne(auth.project.id, id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Webhook)
   updateWebhook(
-    @Auth() authorization: string,
-    @Args() input: UpdateWebhookInput,
-  ): Promise<Webhook> {
-    return this.webhookService.update(authorization, input);
+    @Auth() auth: Required<TokenPayload>,
+    @Args() updateWebhookArgs: UpdateWebhookArgs,
+  ): Observable<Webhook> {
+    return this.webhookService.update(auth.project.id, updateWebhookArgs);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Webhook)
   removeWebhook(
-    @Auth() authorization: string,
+    @Auth() auth: Required<TokenPayload>,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Webhook> {
-    return this.webhookService.remove(authorization, id);
+  ): Observable<Webhook> {
+    return this.webhookService.remove(auth.project.id, id);
   }
 }

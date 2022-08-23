@@ -1,10 +1,13 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
+import { Observable } from 'rxjs';
+import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
 import { Token } from 'src/auth/entities/token.entity';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
 import { User } from 'src/user/entities/user.entity';
-import { CreateProjectInput } from './dto/create-project.input';
-import { InviteInput } from './dto/invite.input';
-import { UpdateProjectInput } from './dto/update-project.input';
+import { CreateProjectArgs } from './dto/create-project.args';
+import { InviteUserArgs } from './dto/invite-user.args';
+import { UpdateProjectArgs } from './dto/update-project.args';
 import { ProjectWithToken } from './entities/project-with-token.entity';
 import { Project } from './entities/project.entity';
 import { ProjectService } from './project.service';
@@ -15,48 +18,55 @@ export class ProjectResolver {
 
   @Mutation(() => ProjectWithToken)
   createProject(
-    @Auth() authorization: string,
-    @Args() input: CreateProjectInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() createProjectArgs: CreateProjectArgs,
   ): Promise<ProjectWithToken> {
-    return this.projectService.create(authorization, input);
+    return this.projectService.create(authorization, createProjectArgs);
   }
 
   @Mutation(() => Token)
   signInProject(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Token> {
+  ): Observable<Token> {
     return this.projectService.signIn(authorization, id);
   }
 
   @Query(() => Project)
-  project(@Auth() authorization: string): Promise<Project> {
-    return this.projectService.getMe(authorization);
+  project(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<Project> {
+    return this.projectService.findMe(authorization);
   }
 
   @Mutation(() => Project)
   updateProject(
-    @Auth() authorization: string,
-    @Args() input: UpdateProjectInput,
-  ): Promise<Project> {
-    return this.projectService.update(authorization, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateProjectArgs: UpdateProjectArgs,
+  ): Observable<Project> {
+    return this.projectService.updateMe(authorization, updateProjectArgs);
   }
 
   @Mutation(() => Project)
-  removeProject(@Auth() authorization: string): Promise<Project> {
-    return this.projectService.remove(authorization);
+  removeProject(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<Project> {
+    return this.projectService.removeMe(authorization);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
-  invite(
-    @Auth() authorization: string,
-    @Args() input: InviteInput,
-  ): Promise<boolean> {
-    return this.projectService.invite(authorization, input);
+  inviteUser(
+    @GqlHeaders('authorization') authorization: string,
+    @Args() inviteUserArgs: InviteUserArgs,
+  ): Observable<boolean> {
+    return this.projectService.inviteUser(authorization, inviteUserArgs);
   }
 
   @Query(() => [User])
-  projectUsers(@Auth() authorization: string): Promise<User[]> {
-    return this.projectService.getUsers(authorization);
+  projectUsers(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<User[]> {
+    return this.projectService.findAllUsers(authorization);
   }
 }

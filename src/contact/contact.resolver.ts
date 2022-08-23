@@ -1,20 +1,15 @@
-import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
-import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
-import { RoleType } from 'src/auth/enums/role-type.enum';
-import { Roles } from 'src/auth/roles.decorator';
-import { RolesGuard } from 'src/auth/roles.guard';
-import { User } from 'src/auth/user.decorator';
-import { TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
+import { FileUpload, GraphQLUpload } from 'graphql-upload';
+import { Observable } from 'rxjs';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { TagWithoutParentAndChildren } from 'src/tag/entities/tag-without-parent-and-children.entity';
 import { ContactFlowService } from './contact-flow.service';
 import { ContactHistoryService } from './contact-history.service';
 import { ContactTagService } from './contact-tag.service';
 import { ContactService } from './contact.service';
-import { CreateContactInput } from './dto/create-contact.input';
-import { ImportContactsInput } from './dto/import-contacts.input';
-import { TransferContactInput } from './dto/transfer-contact.input';
-import { UpdateContactInput } from './dto/update-contact.input';
+import { CreateContactArgs } from './dto/create-contact.args';
+import { TransferContactArgs } from './dto/transfer-contact.args';
+import { UpdateContactArgs } from './dto/update-contact.args';
 import { Contact } from './entities/contact.entity';
 import { History } from './entities/history.entity';
 
@@ -27,123 +22,116 @@ export class ContactResolver {
     private readonly contactTagService: ContactTagService,
   ) {}
 
-  @Mutation(() => [Contact])
+  @Mutation(() => Boolean)
+  importContacts(
+    @GqlHeaders('authorization') authorization: string,
+    @Args('csvOrXlsx', { type: () => GraphQLUpload }) csvOrXlsx: FileUpload,
+  ): Observable<boolean> {
+    return this.contactService.import(authorization, csvOrXlsx);
+  }
+
+  @Mutation(() => Contact)
   createContact(
-    @Auth() authorization: string,
-    @Args() input: CreateContactInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() createContactArgs: CreateContactArgs,
   ): Promise<Contact> {
-    return this.contactService.create(authorization, input);
+    return this.contactService.create(authorization, createContactArgs);
   }
 
   @Query(() => [Contact])
-  contacts(@Auth() authorization: string): Promise<Contact[]> {
+  contacts(
+    @GqlHeaders('authorization') authorization: string,
+  ): Promise<Contact[]> {
     return this.contactService.findAll(authorization);
   }
 
   @Query(() => Contact)
   contactById(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Contact> {
     return this.contactService.findOne(authorization, id);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Contact)
   updateContact(
-    @Auth() authorization: string,
-    @Args() input: UpdateContactInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateContactArgs: UpdateContactArgs,
   ): Promise<Contact> {
-    return this.contactService.update(authorization, input);
+    return this.contactService.update(authorization, updateContactArgs);
   }
 
   @Mutation(() => Contact)
   removeContact(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<Contact> {
     return this.contactService.remove(authorization, id);
   }
 
-  @Mutation(() => Boolean)
-  importContacts(
-    @Auth() authorization: string,
-    input: ImportContactsInput,
-  ): Promise<boolean> {
-    return this.contactService.import(authorization, input);
-  }
-
   @Mutation(() => TagWithoutParentAndChildren)
   createContactTag(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
     @Args('tagId', { type: () => Int }) tagId: number,
-  ): Promise<TagWithoutParentAndChildren> {
+  ): Observable<TagWithoutParentAndChildren> {
     return this.contactTagService.create(authorization, id, tagId);
   }
 
   @Mutation(() => TagWithoutParentAndChildren)
   removeContactTag(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
     @Args('tagId', { type: () => Int }) tagId: number,
-  ): Promise<TagWithoutParentAndChildren> {
+  ): Observable<TagWithoutParentAndChildren> {
     return this.contactTagService.remove(authorization, id, tagId);
   }
 
   @Query(() => [History])
   contactHistory(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<History[]> {
+  ): Observable<History[]> {
     return this.contactHistoryService.findAll(authorization, id);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   acceptContact(
-    @Auth() authorization: string,
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<boolean> {
-    return this.contactFlowService.acceptContact(authorization, id, user.id);
+    return this.contactFlowService.accept(authorization, id);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   closeContact(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<boolean> {
-    return this.contactFlowService.closeContact(authorization, id);
+    return this.contactFlowService.close(authorization, id);
   }
 
-  @Roles(RoleType.Owner, RoleType.Admin)
-  @UseGuards(BearerAuthGuard, RolesGuard)
   @Mutation(() => Boolean)
   transferContact(
-    @Auth() authorization: string,
-    @Args() input: TransferContactInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() transferContactArgs: TransferContactArgs,
   ): Promise<boolean> {
-    return this.contactFlowService.transferContact(authorization, input);
+    return this.contactFlowService.transfer(authorization, transferContactArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   returnContact(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<boolean> {
-    return this.contactFlowService.returnContact(authorization, id);
+    return this.contactFlowService.return(authorization, id);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => Boolean)
   reopenContact(
-    @Auth() authorization: string,
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
   ): Promise<boolean> {
-    return this.contactFlowService.reopenContact(authorization, id, user.id);
+    return this.contactFlowService.reopen(authorization, id);
   }
 }

@@ -1,10 +1,5 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { ObjectType } from '@nestjs/graphql';
+import { ContactsCount } from 'src/contact/entities/contacts-count.entity';
 
 @ObjectType()
-export class ChatsCount {
-  @Field(() => Int)
-  assigned: number;
-
-  @Field(() => Int)
-  unassigned: number;
-}
+export class ChatsCount extends ContactsCount {}

@@ -1,130 +1,98 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
+import { ClientProxy } from '@nestjs/microservices';
 import { EventEmitter } from 'events';
 import { JwtPayload, verify } from 'jsonwebtoken';
+import { Observable } from 'rxjs';
 import { Socket } from 'socket.io';
-import { CreateChatbotInput } from './dto/create-chatbot.input';
-import { UpdateChatbotInput } from './dto/update-chatbot.input';
+import { CHATBOTS_SERVICE } from 'src/shared/constants/broker';
+import { CreateChatbotArgs } from './dto/create-chatbot.args';
+import { UpdateChatbotArgs } from './dto/update-chatbot.args';
 import { Chatbot } from './entities/chatbot.entity';
 import { ChatbotEventType } from './enums/chatbot-event-type.enum';
 
 @Injectable()
 export class ChatbotService {
   private readonly emitter = new EventEmitter();
-  private readonly socket = new WeakMap<Socket, [string, Socket['emit']]>();
+  private readonly sockets = new WeakMap<Socket, [string, Socket['emit']]>();
 
-  private readonly axios: AxiosInstance;
-
-  constructor(private readonly configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('CHATBOTS_URL'),
-    });
-
+  constructor(
+    @Inject(CHATBOTS_SERVICE) private readonly client: ClientProxy,
+    private readonly configService: ConfigService,
+  ) {
     this.emitter.setMaxListeners(Infinity);
   }
 
-  async create(
+  create(
     authorization: string,
-    input: CreateChatbotInput,
-  ): Promise<Chatbot> {
-    try {
-      const res = await this.axios.post<Chatbot>('/chatbots', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+    createChatbotArgs: CreateChatbotArgs,
+  ): Observable<Chatbot> {
+    return this.client.send<Chatbot>('chatbots.create', {
+      headers: {
+        authorization,
+      },
+      payload: createChatbotArgs,
+    });
   }
 
-  async findAll(authorization: string): Promise<Chatbot[]> {
-    try {
-      const res = await this.axios.get<Chatbot[]>('/chatbots', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  findAll(authorization: string): Observable<Chatbot[]> {
+    return this.client.send<Chatbot[]>('chatbots.findAll', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
   }
 
-  async findOne(authorization: string, id: number): Promise<Chatbot> {
-    try {
-      const res = await this.axios.get<Chatbot>(`/chatbots/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  findOne(authorization: string, id: number): Observable<Chatbot> {
+    return this.client.send<Chatbot>('chatbots.findOne', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 
-  async update(
+  update(
     authorization: string,
-    input: UpdateChatbotInput,
-  ): Promise<Chatbot> {
-    try {
-      const res = await this.axios.patch<Chatbot>(
-        `/chatbots/${input.id}`,
-        input,
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+    updateChatbotArgs: UpdateChatbotArgs,
+  ): Observable<Chatbot> {
+    return this.client.send<Chatbot>('chatbots.update', {
+      headers: {
+        authorization,
+      },
+      payload: updateChatbotArgs,
+    });
   }
 
-  async remove(authorization: string, id: number): Promise<Chatbot> {
-    try {
-      const res = await this.axios.delete<Chatbot>(`/chatbots/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  remove(authorization: string, id: number): Observable<Chatbot> {
+    return this.client.send<Chatbot>('chatbots.remove', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 
   handleConnection(socket: Socket): void {
-    const { auth } = socket.handshake;
     try {
-      const token = <JwtPayload>(
-        verify(auth.token, this.configService.get<string>('SECRET'))
-      );
+      const token = verify(
+        socket.handshake.auth.token,
+        this.configService.get<string>('SECRET'),
+      ) as JwtPayload;
 
-      this.socket.set(socket, [token.project.id, socket.emit.bind(socket)]);
-      this.emitter.on(...this.socket.get(socket));
-    } catch (e) {
-      console.error(e);
-    }
+      this.sockets.set(socket, [token.project.id, socket.emit.bind(socket)]);
+      this.emitter.on(...this.sockets.get(socket));
+    } catch {}
   }
 
   handleDisconnect(socket: Socket): void {
-    this.emitter.off(...this.socket.get(socket));
-    this.socket.delete(socket);
+    this.emitter.off(...this.sockets.get(socket));
+    this.sockets.delete(socket);
   }
 
-  sendNewEvent(projectId: number, event: any): void {
-    this.emitter.emit(String(projectId), ChatbotEventType.NewEvent, event);
+  emit(projectId: number, event: any): void {
+    this.emitter.emit(projectId.toString(), ChatbotEventType.NewEvent, event);
   }
 
   handleSendMessage(socket: Socket, message: any): void {

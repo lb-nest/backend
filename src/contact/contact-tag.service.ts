@@ -1,60 +1,48 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
-import { TagWithoutParentAndChildren } from 'src/tag/entities/tag.entity';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
+import { TagWithoutParentAndChildren } from 'src/tag/entities/tag-without-parent-and-children.entity';
 
 @Injectable()
 export class ContactTagService {
-  private readonly axios: AxiosInstance;
+  constructor(@Inject(CONTACTS_SERVICE) private readonly client: ClientProxy) {}
 
-  constructor(configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
-    });
-  }
-
-  async create(
+  create(
     authorization: string,
-    id: number,
+    contactId: number,
     tagId: number,
-  ): Promise<TagWithoutParentAndChildren> {
-    try {
-      const res = await this.axios.post<TagWithoutParentAndChildren>(
-        `/contacts/${id}/tags`,
-        {
+  ): Observable<TagWithoutParentAndChildren> {
+    return this.client.send<TagWithoutParentAndChildren>(
+      'contacts.tags.create',
+      {
+        headers: {
+          authorization,
+        },
+        payload: {
+          contactId,
           tagId,
         },
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+      },
+    );
   }
 
-  async remove(
+  remove(
     authorization: string,
-    id: number,
+    contactId: number,
     tagId: number,
-  ): Promise<TagWithoutParentAndChildren> {
-    try {
-      const res = await this.axios.delete<TagWithoutParentAndChildren>(
-        `/contacts/${id}/tags/${tagId}`,
-        {
-          headers: {
-            authorization,
-          },
+  ): Observable<TagWithoutParentAndChildren> {
+    return this.client.send<TagWithoutParentAndChildren>(
+      'contacts.tags.remove',
+      {
+        headers: {
+          authorization,
         },
-      );
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+        payload: {
+          contactId,
+          tagId,
+        },
+      },
+    );
   }
 }

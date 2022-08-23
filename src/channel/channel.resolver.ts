@@ -1,8 +1,9 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
+import { Observable } from 'rxjs';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
 import { ChannelService } from './channel.service';
-import { CreateChannelInput } from './dto/create-channel.input';
-import { UpdateChannelInput } from './dto/update-channel.input';
+import { CreateChannelArgs } from './dto/create-channel.args';
+import { UpdateChannelArgs } from './dto/update-channel.args';
 import { Channel } from './entities/channel.entity';
 
 @Resolver(() => Channel)
@@ -11,38 +12,40 @@ export class ChannelResolver {
 
   @Mutation(() => Channel)
   createChannel(
-    @Auth() authorization: string,
-    @Args() input: CreateChannelInput,
-  ): Promise<Channel> {
-    return this.channelService.create(authorization, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() args: CreateChannelArgs,
+  ): Observable<Channel> {
+    return this.channelService.create(authorization, args);
   }
 
   @Query(() => [Channel])
-  channels(@Auth() authorization: string): Promise<Channel[]> {
+  channels(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<Channel[]> {
     return this.channelService.findAll(authorization);
   }
 
   @Query(() => Channel)
   channelById(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Channel> {
+  ): Observable<Channel> {
     return this.channelService.findOne(authorization, id);
   }
 
   @Mutation(() => Channel)
   updateChannel(
-    @Auth() authorization: string,
-    @Args() input: UpdateChannelInput,
-  ): Promise<Channel> {
-    return this.channelService.update(authorization, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() args: UpdateChannelArgs,
+  ): Observable<Channel> {
+    return this.channelService.update(authorization, args);
   }
 
   @Mutation(() => Channel)
   removeChannel(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Channel> {
+  ): Observable<Channel> {
     return this.channelService.remove(authorization, id);
   }
 }

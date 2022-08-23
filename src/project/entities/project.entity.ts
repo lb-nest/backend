@@ -1,18 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { BillingType } from '../enums/billing-type.enum';
-import { RoleType } from '../enums/role-type.enum';
-
-@ObjectType()
-class Billing {
-  @Field(() => BillingType)
-  type: BillingType;
-}
-
-@ObjectType()
-class Role {
-  @Field(() => RoleType)
-  role: RoleType;
-}
+import { Billing } from './billing.entity';
+import { Role } from './role.entity';
 
 @ObjectType()
 export class Project {

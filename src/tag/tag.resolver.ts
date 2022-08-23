@@ -1,7 +1,8 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
-import { CreateTagInput } from './dto/create-tag.input';
-import { UpdateTagInput } from './dto/update-tag.input';
+import { Observable } from 'rxjs';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { CreateTagArgs } from './dto/create-tag.args';
+import { UpdateTagArgs } from './dto/update-tag.args';
 import { Tag } from './entities/tag.entity';
 import { TagService } from './tag.service';
 
@@ -11,38 +12,38 @@ export class TagResolver {
 
   @Mutation(() => Tag)
   createTag(
-    @Auth() authorization: string,
-    @Args() input: CreateTagInput,
-  ): Promise<Tag> {
-    return this.tagService.create(authorization, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() createTagArgs: CreateTagArgs,
+  ): Observable<Tag> {
+    return this.tagService.create(authorization, createTagArgs);
   }
 
   @Query(() => [Tag])
-  tags(@Auth() authorization: string): Promise<Tag[]> {
+  tags(@GqlHeaders('authorization') authorization: string): Observable<Tag[]> {
     return this.tagService.findAll(authorization);
   }
 
   @Query(() => Tag)
   tagById(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Tag> {
+  ): Observable<Tag> {
     return this.tagService.findOne(authorization, id);
   }
 
   @Mutation(() => Tag)
   updateTag(
-    @Auth() authorization: string,
-    @Args() input: UpdateTagInput,
-  ): Promise<Tag> {
-    return this.tagService.update(authorization, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateTagArgs: UpdateTagArgs,
+  ): Observable<Tag> {
+    return this.tagService.update(authorization, updateTagArgs);
   }
 
   @Mutation(() => Tag)
   removeTag(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Tag> {
+  ): Observable<Tag> {
     return this.tagService.remove(authorization, id);
   }
 }

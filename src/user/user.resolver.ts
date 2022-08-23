@@ -1,7 +1,8 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
+import { Observable } from 'rxjs';
 import { Project } from 'src/project/entities/project.entity';
-import { UpdateUserInput } from './dto/update-user.input';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { UpdateUserArgs } from './dto/update-user.args';
 import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 
@@ -10,25 +11,29 @@ export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
   @Query(() => User)
-  user(@Auth() authorization: string): Promise<User> {
-    return this.userService.getMe(authorization);
-  }
-
-  @Query(() => [Project])
-  userProjects(@Auth() authorization: string): Promise<Project[]> {
-    return this.userService.getProjects(authorization);
+  user(@GqlHeaders('authorization') authorization: string): Observable<User> {
+    return this.userService.findMe(authorization);
   }
 
   @Mutation(() => User)
   updateUser(
-    @Auth() authorization: string,
-    @Args() input: UpdateUserInput,
-  ): Promise<User> {
-    return this.userService.update(authorization, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateUserArgs: UpdateUserArgs,
+  ): Observable<User> {
+    return this.userService.update(authorization, updateUserArgs);
   }
 
   @Mutation(() => User)
-  removeUser(@Auth() authorization: string): Promise<User> {
+  removeUser(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<User> {
     return this.userService.remove(authorization);
+  }
+
+  @Query(() => [Project])
+  userProjects(
+    @GqlHeaders('authorization') authorization: string,
+  ): Observable<Project[]> {
+    return this.userService.findAllProjects(authorization);
   }
 }

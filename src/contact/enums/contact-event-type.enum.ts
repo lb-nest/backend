@@ -1,3 +1,3 @@
 export enum ContactEventType {
-  Update = 'ContactUpdate',
+  Update = 'ContactEventListener.handleUpdateEvent',
 }

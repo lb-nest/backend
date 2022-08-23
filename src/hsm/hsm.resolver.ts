@@ -1,7 +1,8 @@
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Auth } from 'src/auth/auth.decorator';
-import { CreateHsmInput } from './dto/create-hsm.input';
-import { UpdateHsmInput } from './dto/update-hsm.input';
+import { Observable } from 'rxjs';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { CreateHsmArgs } from './dto/create-hsm.args';
+import { UpdateHsmArgs } from './dto/update-hsm.args';
 import { Hsm } from './entities/hsm.entity';
 import { HsmService } from './hsm.service';
 
@@ -11,38 +12,38 @@ export class HsmResolver {
 
   @Mutation(() => Hsm)
   createHsm(
-    @Auth() authorization: string,
-    @Args() input: CreateHsmInput,
-  ): Promise<Hsm> {
-    return this.hsmService.create(authorization, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() createHsmArgs: CreateHsmArgs,
+  ): Observable<Hsm> {
+    return this.hsmService.create(authorization, createHsmArgs);
   }
 
   @Query(() => [Hsm])
-  hsm(@Auth() authorization: string): Promise<Hsm[]> {
+  hsm(@GqlHeaders('authorization') authorization: string): Observable<Hsm[]> {
     return this.hsmService.findAll(authorization);
   }
 
   @Query(() => Hsm)
   hsmById(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Hsm> {
+  ): Observable<Hsm> {
     return this.hsmService.findOne(authorization, id);
   }
 
   @Mutation(() => Hsm)
   updateHsm(
-    @Auth() authorization: string,
-    @Args() input: UpdateHsmInput,
-  ): Promise<Hsm> {
-    return this.hsmService.update(authorization, input);
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateHsmArgs: UpdateHsmArgs,
+  ): Observable<Hsm> {
+    return this.hsmService.update(authorization, updateHsmArgs);
   }
 
   @Mutation(() => Hsm)
   removeHsm(
-    @Auth() authorization: string,
+    @GqlHeaders('authorization') authorization: string,
     @Args('id', { type: () => Int }) id: number,
-  ): Promise<Hsm> {
+  ): Observable<Hsm> {
     return this.hsmService.remove(authorization, id);
   }
 }

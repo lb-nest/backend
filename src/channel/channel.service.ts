@@ -1,97 +1,59 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
-import { CreateChannelInput } from './dto/create-channel.input';
-import { UpdateChannelInput } from './dto/update-channel.input';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
+import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
+import { CreateChannelArgs } from './dto/create-channel.args';
+import { UpdateChannelArgs } from './dto/update-channel.args';
 import { Channel } from './entities/channel.entity';
 
 @Injectable()
 export class ChannelService {
-  private readonly axios: AxiosInstance;
+  constructor(
+    @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
+  ) {}
 
-  constructor(configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
+  create(authorization: string, args: CreateChannelArgs): Observable<Channel> {
+    return this.client.send<Channel>('channels.create', {
+      headers: {
+        authorization,
+      },
+      payload: args,
     });
   }
 
-  async create(
-    authorization: string,
-    input: CreateChannelInput,
-  ): Promise<Channel> {
-    try {
-      const res = await this.axios.post<Channel>('/channels', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  findAll(authorization: string): Observable<Channel[]> {
+    return this.client.send<Channel[]>('channels.findAll', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
   }
 
-  async findAll(authorization: string): Promise<Channel[]> {
-    try {
-      const res = await this.axios.get<Channel[]>('/channels', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  findOne(authorization: string, id: number): Observable<Channel> {
+    return this.client.send<Channel>('channels.findOne', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 
-  async findOne(authorization: string, id: number): Promise<Channel> {
-    try {
-      const res = await this.axios.get<Channel>(`/channels/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  update(authorization: string, args: UpdateChannelArgs): Observable<Channel> {
+    return this.client.send<Channel>('channels.update', {
+      headers: {
+        authorization,
+      },
+      payload: args,
+    });
   }
 
-  async update(
-    authorization: string,
-    input: UpdateChannelInput,
-  ): Promise<Channel> {
-    try {
-      const res = await this.axios.patch<Channel>(
-        `/channels/${input.id}`,
-        input,
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async remove(authorization: string, id: number): Promise<Channel> {
-    try {
-      const res = await this.axios.delete<Channel>(`/channels/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  remove(authorization: string, id: number): Observable<Channel> {
+    return this.client.send<Channel>('channels.remove', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 }

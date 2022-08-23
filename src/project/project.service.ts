@@ -1,227 +1,102 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  NotImplementedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import axios, { AxiosInstance } from 'axios';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom, Observable } from 'rxjs';
 import { Token } from 'src/auth/entities/token.entity';
-import { ChatbotEventType } from 'src/chatbot/enums/chatbot-event-type.enum';
-import { ContactService } from 'src/contact/contact.service';
-import { pubSub } from 'src/pubsub';
+import { AUTH_SERVICE } from 'src/shared/constants/broker';
 import { User } from 'src/user/entities/user.entity';
-import { WebhookEventType } from 'src/webhook/enums/webhook-event-type.enum';
-import { CreateProjectInput } from './dto/create-project.input';
-import { InviteInput } from './dto/invite.input';
-import { UpdateProjectInput } from './dto/update-project.input';
+import { CreateProjectArgs } from './dto/create-project.args';
+import { InviteUserArgs } from './dto/invite-user.args';
+import { UpdateProjectArgs } from './dto/update-project.args';
 import { ProjectWithToken } from './entities/project-with-token.entity';
 import { Project } from './entities/project.entity';
 import { ProjectTokenService } from './project-token.service';
 
 @Injectable()
 export class ProjectService {
-  private readonly axios: AxiosInstance;
-
   constructor(
+    @Inject(AUTH_SERVICE) private readonly client: ClientProxy,
     private readonly projectTokenService: ProjectTokenService,
-    private readonly configService: ConfigService,
-    private readonly eventEmitter: EventEmitter2,
-    @Inject(forwardRef(() => ContactService))
-    private readonly contactService: ContactService,
-  ) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('AUTHORIZATION_URL'),
-    });
-  }
+  ) {}
 
   async create(
     authorization: string,
-    input: CreateProjectInput,
+    createProjectArgs: CreateProjectArgs,
   ): Promise<ProjectWithToken> {
-    try {
-      const res = await this.axios.post<Project>('/projects', input, {
+    const project = await lastValueFrom(
+      this.client.send<Project>('projects.create', {
         headers: {
           authorization,
         },
-      });
-
-      const token = await this.projectTokenService.save(
-        res.data.id,
-        await this.signIn(authorization, res.data.id),
-      );
-
-      await this.createWebhooks(`Bearer ${token.token}`, res.data.id);
-
-      console.log(3);
-
-      return {
-        ...res.data,
-        token,
-      };
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async getMe(authorization: string): Promise<Project> {
-    try {
-      const res = await this.axios.get<Project>('/projects/@me', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async update(
-    authorization: string,
-    input: UpdateProjectInput,
-  ): Promise<Project> {
-    try {
-      const res = await this.axios.patch<Project>('/projects/@me', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async remove(authorization: string): Promise<Project> {
-    throw new NotImplementedException();
-  }
-
-  async signIn(authorization: string, id: number): Promise<Token> {
-    try {
-      const res = await this.axios.get<Token>(`/projects/${id}/token`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async invite(authorization: string, input: InviteInput): Promise<boolean> {
-    try {
-      await this.axios.post<any>('/projects/@me/users', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async getUsers(authorization: string, ...ids: number[]): Promise<User[]> {
-    const query = new URLSearchParams();
-    if (ids.length) {
-      query.set('ids', ids.join(','));
-    }
-
-    const res = await this.axios.get<any[]>(`/projects/@me/users?${query}`, {
-      headers: {
-        authorization,
-      },
-    });
-
-    return res.data;
-  }
-
-  private async createWebhooks(authorization: string, id: number) {
-    const backend = this.configService.get<string>('BACKEND_URL');
-    const messaging = this.configService.get<string>('MESSAGING_URL');
-
-    const webhooks = [
-      {
-        name: 'system.backend',
-        url: backend.concat(`/projects/${id}/webhook`),
-        eventType: WebhookEventType.All,
-      },
-    ];
-
-    await Promise.all(
-      webhooks.map((webhook) =>
-        axios.post<any>(messaging.concat('/webhooks'), webhook, {
-          headers: {
-            authorization,
-          },
-        }),
-      ),
+        payload: createProjectArgs,
+      }),
     );
-  }
 
-  async handleWebhook(projectId: number, payload: any): Promise<void> {
-    switch (payload.type) {
-      case WebhookEventType.IncomingChats:
-        this.eventEmitter.emit(
-          ChatbotEventType.NewEvent,
-          await this.handleChatsReceived(projectId, payload.payload),
-        );
-        break;
-
-      case WebhookEventType.OutgoingChats:
-        await this.handleChatsReceived(projectId, payload.payload);
-        break;
-
-      case WebhookEventType.IncomingMessages:
-      case WebhookEventType.OutgoingMessages:
-        await this.handleMessagesReceived(projectId, payload.payload);
-        break;
-    }
-  }
-
-  private async handleChatsReceived(
-    projectId: number,
-    chat: any,
-    silent = false,
-  ): Promise<any> {
-    const contact = await this.contactService.createForChat(
-      'Bearer '.concat(await this.projectTokenService.get(projectId)),
-      chat.id,
-      chat.contact,
-    );
-    if (!silent) {
-      pubSub.publish(`chatsReceived:${projectId}`, {
-        chatsReceived: {
-          ...chat,
-          contact,
-        },
-      });
-    }
     return {
-      projectId,
-      ...chat,
-      contact,
+      ...project,
+      token: await this.projectTokenService.save(
+        project.id,
+        await lastValueFrom(this.signIn(authorization, project.id)),
+      ),
     };
   }
 
-  private async handleMessagesReceived(
-    projectId: number,
-    messages: any[],
-  ): Promise<void> {
-    messages
-      .sort((a, b) => a.id - b.id)
-      .map((message) => {
-        pubSub.publish(`messagesReceived:${projectId}:${message.chat.id}`, {
-          messagesReceived: message,
-        });
-      });
+  signIn(authorization: string, id: number): Observable<Token> {
+    return this.client.send<Token>('projects.createToken', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
+  }
+
+  findMe(authorization: string): Observable<Project> {
+    return this.client.send<Project>('projects.@me', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
+  }
+
+  updateMe(
+    authorization: string,
+    updateProjectArgs: UpdateProjectArgs,
+  ): Observable<Project> {
+    return this.client.send<Project>('projects.@me.update', {
+      headers: {
+        authorization,
+      },
+      payload: updateProjectArgs,
+    });
+  }
+
+  removeMe(authorization: string): Observable<Project> {
+    return this.client.send<Project>('projects.@me.remove', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
+  }
+
+  inviteUser(
+    authorization: string,
+    inviteUserArgs: InviteUserArgs,
+  ): Observable<boolean> {
+    return this.client.send<boolean>('projects.@me.inviteUser', {
+      headers: {
+        authorization,
+      },
+      payload: inviteUserArgs,
+    });
+  }
+
+  findAllUsers(authorization: string, ...ids: number[]): Observable<User[]> {
+    return this.client.send<User[]>('projects.@me.findAllUsers', {
+      headers: {
+        authorization,
+      },
+      payload: ids,
+    });
   }
 }

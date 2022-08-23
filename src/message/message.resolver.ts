@@ -1,9 +1,8 @@
 import {
-  BadRequestException,
+  ForbiddenException,
   NotFoundException,
   UseGuards,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import {
   Args,
   Int,
@@ -12,104 +11,91 @@ import {
   Resolver,
   Subscription,
 } from '@nestjs/graphql';
-import axios, { AxiosInstance } from 'axios';
 import { Auth } from 'src/auth/auth.decorator';
 import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
-import { RoleType } from 'src/auth/enums/role-type.enum';
-import { User } from 'src/auth/user.decorator';
+import { TokenPayload } from 'src/auth/entities/token-payload.entity';
+import { ContactService } from 'src/contact/contact.service';
+import { RoleType } from 'src/project/enums/role-type.enum';
 import { pubSub } from 'src/pubsub';
-import { CreateMessageInput } from './dto/create-message.input';
-import { ReadMessagesInput } from './dto/read-messages.input';
-import { RemoveMessageInput } from './dto/remove-message.input';
-import { UpdateMessageInput } from './dto/update-message.input';
+import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { CreateMessageArgs } from './dto/create-message.args';
+import { ReadMessagesArgs } from './dto/read-messages.args';
+import { UpdateMessageArgs } from './dto/update-message.args';
 import { Message } from './entities/message.entity';
 import { MessageService } from './message.service';
 
 @Resolver(() => Message)
 export class MessageResolver {
-  private readonly axios: AxiosInstance;
-
   constructor(
     private readonly messageService: MessageService,
-    private readonly configService: ConfigService,
-  ) {
-    this.axios = axios.create({
-      baseURL: this.configService.get<string>('CONTACTS_URL'),
-    });
-  }
+    private readonly contactService: ContactService,
+  ) {}
 
-  @UseGuards(BearerAuthGuard)
   @Mutation(() => [Message])
   createMessage(
-    @Auth() authorization: string,
-    @User() user: any,
-    @Args() input: CreateMessageInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() createMessageArgs: CreateMessageArgs,
   ): Promise<Message[]> {
-    return this.messageService.create(authorization, user, input);
+    return this.messageService.create(authorization, createMessageArgs);
   }
 
-  @UseGuards(BearerAuthGuard)
   @Query(() => [Message])
   messages(
-    @Auth() authorization: string,
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
     @Args('chatId', { type: () => Int }) chatId: number,
   ): Promise<Message[]> {
-    return this.messageService.findAll(authorization, user, chatId);
+    return this.messageService.findAll(authorization, chatId);
   }
 
   @Mutation(() => Message)
   updateMessage(
-    @Auth() authorization: string,
-    @Args() input: UpdateMessageInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() updateMessageArgs: UpdateMessageArgs,
   ): Promise<Message> {
-    return this.messageService.update(authorization, input);
+    return this.messageService.update(authorization, updateMessageArgs);
   }
 
   @Mutation(() => Message)
   removeMessage(
-    @Auth() authorization: string,
-    @Args() input: RemoveMessageInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args('id', { type: () => Int }) id: number,
   ): Promise<Message> {
-    return this.messageService.remove(authorization, input);
+    return this.messageService.remove(authorization, id);
   }
 
   @Mutation(() => Boolean)
   markMessagesAsRead(
-    @Auth() authorization: string,
-    @User() user: any,
-    @Args() input: ReadMessagesInput,
+    @GqlHeaders('authorization') authorization: string,
+    @Args() readMessagesArgs: ReadMessagesArgs,
   ): Promise<boolean> {
-    return this.messageService.markAsRead(authorization, user, input);
+    return this.messageService.markAsRead(authorization, readMessagesArgs);
   }
 
   @UseGuards(BearerAuthGuard)
   @Subscription(() => Message)
   async messagesReceived(
-    @Auth() authorization: string,
-    @User() user: any,
+    @GqlHeaders('authorization') authorization: string,
+    @Auth() auth: Required<TokenPayload>,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
-    const res = await this.axios(`/contacts/findAllByChatId?chatId=${chatId}`, {
-      headers: {
-        authorization,
-      },
-    });
+    const [contact] = await this.contactService.findAllForChat(
+      authorization,
+      chatId,
+    );
 
-    const [contact] = res.data;
     if (!contact) {
       throw new NotFoundException();
     }
 
-    const isAdmin = user.project.roles.some(({ role }) =>
+    const isAdmin = auth.project.roles.some(({ role }) =>
       [RoleType.Admin, RoleType.Owner].includes(role),
     );
 
-    if (!isAdmin && contact.assignedTo !== user.id) {
-      throw new BadRequestException();
+    if (!isAdmin && contact.assignedTo?.id !== auth.id) {
+      throw new ForbiddenException();
     }
 
-    const projectId = user.project.id;
+    const projectId = auth.project.id;
     return pubSub.asyncIterator(`messagesReceived:${projectId}:${chatId}`);
   }
 }

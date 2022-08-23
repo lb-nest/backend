@@ -1,219 +1,294 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotImplementedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import axios, { AxiosInstance } from 'axios';
+import { ClientProxy } from '@nestjs/microservices';
+import { FileUpload } from 'graphql-upload';
+import { lastValueFrom, Observable } from 'rxjs';
+import { ChatService } from 'src/chat/chat.service';
+import { FindAllChatsForUserArgs } from 'src/chat/dto/find-chats.args';
 import { ProjectService } from 'src/project/project.service';
-import { CreateContactWithoutChannelId } from './dto/create-contact-without-channel-id.input';
-import { CreateContactInput } from './dto/create-contact.input';
-import { ImportContactsInput } from './dto/import-contacts.input';
-import { UpdateContactInput } from './dto/update-contact.input';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
+import { CreateContactArgs } from './dto/create-contact.args';
+import { UpdateContactArgs } from './dto/update-contact.args';
 import { Contact } from './entities/contact.entity';
+import { ContactsCount } from './entities/contacts-count.entity';
 import { ContactEventType } from './enums/contact-event-type.enum';
 
 @Injectable()
 export class ContactService {
-  private readonly mAxios: AxiosInstance;
-  private readonly cAxios: AxiosInstance;
-
   constructor(
-    configService: ConfigService,
+    @Inject(CONTACTS_SERVICE) private readonly client: ClientProxy,
+    @Inject(forwardRef(() => ChatService))
+    private readonly chatService: ChatService,
     private readonly projectService: ProjectService,
     private readonly eventEmitter: EventEmitter2,
-  ) {
-    this.mAxios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
-    });
-    this.cAxios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
+  ) {}
+
+  import(authorization: string, csvOrXlsx: FileUpload): Observable<boolean> {
+    // TODO: парсинг csv или xlsx файла
+
+    return this.client.send<boolean>('contacts.import', {
+      headers: {
+        authorization,
+      },
+      payload: null,
     });
   }
 
   async create(
     authorization: string,
-    input: CreateContactInput,
+    createContactArgs: CreateContactArgs,
   ): Promise<Contact> {
-    throw new NotImplementedException();
+    const contact = await lastValueFrom(
+      this.client.send<Contact>('contacts.create', {
+        headers: {
+          authorization,
+        },
+        payload: createContactArgs,
+      }),
+    );
+
+    if (typeof contact.assignedTo?.id === 'number') {
+      const [assignedTo] = await lastValueFrom(
+        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
+      );
+
+      contact.assignedTo = assignedTo;
+    }
+
+    return contact;
   }
 
   async createForChat(
     authorization: string,
     chatId: number,
-    contact: CreateContactWithoutChannelId,
+    createContactArgs: CreateContactArgs,
   ): Promise<Contact> {
-    try {
-      const res = await this.cAxios.post<any>(
-        '/contacts',
-        {
-          chatId,
-          ...contact,
-        },
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      if (res.data.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          res.data.assignedTo,
-        );
-
-        res.data.assignedTo = user;
-      }
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async findAll(authorization: string): Promise<Contact[]> {
-    try {
-      const contacts = await this.cAxios.get<any[]>(
-        '/contacts?assignedTo=null',
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      const assignedTo = contacts.data.map((c) => c.assignedTo).filter(Boolean);
-      if (assignedTo.length > 0) {
-        const users = await this.projectService.getUsers(
-          authorization,
-          ...assignedTo,
-        );
-
-        contacts.data.forEach((c) => {
-          c.assignedTo = users.find((u) => u.id === c.assignedTo);
-        });
-      }
-
-      return contacts.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async findOne(authorization: string, id: number): Promise<Contact> {
-    try {
-      const res = await this.cAxios.get<any>(`/contacts/${id}`, {
+    const contact = await lastValueFrom(
+      this.client.send<Contact>('contacts.createForChat', {
         headers: {
           authorization,
         },
-      });
+        payload: {
+          chatId,
+          ...createContactArgs,
+        },
+      }),
+    );
 
-      if (res.data.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          res.data.assignedTo,
-        );
+    if (typeof contact.assignedTo?.id === 'number') {
+      const [assignedTo] = await lastValueFrom(
+        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
+      );
 
-        res.data.assignedTo = user;
-      }
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
+      contact.assignedTo = assignedTo;
     }
+
+    return contact;
+  }
+
+  async findAll(authorization: string): Promise<Contact[]> {
+    const contacts = await lastValueFrom(
+      this.client.send<Contact[]>('contacts.findAll', {
+        headers: {
+          authorization,
+        },
+        payload: null,
+      }),
+    );
+
+    const assignedTo = contacts
+      .map((contact) => contact.assignedTo?.id)
+      .filter(Boolean);
+
+    if (assignedTo.length > 0) {
+      const users = await lastValueFrom(
+        this.projectService.findAllUsers(authorization, ...assignedTo),
+      );
+
+      for (const contact of contacts) {
+        contact.assignedTo = users.find(
+          (user) => user.id === contact.assignedTo?.id,
+        );
+      }
+    }
+
+    return contacts;
+  }
+
+  async findAllForUser(
+    authorization: string,
+    findAllContactForUserArgs: FindAllChatsForUserArgs,
+  ): Promise<Contact[]> {
+    const contacts = await lastValueFrom(
+      this.client.send<Contact[]>('contacts.findAllForUser', {
+        headers: {
+          authorization,
+        },
+        payload: findAllContactForUserArgs,
+      }),
+    );
+
+    const assignedTo = contacts
+      .map((contact) => contact.assignedTo?.id)
+      .filter(Boolean);
+
+    if (assignedTo.length > 0) {
+      const users = await lastValueFrom(
+        this.projectService.findAllUsers(authorization, ...assignedTo),
+      );
+
+      for (const contact of contacts) {
+        contact.assignedTo = users.find(
+          (user) => user.id === contact.assignedTo?.id,
+        );
+      }
+    }
+
+    return contacts;
+  }
+
+  async findAllForChat(
+    authorization: string,
+    ...ids: number[]
+  ): Promise<Contact[]> {
+    const contacts = await lastValueFrom(
+      this.client.send<Contact[]>('contacts.findAllForChat', {
+        headers: {
+          authorization,
+        },
+        payload: {
+          ids,
+        },
+      }),
+    );
+
+    const assignedTo = contacts
+      .map((contact) => contact.assignedTo?.id)
+      .filter(Boolean);
+
+    if (assignedTo.length > 0) {
+      const users = await lastValueFrom(
+        this.projectService.findAllUsers(authorization, ...assignedTo),
+      );
+
+      for (const contact of contacts) {
+        contact.assignedTo = users.find(
+          (user) => user.id === contact.assignedTo?.id,
+        );
+      }
+    }
+
+    return contacts;
+  }
+
+  countAll(authorization: string): Observable<ContactsCount> {
+    return this.client.send<ContactsCount>('contacts.countAll', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
+  }
+
+  async findOne(authorization: string, id: number): Promise<Contact> {
+    const contact = await lastValueFrom(
+      this.client.send<Contact>('contacts.findOne', {
+        headers: {
+          authorization,
+        },
+        payload: id,
+      }),
+    );
+
+    if (typeof contact.assignedTo?.id === 'number') {
+      const [assignedTo] = await lastValueFrom(
+        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
+      );
+
+      contact.assignedTo = assignedTo;
+    }
+
+    return contact;
   }
 
   async update(
     authorization: string,
-    input: UpdateContactInput,
+    updateContactArgs: UpdateContactArgs,
   ): Promise<Contact> {
-    try {
-      const res = await this.cAxios.patch<any>(`/contacts/${input.id}`, input, {
+    const contact = await lastValueFrom(
+      this.client.send<Contact>('contacts.update', {
         headers: {
           authorization,
         },
-      });
+        payload: updateContactArgs,
+      }),
+    );
 
-      await this.mAxios.patch<any>(`/chats/${res.data.chatId}`, input, {
-        headers: {
-          authorization,
-        },
-      });
+    await Promise.allSettled(
+      contact.chats.map((chat) =>
+        lastValueFrom(
+          this.chatService.update(authorization, {
+            id: chat.id,
+            name: contact.name,
+            avatarUrl: contact.avatarUrl,
+          }),
+        ),
+      ),
+    );
 
-      if (res.data.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          res.data.assignedTo,
-        );
+    if (typeof contact.assignedTo?.id === 'number') {
+      const [assignedTo] = await lastValueFrom(
+        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
+      );
 
-        res.data.assignedTo = user;
-      }
-
-      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
+      contact.assignedTo = assignedTo;
     }
+
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return contact;
   }
 
   async remove(authorization: string, id: number): Promise<Contact> {
-    try {
-      const res = await this.cAxios.delete<any>(`/contacts/${id}`, {
+    const contact = await lastValueFrom(
+      this.client.send<Contact>('contacts.remove', {
         headers: {
           authorization,
         },
-      });
+        payload: id,
+      }),
+    );
 
-      await this.mAxios.delete<any>(`/chats/${res.data.chatId}`, {
-        headers: {
-          authorization,
-        },
-      });
+    await Promise.allSettled(
+      contact.chats.map((chat) =>
+        lastValueFrom(this.chatService.remove(authorization, chat.id)),
+      ),
+    );
 
-      if (res.data.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          res.data.assignedTo,
-        );
+    if (typeof contact.assignedTo?.id === 'number') {
+      const [assignedTo] = await lastValueFrom(
+        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
+      );
 
-        res.data.assignedTo = user;
-      }
-
-      // TODO: оповещать вебсокеты
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
+      contact.assignedTo = assignedTo;
     }
+
+    // TODO: оповещать вебсокеты
+    return contact;
   }
 
-  async import(
+  createChatForContact(
     authorization: string,
-    input: ImportContactsInput,
-  ): Promise<boolean> {
-    const chats = await this.mAxios.post<any[]>('/chats/import', input, {
+    id: number,
+    chatId: number,
+  ): Observable<boolean> {
+    return this.client.send<boolean>('contacts.connectChat', {
       headers: {
         authorization,
       },
+      payload: {
+        id,
+        chatId,
+      },
     });
-
-    await this.cAxios.post<any[]>(
-      '/contacts/import',
-      {
-        channelId: input.channelId,
-        contacts: chats.data.map(({ id, contact }) => ({
-          chatId: id,
-          ...contact,
-        })),
-      },
-      {
-        headers: {
-          authorization,
-        },
-      },
-    );
-
-    return true;
   }
 }

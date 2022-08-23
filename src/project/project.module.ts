@@ -1,22 +1,18 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { ContactModule } from 'src/contact/contact.module';
-import { ContactService } from 'src/contact/contact.service';
+import { AppModule } from 'src/app.module';
 import { PrismaService } from 'src/prisma.service';
 import { ProjectTokenService } from './project-token.service';
-import { ProjectController } from './project.controller';
 import { ProjectResolver } from './project.resolver';
 import { ProjectService } from './project.service';
 
 @Module({
-  imports: [forwardRef(() => ContactModule)],
+  imports: [forwardRef(() => AppModule)],
   providers: [
-    ContactService,
+    PrismaService,
+    ProjectTokenService,
     ProjectResolver,
     ProjectService,
-    ProjectTokenService,
-    PrismaService,
   ],
-  controllers: [ProjectController],
-  exports: [ProjectService],
+  exports: [ProjectTokenService, ProjectService],
 })
 export class ProjectModule {}

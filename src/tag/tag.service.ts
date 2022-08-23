@@ -1,87 +1,57 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
-import { CreateTagInput } from './dto/create-tag.input';
-import { UpdateTagInput } from './dto/update-tag.input';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { Observable } from 'rxjs';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
+import { CreateTagArgs } from './dto/create-tag.args';
+import { UpdateTagArgs } from './dto/update-tag.args';
 import { Tag } from './entities/tag.entity';
 
 @Injectable()
 export class TagService {
-  private readonly axios: AxiosInstance;
+  constructor(@Inject(CONTACTS_SERVICE) private readonly client: ClientProxy) {}
 
-  constructor(configService: ConfigService) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
+  create(authorization: string, createTagArgs: CreateTagArgs): Observable<Tag> {
+    return this.client.send<Tag>('tags.create', {
+      headers: {
+        authorization,
+      },
+      payload: createTagArgs,
     });
   }
 
-  async create(authorization: string, input: CreateTagInput): Promise<Tag> {
-    try {
-      const res = await this.axios.post<Tag>('/tags', input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  findAll(authorization: string): Observable<Tag[]> {
+    return this.client.send<Tag[]>('tags.findAll', {
+      headers: {
+        authorization,
+      },
+      payload: null,
+    });
   }
 
-  async findAll(authorization: string): Promise<Tag[]> {
-    try {
-      const res = await this.axios.get<Tag[]>('/tags', {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  findOne(authorization: string, id: number): Observable<Tag> {
+    return this.client.send<Tag>('tags.findOne', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 
-  async findOne(authorization: string, id: number): Promise<Tag> {
-    try {
-      const res = await this.axios.get<Tag>(`/tags/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  update(authorization: string, updateTagArgs: UpdateTagArgs): Observable<Tag> {
+    return this.client.send<Tag>('tags.update', {
+      headers: {
+        authorization,
+      },
+      payload: updateTagArgs,
+    });
   }
 
-  async update(authorization: string, input: UpdateTagInput): Promise<Tag> {
-    try {
-      const res = await this.axios.patch<Tag>(`/tags/${input.id}`, input, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async remove(authorization: string, id: number): Promise<Tag> {
-    try {
-      const res = await this.axios.delete<Tag>(`/tags/${id}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+  remove(authorization: string, id: number): Observable<Tag> {
+    return this.client.send<Tag>('tags.remove', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
   }
 }

@@ -1,10 +1,12 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { CacheModule, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GraphQLModule } from '@nestjs/graphql';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Context } from 'apollo-server-core';
 import Joi from 'joi';
+import mapObject from 'map-obj';
 import { AuthModule } from './auth/auth.module';
 import { ChannelModule } from './channel/channel.module';
 import { ChatModule } from './chat/chat.module';
@@ -13,7 +15,14 @@ import { ContactModule } from './contact/contact.module';
 import { FileModule } from './file/file.module';
 import { HsmModule } from './hsm/hsm.module';
 import { MessageModule } from './message/message.module';
+import { PrismaService } from './prisma.service';
 import { ProjectModule } from './project/project.module';
+import {
+  AUTH_SERVICE,
+  CHATBOTS_SERVICE,
+  CONTACTS_SERVICE,
+  MESSAGING_SERVICE,
+} from './shared/constants/broker';
 import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
 import { WebhookModule } from './webhook/webhook.module';
@@ -24,20 +33,18 @@ import { WebhookModule } from './webhook/webhook.module';
       isGlobal: true,
       validationSchema: Joi.object({
         DATABASE_URL: Joi.string().uri().required(),
+        BROKER_URL: Joi.string().uri().required(),
         PORT: Joi.number().default(8080),
+        WEBSOCKET_PORT: Joi.number().default(4040),
+        SECRET: Joi.string().required(),
         S3_ENDPOINT: Joi.string().uri().required(),
         S3_ACCESS_KEY: Joi.string().required(),
         S3_SECRET_KEY: Joi.string().required(),
         S3_BUCKET: Joi.string().required(),
-        AUTHORIZATION_URL: Joi.string().uri().required(),
-        BACKEND_URL: Joi.string().uri().required(),
-        CHATBOTS_URL: Joi.string().uri().required(),
-        CONTACTS_URL: Joi.string().uri().required(),
-        MESSAGING_URL: Joi.string().uri().required(),
       }),
     }),
-    EventEmitterModule.forRoot({
-      maxListeners: Infinity,
+    CacheModule.register({
+      isGlobal: true,
     }),
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -48,36 +55,96 @@ import { WebhookModule } from './webhook/webhook.module';
         subscriptions: {
           'graphql-ws': {
             onConnect: async (context: Context<any>) => {
-              const connectionParams = Object.fromEntries(
-                Object.entries(context.connectionParams).map(([key, val]) => [
-                  key.toLowerCase(),
-                  val,
-                ]),
+              Object.assign(
+                context.extra.request.headers,
+                mapObject(
+                  context.connectionParams,
+                  (key: string, value) => [key.toLowerCase(), value],
+                  {
+                    deep: true,
+                  },
+                ),
               );
-
-              Object.assign(context.extra.request.headers, connectionParams);
               context.req = context.extra.request;
             },
           },
-          context: ({ req, extra }) => ({
+          context: ({ req, res, extra }) => ({
             req,
+            res,
             extra,
           }),
         },
         playground: true,
       }),
     }),
+    EventEmitterModule.forRoot({
+      maxListeners: Infinity,
+    }),
+    ClientsModule.registerAsync([
+      {
+        name: AUTH_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${AUTH_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: CHATBOTS_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${CHATBOTS_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: CONTACTS_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${CONTACTS_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: MESSAGING_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${MESSAGING_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
     AuthModule,
-    UserModule,
     ChannelModule,
     ChatModule,
-    HsmModule,
-    WebhookModule,
-    MessageModule,
-    ContactModule,
-    TagModule,
-    FileModule,
     ChatbotModule,
+    ContactModule,
+    FileModule,
+    HsmModule,
+    MessageModule,
+    ProjectModule,
+    TagModule,
+    UserModule,
+    WebhookModule,
+  ],
+  providers: [PrismaService],
+  exports: [
+    ClientsModule,
+    ChannelModule,
+    ChatModule,
+    ContactModule,
     ProjectModule,
   ],
 })

@@ -1,148 +1,181 @@
 import {
-  BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   NotImplementedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
-import { ProjectService } from 'src/project/project.service';
-import { URLSearchParams } from 'url';
-import { ChatsInput } from './dto/chats.input';
-import { CreateChatInput } from './dto/create-chat.input';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom, Observable } from 'rxjs';
+import { ChannelService } from 'src/channel/channel.service';
+import { ChannelType } from 'src/channel/enums/channel-type.enum';
+import { ContactService } from 'src/contact/contact.service';
+import { ProjectTokenService } from 'src/project/project-token.service';
+import { pubSub } from 'src/pubsub';
+import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
+import { CreateChatArgs } from './dto/create-chat.args';
+import { FindAllChatsForUserArgs } from './dto/find-chats.args';
+import { UpdateChatArgs } from './dto/update-chat.args';
 import { Chat } from './entities/chat.entity';
+import { ChatsCount } from './entities/chats-count.entity';
 
 @Injectable()
 export class ChatService {
-  private readonly mAxios: AxiosInstance;
-  private readonly cAxios: AxiosInstance;
-
   constructor(
-    private readonly projectService: ProjectService,
-    configService: ConfigService,
-  ) {
-    this.mAxios = axios.create({
-      baseURL: configService.get<string>('MESSAGING_URL'),
-    });
-    this.cAxios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
-    });
-  }
+    @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
+    @Inject(forwardRef(() => ContactService))
+    private readonly contactService: ContactService,
+    @Inject(forwardRef(() => ChannelService))
+    private readonly channelService: ChannelService,
+    private readonly projectTokenService: ProjectTokenService,
+  ) {}
 
-  async create(authorization: string, input: CreateChatInput): Promise<Chat> {
-    throw new NotImplementedException();
-  }
-
-  async findAll(authorization: string, input: ChatsInput): Promise<Chat[]> {
-    try {
-      const query = new URLSearchParams({
-        status: input.status,
-      });
-
-      if (input.assignedTo) {
-        query.set('assignedTo', input.assignedTo.toString());
-      }
-
-      const contacts = await this.cAxios.get<any[]>(`/contacts?${query}`, {
-        headers: {
-          authorization,
-        },
-      });
-
-      const chatIds = contacts.data.map((c) => c.chatId);
-      const chats = await this.mAxios.get<any[]>(
-        `/chats?ids=${chatIds.join(',')}`,
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      const assignedTo = contacts.data.map((c) => c.assignedTo).filter(Boolean);
-      if (assignedTo.length > 0) {
-        const users = await this.projectService.getUsers(
-          authorization,
-          ...assignedTo,
-        );
-
-        contacts.data.forEach((c) => {
-          c.assignedTo = users.find((u) => u.id === c.assignedTo);
-        });
-      }
-
-      return chats.data
-        .sort((a, b) => chatIds.indexOf(a.id) - chatIds.indexOf(b.id))
-        .map((chat) =>
-          Object.assign(chat, {
-            contact: contacts.data.find(
-              (contact) => contact.chatId === chat.id,
-            ),
-          }),
-        );
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
-  }
-
-  async findWithQuery(
+  async create(
     authorization: string,
-    user: any,
-    query: string,
-  ): Promise<Chat[]> {
-    throw new NotImplementedException();
-  }
+    createChatArgs: CreateChatArgs,
+  ): Promise<Chat> {
+    const contact = await this.contactService.findOne(
+      authorization,
+      createChatArgs.contactId,
+    );
 
-  async count(authorization: string): Promise<Record<string, number>> {
-    try {
-      const res = await this.cAxios.get<any>('/contacts/countAll', {
+    const channel = await lastValueFrom(
+      this.channelService.findOne(authorization, createChatArgs.channelId),
+    );
+
+    const accountId = {
+      [ChannelType.Telegram]: contact.telegramId,
+      [ChannelType.Webchat]: contact.webchatId,
+      [ChannelType.Whatsapp]: contact.whatsappId,
+    }[channel.type];
+
+    const chat = await lastValueFrom(
+      this.client.send<Omit<Chat, 'contact'>>('chats.create', {
         headers: {
           authorization,
         },
-      });
+        payload: {
+          channelId: createChatArgs.channelId,
+          accountId,
+          name: contact.name,
+          avatarUrl: contact.avatarUrl,
+        },
+      }),
+    );
 
-      return res.data;
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
+    await lastValueFrom(
+      this.contactService.createChatForContact(
+        authorization,
+        createChatArgs.contactId,
+        chat.id,
+      ),
+    );
+
+    return {
+      ...chat,
+      contact,
+    };
+  }
+
+  async findAll(
+    authorization: string,
+    args: FindAllChatsForUserArgs,
+  ): Promise<Chat[]> {
+    const contacts = await this.contactService.findAllForUser(
+      authorization,
+      args,
+    );
+
+    if (contacts.length === 0) {
+      return [];
     }
+
+    const chatIds = contacts.map(({ chats }) => chats[0].id);
+    const chats = await lastValueFrom(
+      this.client.send<Array<Omit<Chat, 'contact'>>>('chats.findAll', {
+        headers: {
+          authorization,
+        },
+        payload: chatIds,
+      }),
+    );
+
+    return chats
+      .sort((a, b) => chatIds.indexOf(a.id) - chatIds.indexOf(b.id))
+      .map((chat) => ({
+        ...chat,
+        contact: contacts.find(({ chats }) => chats[0].id === chat.id),
+      }));
+  }
+
+  async findWithQuery(authorization: string, query: string): Promise<Chat[]> {
+    throw new NotImplementedException();
   }
 
   async findOne(authorization: string, id: number): Promise<Chat> {
-    try {
-      const contacts = await this.cAxios.get<any[]>(
-        `/contacts/findAllByChatId?chatId=${id}`,
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
+    const [contact] = await this.contactService.findAllForChat(
+      authorization,
+      id,
+    );
 
-      const [contact] = contacts.data;
-      if (!contact) {
-        throw new NotFoundException();
-      }
+    if (!contact) {
+      throw new NotFoundException();
+    }
 
-      const chat = await this.mAxios.get<any>(`/chats/${id}`, {
+    const chat = await lastValueFrom(
+      this.client.send<Omit<Chat, 'contact'>>('chats.findOne', {
         headers: {
           authorization,
         },
-      });
+        payload: id,
+      }),
+    );
 
-      if (contact.assignedTo) {
-        const [user] = await this.projectService.getUsers(
-          authorization,
-          contact.assignedTo,
-        );
+    return {
+      ...chat,
+      contact,
+    };
+  }
 
-        contact.assignedTo = user;
-      }
+  update(
+    authorization: string,
+    input: UpdateChatArgs,
+  ): Observable<Omit<Chat, 'contact'>> {
+    return this.client.send<Omit<Chat, 'contact'>>('chats.update', {
+      headers: {
+        authorization,
+      },
+      payload: input,
+    });
+  }
 
-      return Object.assign(chat.data, {
+  remove(authorization: string, id: number): Observable<Omit<Chat, 'contact'>> {
+    return this.client.send<Omit<Chat, 'contact'>>('chats.remove', {
+      headers: {
+        authorization,
+      },
+      payload: id,
+    });
+  }
+
+  countAll(authorization: string): Observable<ChatsCount> {
+    return this.contactService.countAll(authorization);
+  }
+
+  async received(projectId: number, chat: any): Promise<void> {
+    const contact = await this.contactService.createForChat(
+      `Bearer ${await this.projectTokenService
+        .get(projectId)
+        .then(({ token }) => token)}`,
+      chat.id,
+      chat.contact,
+    );
+
+    pubSub.publish(`chatsReceived:${projectId}`, {
+      chatsReceived: {
+        ...chat,
         contact,
-      });
-    } catch (e) {
-      throw new BadRequestException(e.response?.data);
-    }
+      },
+    });
   }
 }

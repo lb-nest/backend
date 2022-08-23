@@ -1,178 +1,176 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import axios, { AxiosInstance } from 'axios';
+import { ClientProxy } from '@nestjs/microservices';
+import { decode } from 'jsonwebtoken';
+import { lastValueFrom } from 'rxjs';
+import { TokenPayload } from 'src/auth/entities/token-payload.entity';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
 import { ContactHistoryService } from './contact-history.service';
-import { TransferContactInput } from './dto/transfer-contact.input';
+import { TransferContactArgs } from './dto/transfer-contact.args';
 import { ContactEventType } from './enums/contact-event-type.enum';
 import { ContactStatus } from './enums/contact-status.enum';
 import { HistoryEventType } from './enums/history-event-type.enum';
 
 @Injectable()
 export class ContactFlowService {
-  private readonly axios: AxiosInstance;
-
   constructor(
+    @Inject(CONTACTS_SERVICE) private readonly client: ClientProxy,
     private readonly eventEmitter: EventEmitter2,
     private readonly contactHistoryService: ContactHistoryService,
-    configService: ConfigService,
-  ) {
-    this.axios = axios.create({
-      baseURL: configService.get<string>('CONTACTS_URL'),
-    });
-  }
+  ) {}
 
-  async acceptContact(
-    authorization: string,
-    id: number,
-    userId: number,
-  ): Promise<boolean> {
-    try {
-      const res = await this.axios.patch<any>(
-        `/contacts/${id}`,
-        {
-          assignedTo: userId,
-        },
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      await this.contactHistoryService.create(
-        authorization,
-        id,
-        HistoryEventType.Accepted,
-        {
-          assignedTo: userId,
-        },
-      );
-
-      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async closeContact(authorization: string, id: number): Promise<boolean> {
-    try {
-      const res = await this.axios.patch<any>(
-        `/contacts/${id}`,
-        {
-          assignedTo: null,
-          status: ContactStatus.Closed,
-        },
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
-
-      await this.contactHistoryService.create(
-        authorization,
-        id,
-        HistoryEventType.Closed,
-        {},
-      );
-
-      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
-  }
-
-  async transferContact(
-    authorization: string,
-    input: TransferContactInput,
-  ): Promise<boolean> {
-    try {
-      const res = await this.axios.patch<any>(`/contacts/${input.id}`, input, {
+  async accept(authorization: string, id: number): Promise<boolean> {
+    const user = <Required<TokenPayload>>decode(authorization.slice(7));
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
         headers: {
           authorization,
         },
-      });
-
-      await this.contactHistoryService.create(
-        authorization,
-        input.id,
-        HistoryEventType.Transferred,
-        {
-          assignedTo: input.assignedTo,
+        payload: {
+          id,
+          assignedTo: {
+            id: user.id,
+          },
         },
-      );
+      }),
+    );
 
-      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+    await lastValueFrom(
+      this.contactHistoryService.create(
+        authorization,
+        id,
+        HistoryEventType.Assign,
+        {
+          assignedTo: {
+            id: user.id,
+          },
+        },
+      ),
+    );
+
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
   }
 
-  async returnContact(authorization: string, id: number): Promise<boolean> {
-    try {
-      const res = await this.axios.patch<any>(
-        `/contacts/${id}`,
+  async close(authorization: string, id: number): Promise<boolean> {
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
+        },
+        payload: {
+          id,
+          assignedTo: null,
+          status: ContactStatus.Closed,
+        },
+      }),
+    );
+
+    await lastValueFrom(
+      this.contactHistoryService.create(
+        authorization,
+        id,
+        HistoryEventType.Close,
+        {},
+      ),
+    );
+
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
+  }
+
+  async transfer(
+    authorization: string,
+    transferContactArgs: TransferContactArgs,
+  ): Promise<boolean> {
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
+        },
+        payload: {
+          id: transferContactArgs.id,
+          assignedTo: {
+            id: transferContactArgs.assignedTo,
+            type: transferContactArgs.type,
+          },
+        },
+      }),
+    );
+
+    await lastValueFrom(
+      this.contactHistoryService.create(
+        authorization,
+        transferContactArgs.id,
+        HistoryEventType.Assign,
         {
+          assignedTo: transferContactArgs.assignedTo,
+        },
+      ),
+    );
+
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
+  }
+
+  async return(authorization: string, id: number): Promise<boolean> {
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
+        },
+        payload: {
+          id,
           assignedTo: null,
           status: ContactStatus.Open,
         },
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
+      }),
+    );
 
-      await this.contactHistoryService.create(
+    await lastValueFrom(
+      this.contactHistoryService.create(
         authorization,
         id,
-        HistoryEventType.Returned,
+        HistoryEventType.BackToQueue,
         {},
-      );
+      ),
+    );
 
-      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
   }
 
-  async reopenContact(
-    authorization: string,
-    id: number,
-    userId: number,
-  ): Promise<boolean> {
-    try {
-      const res = await this.axios.patch<any>(
-        `/contacts/${id}`,
-        {
-          assignedTo: userId,
+  async reopen(authorization: string, id: number): Promise<boolean> {
+    const user = <Required<TokenPayload>>decode(authorization.slice(7));
+
+    const contact = await lastValueFrom(
+      this.client.send('contacts.update', {
+        headers: {
+          authorization,
+        },
+        payload: {
+          id,
+          assignedTo: {
+            id: user.id,
+            // TODO: type
+          },
           status: ContactStatus.Open,
         },
-        {
-          headers: {
-            authorization,
-          },
-        },
-      );
+      }),
+    );
 
-      await this.contactHistoryService.create(
+    await lastValueFrom(
+      this.contactHistoryService.create(
         authorization,
         id,
-        HistoryEventType.Reopened,
+        HistoryEventType.Assign,
         {
-          assignedTo: userId,
+          assignedTo: user.id,
         },
-      );
+      ),
+    );
 
-      this.eventEmitter.emit(ContactEventType.Update, authorization, res.data);
-      return true;
-    } catch (e) {
-      throw new BadRequestException(e.response.data);
-    }
+    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
+    return true;
   }
 }
