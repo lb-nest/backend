@@ -4,10 +4,12 @@ import {
   Injectable,
   NotImplementedException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { decode } from 'jsonwebtoken';
 import { lastValueFrom } from 'rxjs';
 import { TokenPayload } from 'src/auth/entities/token-payload.entity';
+import { ChatbotEventType } from 'src/chatbot/enums/chatbot-event-type.enum';
 import { ContactService } from 'src/contact/contact.service';
 import { pubSub } from 'src/pubsub';
 import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
@@ -21,6 +23,7 @@ export class MessageService {
   constructor(
     @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
     private readonly contactService: ContactService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(
@@ -104,6 +107,8 @@ export class MessageService {
   }
 
   async received(projectId: number, message: any): Promise<void> {
+    this.eventEmitter.emit(ChatbotEventType.Message, projectId, message);
+
     pubSub.publish(`messagesReceived:${projectId}:${message.chat.id}`, {
       messagesReceived: message,
     });
