@@ -2,11 +2,12 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { FileUpload } from 'graphql-upload';
-import { lastValueFrom, Observable } from 'rxjs';
+import { lastValueFrom, mergeMap, Observable } from 'rxjs';
 import { ChatService } from 'src/chat/chat.service';
 import { FindAllChatsForUserArgs } from 'src/chat/dto/find-chats.args';
 import { ProjectService } from 'src/project/project.service';
 import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
+import * as xlsx from 'xlsx';
 import { CreateContactArgs } from './dto/create-contact.args';
 import { UpdateContactArgs } from './dto/update-contact.args';
 import { Contact } from './entities/contact.entity';
@@ -23,15 +24,38 @@ export class ContactService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  import(authorization: string, csvOrXlsx: FileUpload): Observable<boolean> {
-    // TODO: парсинг csv или xlsx файла
-
-    return this.client.send<boolean>('contacts.import', {
-      headers: {
-        authorization,
-      },
-      payload: null,
-    });
+  import(authorization: string, csvOrXls: FileUpload): Observable<any> {
+    return new Observable<xlsx.WorkBook>((observer) => {
+      const buffer: Uint8Array[] = [];
+      csvOrXls
+        .createReadStream()
+        .on('data', buffer.push.bind(buffer))
+        .on('end', async () => {
+          observer.next(
+            xlsx.read(Buffer.concat(buffer), {
+              type: 'buffer',
+            }),
+          );
+          observer.complete();
+        })
+        .on('error', observer.error.bind(observer));
+    }).pipe(
+      mergeMap((workbook) =>
+        this.client.send<boolean>('contacts.import', {
+          headers: {
+            authorization,
+          },
+          payload: {
+            contacts: xlsx.utils.sheet_to_json(
+              workbook.Sheets[workbook.SheetNames[0]],
+              {
+                raw: true,
+              },
+            ),
+          },
+        }),
+      ),
+    );
   }
 
   async create(

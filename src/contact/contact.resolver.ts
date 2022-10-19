@@ -25,9 +25,9 @@ export class ContactResolver {
   @Mutation(() => Boolean)
   importContacts(
     @GqlHeaders('authorization') authorization: string,
-    @Args('csvOrXlsx', { type: () => GraphQLUpload }) csvOrXlsx: FileUpload,
+    @Args('csvOrXls', { type: () => GraphQLUpload }) csvOrXls: FileUpload,
   ): Observable<boolean> {
-    return this.contactService.import(authorization, csvOrXlsx);
+    return this.contactService.import(authorization, csvOrXls);
   }
 
   @Mutation(() => Contact)
