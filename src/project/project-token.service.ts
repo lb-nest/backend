@@ -10,29 +10,35 @@ export class ProjectTokenService {
     private readonly prismaService: PrismaService,
   ) {}
 
-  async save(projectId: number, token: Token): Promise<Token> {
+  async save(id: number, token: Token): Promise<Token> {
     return this.cacheManager.set(
-      `token:${projectId}`,
-      await this.prismaService.projectToken.create({
+      `token:${id}`,
+      await this.prismaService.project.create({
         data: {
-          projectId,
+          id,
           token: token.token,
+        },
+        select: {
+          token: true,
         },
       }),
     );
   }
 
-  async get(projectId: number): Promise<Token> {
-    const token = await this.cacheManager.get<Token>(`token:${projectId}`);
+  async get(id: number): Promise<Token> {
+    const token = await this.cacheManager.get<Token>(`token:${id}`);
     if (token) {
       return token;
     }
 
     return this.cacheManager.set(
-      `token:${projectId}`,
-      await this.prismaService.projectToken.findUniqueOrThrow({
+      `token:${id}`,
+      await this.prismaService.project.findUniqueOrThrow({
         where: {
-          projectId,
+          id,
+        },
+        select: {
+          token: true,
         },
       }),
     );
