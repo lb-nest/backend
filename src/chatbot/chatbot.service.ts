@@ -91,8 +91,8 @@ export class ChatbotService {
     this.sockets.delete(socket);
   }
 
-  emit(projectId: number, event: any): void {
-    this.emitter.emit(projectId.toString(), ChatbotEventType.NewEvent, event);
+  emit(event: any): void {
+    this.emitter.emit(event.projectId.toString(), event.type, event);
   }
 
   handleSendMessage(socket: Socket, message: any): void {

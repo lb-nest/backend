@@ -5,10 +5,12 @@ import {
   NotFoundException,
   NotImplementedException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, Observable } from 'rxjs';
 import { ChannelService } from 'src/channel/channel.service';
 import { ChannelType } from 'src/channel/enums/channel-type.enum';
+import { ChatbotEventType } from 'src/chatbot/enums/chatbot-event-type.enum';
 import { ContactService } from 'src/contact/contact.service';
 import { ProjectTokenService } from 'src/project/project-token.service';
 import { pubSub } from 'src/pubsub';
@@ -28,6 +30,7 @@ export class ChatService {
     @Inject(forwardRef(() => ChannelService))
     private readonly channelService: ChannelService,
     private readonly projectTokenService: ProjectTokenService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(
@@ -170,6 +173,11 @@ export class ChatService {
       chat.id,
       chat.contact,
     );
+
+    this.eventEmitter.emit(ChatbotEventType.NewChat, projectId, {
+      ...chat,
+      contact,
+    });
 
     pubSub.publish(`chatsReceived:${projectId}`, {
       chatsReceived: {
