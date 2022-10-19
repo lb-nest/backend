@@ -99,7 +99,9 @@ export class ChatService {
         headers: {
           authorization,
         },
-        payload: chatIds,
+        payload: {
+          ids: chatIds,
+        },
       }),
     );
 
