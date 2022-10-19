@@ -10,7 +10,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model ProjectToken {
-  projectId Int    @id
-  token     String
+model Project {
+  id             Int     @id
+  token          String
+  defaultChatbot Int?
+  mailings       Boolean @default(false)
 }
