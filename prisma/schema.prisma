@@ -11,8 +11,8 @@ datasource db {
 }
 
 model Project {
-  id             Int     @id
-  token          String
-  defaultChatbot Int?
-  mailings       Boolean @default(false)
+  id           Int     @id
+  token        String
+  integrations Boolean @default(false)
+  mailings     Boolean @default(false)
 }
