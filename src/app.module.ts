@@ -7,20 +7,29 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Context } from 'apollo-server-core';
 import Joi from 'joi';
 import mapObject from 'map-obj';
+import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { BillingModule } from './billing/billing.module';
 import { ChannelModule } from './channel/channel.module';
 import { ChatModule } from './chat/chat.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
 import { ContactModule } from './contact/contact.module';
+import { FeatureModule } from './feature/feature.module';
 import { FileModule } from './file/file.module';
 import { HsmModule } from './hsm/hsm.module';
+import { IntegrationModule } from './integration/integration.module';
+import { MailingModule } from './mailing/mailing.module';
 import { MessageModule } from './message/message.module';
 import { PrismaService } from './prisma.service';
 import { ProjectModule } from './project/project.module';
 import {
+  ADMIN_SERVICE,
   AUTH_SERVICE,
+  BILLING_SERVICE,
   CHATBOTS_SERVICE,
   CONTACTS_SERVICE,
+  INTEGRATIONS_SERVICE,
+  MAILINGS_SERVICE,
   MESSAGING_SERVICE,
 } from './shared/constants/broker';
 import { TagModule } from './tag/tag.module';
@@ -81,12 +90,34 @@ import { WebhookModule } from './webhook/webhook.module';
     }),
     ClientsModule.registerAsync([
       {
+        name: ADMIN_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${ADMIN_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
         name: AUTH_SERVICE,
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
             urls: [configService.get<string>('BROKER_URL')],
             queue: `${AUTH_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: BILLING_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${BILLING_SERVICE}_QUEUE`,
           },
         }),
         inject: [ConfigService],
@@ -114,6 +145,28 @@ import { WebhookModule } from './webhook/webhook.module';
         inject: [ConfigService],
       },
       {
+        name: INTEGRATIONS_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${INTEGRATIONS_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: MAILINGS_SERVICE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('BROKER_URL')],
+            queue: `${MAILINGS_SERVICE}_QUEUE`,
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
         name: MESSAGING_SERVICE,
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
@@ -125,18 +178,23 @@ import { WebhookModule } from './webhook/webhook.module';
         inject: [ConfigService],
       },
     ]),
+    AdminModule,
     AuthModule,
     ChannelModule,
     ChatModule,
     ChatbotModule,
     ContactModule,
+    FeatureModule,
     FileModule,
     HsmModule,
+    IntegrationModule,
+    MailingModule,
     MessageModule,
     ProjectModule,
     TagModule,
     UserModule,
     WebhookModule,
+    BillingModule,
   ],
   providers: [PrismaService],
   exports: [
