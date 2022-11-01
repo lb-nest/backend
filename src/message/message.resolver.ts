@@ -78,7 +78,7 @@ export class MessageResolver {
     @Auth() auth: Required<TokenPayload>,
     @Args('chatId', { type: () => Int }) chatId: number,
   ) {
-    const [contact] = await this.contactService.findAllForChat(
+    const [contact] = await this.contactService.findOneForChat(
       authorization,
       chatId,
     );

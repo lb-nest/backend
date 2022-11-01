@@ -30,7 +30,7 @@ export class MessageService {
     authorization: string,
     createMessageArgs: CreateMessageArgs,
   ): Promise<Message[]> {
-    const [contact] = await this.contactService.findAllForChat(
+    const [contact] = await this.contactService.findOneForChat(
       authorization,
       createMessageArgs.chatId,
     );
@@ -51,7 +51,7 @@ export class MessageService {
   }
 
   async findAll(authorization: string, chatId: number): Promise<Message[]> {
-    const [contact] = await this.contactService.findAllForChat(
+    const [contact] = await this.contactService.findOneForChat(
       authorization,
       chatId,
     );
@@ -86,7 +86,7 @@ export class MessageService {
     authorization: string,
     readMessagesArgs: ReadMessagesArgs,
   ): Promise<boolean> {
-    const [contact] = await this.contactService.findAllForChat(
+    const [contact] = await this.contactService.findOneForChat(
       authorization,
       readMessagesArgs.chatId,
     );

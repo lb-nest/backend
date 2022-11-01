@@ -118,7 +118,7 @@ export class ChatService {
   }
 
   async findOne(authorization: string, id: number): Promise<Chat> {
-    const [contact] = await this.contactService.findAllForChat(
+    const [contact] = await this.contactService.findOneForChat(
       authorization,
       id,
     );

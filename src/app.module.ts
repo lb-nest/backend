@@ -34,8 +34,7 @@ import { WebhookModule } from './webhook/webhook.module';
       validationSchema: Joi.object({
         DATABASE_URL: Joi.string().uri().required(),
         BROKER_URL: Joi.string().uri().required(),
-        PORT: Joi.number().default(8080),
-        WEBSOCKET_PORT: Joi.number().default(4040),
+        PORT: Joi.number().port().default(8080),
         SECRET: Joi.string().required(),
         S3_ENDPOINT: Joi.string().uri().required(),
         S3_ACCESS_KEY: Joi.string().required(),
