@@ -8,5 +8,6 @@ import { MessageService } from './message.service';
   imports: [forwardRef(() => AppModule)],
   providers: [MessageResolver, MessageService],
   controllers: [MessageController],
+  exports: [MessageService],
 })
 export class MessageModule {}

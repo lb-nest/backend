@@ -3,10 +3,20 @@ import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
 import { EventEmitter } from 'events';
 import { JwtPayload, verify } from 'jsonwebtoken';
-import { Observable } from 'rxjs';
+import { lastValueFrom, Observable } from 'rxjs';
 import { Socket } from 'socket.io';
+import { ContactFlowService } from 'src/contact/contact-flow.service';
+import { ContactTagService } from 'src/contact/contact-tag.service';
+import { MessageService } from 'src/message/message.service';
+import { ProjectTokenService } from 'src/project/project-token.service';
 import { CHATBOTS_SERVICE } from 'src/shared/constants/broker';
 import { CreateChatbotArgs } from './dto/create-chatbot.args';
+import { HandleAssignTagDto } from './dto/handle-assign-tag.dto';
+import { HandleCallbackDto } from './dto/handle-callback.dto';
+import { HandleCloseDto } from './dto/handle-close.dto';
+import { HandleSendMessageDto } from './dto/handle-send-message.dto';
+import { HandleTransferDto } from './dto/handle-transfer.dto';
+import { HandleWebhookDto } from './dto/handle-webhook.dto';
 import { UpdateChatbotArgs } from './dto/update-chatbot.args';
 import { Chatbot } from './entities/chatbot.entity';
 import { ChatbotEventType } from './enums/chatbot-event-type.enum';
@@ -14,11 +24,15 @@ import { ChatbotEventType } from './enums/chatbot-event-type.enum';
 @Injectable()
 export class ChatbotService {
   private readonly emitter = new EventEmitter();
-  private readonly sockets = new WeakMap<Socket, [string, Socket['emit']]>();
+  private readonly sockets = new WeakMap<Socket, [any, Socket['emit']]>();
 
   constructor(
     @Inject(CHATBOTS_SERVICE) private readonly client: ClientProxy,
     private readonly configService: ConfigService,
+    private readonly projectTokenService: ProjectTokenService,
+    private readonly messageService: MessageService,
+    private readonly contactFlowService: ContactFlowService,
+    private readonly contactTagService: ContactTagService,
   ) {
     this.emitter.setMaxListeners(Infinity);
   }
@@ -76,12 +90,12 @@ export class ChatbotService {
 
   handleConnection(socket: Socket): void {
     try {
-      const token = verify(
+      const jwt = verify(
         socket.handshake.auth.token,
         this.configService.get<string>('SECRET'),
       ) as JwtPayload;
 
-      this.sockets.set(socket, [token.project.id, socket.emit.bind(socket)]);
+      this.sockets.set(socket, [jwt.project.id, socket.emit.bind(socket)]);
       this.emitter.on(...this.sockets.get(socket));
     } catch {}
   }
@@ -92,40 +106,98 @@ export class ChatbotService {
   }
 
   emit(event: any): void {
-    this.emitter.emit(event.projectId.toString(), event.type, event);
+    this.emitter.emit(event.projectId, event.type, event);
   }
 
-  handleSendMessage(socket: Socket, message: any): void {
-    // TODO: call messageService.create
+  async handleSendMessage(
+    socket: Socket,
+    handleSendMessageDto: HandleSendMessageDto,
+  ): Promise<void> {
+    await this.messageService.create(
+      await this.authorize(socket),
+      handleSendMessageDto,
+    );
+
     socket.emit(ChatbotEventType.Callback, {
-      id: message.chatId,
+      id: handleSendMessageDto.chatId,
     });
   }
 
-  handleCallback(socket: Socket, message: any): void {
+  handleCallback(socket: Socket, handleCallbackDto: HandleCallbackDto): void {
     socket.emit(ChatbotEventType.Callback, {
-      id: message.chatId,
+      id: handleCallbackDto.chatId,
     });
   }
 
-  handleTransfer(socket: Socket, message: any): void {
-    // TODO: call contactFlowService.transfer
+  async handleTransfer(
+    socket: Socket,
+    handleTransferDto: HandleTransferDto,
+  ): Promise<void> {
+    await this.contactFlowService.transfer(
+      await this.authorize(socket),
+      handleTransferDto,
+    );
+
     socket.emit(ChatbotEventType.Callback, {
-      id: message.chatId,
+      id: handleTransferDto.chatId,
     });
   }
 
-  handleAssignTag(socket: Socket, message: any): void {
-    // TODO: call contactTagService.create
+  async handleAssignTag(
+    socket: Socket,
+    handleAssignTagDto: HandleAssignTagDto,
+  ): Promise<void> {
+    await lastValueFrom(
+      this.contactTagService.create(
+        await this.authorize(socket),
+        handleAssignTagDto.id,
+        handleAssignTagDto.tagId,
+      ),
+    );
+
     socket.emit(ChatbotEventType.Callback, {
-      id: message.chatId,
+      id: handleAssignTagDto.chatId,
     });
   }
 
-  handleClose(socket: Socket, message: any): void {
-    // TODO: call contactFlowService.close
+  async handleClose(
+    socket: Socket,
+    handleCloseDto: HandleCloseDto,
+  ): Promise<void> {
+    await this.contactFlowService.close(
+      await this.authorize(socket),
+      handleCloseDto.id,
+    );
+
     socket.emit(ChatbotEventType.Callback, {
-      id: message.chatId,
+      id: handleCloseDto.chatId,
     });
+  }
+
+  handleWebhook(token: string, handleWebhookDto: HandleWebhookDto): void {
+    try {
+      const jwt = verify(
+        token,
+        this.configService.get<string>('SECRET'),
+      ) as JwtPayload;
+
+      // TODO: create contact with chat
+      const chat = {
+        contact: {},
+      };
+
+      this.emit({
+        projectId: jwt.project.id,
+        type: ChatbotEventType.NewChat,
+        ...chat,
+        contact: chat.contact,
+      });
+    } catch {}
+  }
+
+  private async authorize(socket: Socket): Promise<string> {
+    const [projectId] = this.sockets.get(socket);
+    const { token } = await this.projectTokenService.get(projectId);
+    return `Bearer ${token}`;
   }
 }
