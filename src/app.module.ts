@@ -9,7 +9,6 @@ import Joi from 'joi';
 import mapObject from 'map-obj';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
-import { BillingModule } from './billing/billing.module';
 import { ChannelModule } from './channel/channel.module';
 import { ChatModule } from './chat/chat.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
@@ -34,6 +33,7 @@ import {
 } from './shared/constants/broker';
 import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
+import { WalletModule } from './wallet/wallet.module';
 import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
@@ -193,8 +193,8 @@ import { WebhookModule } from './webhook/webhook.module';
     ProjectModule,
     TagModule,
     UserModule,
+    WalletModule,
     WebhookModule,
-    BillingModule,
   ],
   providers: [PrismaService],
   exports: [
@@ -202,7 +202,11 @@ import { WebhookModule } from './webhook/webhook.module';
     ChannelModule,
     ChatModule,
     ContactModule,
+    IntegrationModule,
+    MailingModule,
+    MessageModule,
     ProjectModule,
+    WalletModule,
   ],
 })
 export class AppModule {}
