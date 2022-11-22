@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import GraphQLJSON from 'graphql-type-json';
 import { Attachment } from './attachment.entity';
+import { Button } from './button.entity';
 
 @ObjectType()
 export class Content {
@@ -10,6 +10,6 @@ export class Content {
   @Field(() => [Attachment])
   attachments: Attachment[];
 
-  @Field(() => [GraphQLJSON], { nullable: true })
-  buttons: any[] | null;
+  @Field(() => [Button])
+  buttons: Button[];
 }

@@ -1,7 +1,14 @@
 import { ArgsType, Field } from '@nestjs/graphql';
 import { Transform } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import GraphQLJSON from 'graphql-type-json';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { CreateAttachmentInput } from 'src/message/dto/create-attachment.input';
+import { CreateButtonInput } from 'src/message/dto/create-button.input';
 
 @ArgsType()
 export class CreateHsmArgs {
@@ -14,13 +21,15 @@ export class CreateHsmArgs {
   @IsString()
   text: string;
 
-  @Field(() => [GraphQLJSON], { nullable: true })
+  @Field(() => [CreateAttachmentInput], { nullable: true })
   @IsOptional()
   @IsArray()
-  attachments?: any[];
+  @ValidateNested({ each: true })
+  attachments?: CreateAttachmentInput[];
 
-  @Field(() => [GraphQLJSON], { nullable: true })
+  @Field(() => [CreateButtonInput], { nullable: true })
   @IsOptional()
   @IsArray()
-  buttons?: any[];
+  @ValidateNested({ each: true })
+  buttons?: CreateButtonInput[];
 }

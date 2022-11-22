@@ -1,5 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import GraphQLJSON from 'graphql-type-json';
+import { Attachment } from 'src/message/entities/attachment.entity';
+import { Button } from 'src/message/entities/button.entity';
 import { Approval } from './approval.entity';
 
 @ObjectType()
@@ -13,11 +14,11 @@ export class Hsm {
   @Field(() => String)
   text: string;
 
-  @Field(() => [GraphQLJSON], { nullable: true })
-  attachments: any[] | null;
+  @Field(() => [Attachment])
+  attachments: Attachment[];
 
-  @Field(() => [GraphQLJSON], { nullable: true })
-  buttons: any[] | null;
+  @Field(() => [Button])
+  buttons: Button[];
 
   @Field(() => [Approval])
   approval: Approval[];
