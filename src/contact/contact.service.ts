@@ -4,11 +4,12 @@ import { ClientProxy } from '@nestjs/microservices';
 import { FileUpload } from 'graphql-upload';
 import { lastValueFrom, mergeMap, Observable } from 'rxjs';
 import { ChatService } from 'src/chat/chat.service';
-import { FindAllChatsForUserArgs } from 'src/chat/dto/find-chats.args';
+import { FindAllChatsForUserArgs } from 'src/chat/dto/find-all-chats.args';
 import { ProjectService } from 'src/project/project.service';
 import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
 import * as xlsx from 'xlsx';
 import { CreateContactArgs } from './dto/create-contact.args';
+import { FindAllContactsArgs } from './dto/find-all-contacts.args';
 import { UpdateContactArgs } from './dto/update-contact.args';
 import { Contact } from './entities/contact.entity';
 import { ContactsCount } from './entities/contacts-count.entity';
@@ -110,13 +111,16 @@ export class ContactService {
     return contact;
   }
 
-  async findAll(authorization: string): Promise<Contact[]> {
+  async findAll(
+    authorization: string,
+    findAllContactsArgs: FindAllContactsArgs,
+  ): Promise<Contact[]> {
     const contacts = await lastValueFrom(
       this.client.send<Contact[]>('contacts.findAll', {
         headers: {
           authorization,
         },
-        payload: null,
+        payload: findAllContactsArgs,
       }),
     );
 
@@ -171,12 +175,12 @@ export class ContactService {
     return contacts;
   }
 
-  async findAllForChat(
+  async findOneForChat(
     authorization: string,
     ...ids: number[]
   ): Promise<Contact[]> {
     const contacts = await lastValueFrom(
-      this.client.send<Contact[]>('contacts.findAllForChat', {
+      this.client.send<Contact[]>('contacts.findOneForChat', {
         headers: {
           authorization,
         },

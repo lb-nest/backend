@@ -16,7 +16,7 @@ import { ProjectTokenService } from 'src/project/project-token.service';
 import { pubSub } from 'src/pubsub';
 import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
 import { CreateChatArgs } from './dto/create-chat.args';
-import { FindAllChatsForUserArgs } from './dto/find-chats.args';
+import { FindAllChatsForUserArgs } from './dto/find-all-chats.args';
 import { UpdateChatArgs } from './dto/update-chat.args';
 import { Chat } from './entities/chat.entity';
 import { ChatsCount } from './entities/chats-count.entity';

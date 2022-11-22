@@ -8,6 +8,7 @@ import { ContactHistoryService } from './contact-history.service';
 import { ContactTagService } from './contact-tag.service';
 import { ContactService } from './contact.service';
 import { CreateContactArgs } from './dto/create-contact.args';
+import { FindAllContactsArgs } from './dto/find-all-contacts.args';
 import { TransferContactArgs } from './dto/transfer-contact.args';
 import { UpdateContactArgs } from './dto/update-contact.args';
 import { Contact } from './entities/contact.entity';
@@ -41,8 +42,9 @@ export class ContactResolver {
   @Query(() => [Contact])
   contacts(
     @GqlHeaders('authorization') authorization: string,
+    @Args() findAllContactsArgs: FindAllContactsArgs,
   ): Promise<Contact[]> {
-    return this.contactService.findAll(authorization);
+    return this.contactService.findAll(authorization, findAllContactsArgs);
   }
 
   @Query(() => Contact)

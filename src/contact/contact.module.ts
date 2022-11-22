@@ -16,6 +16,6 @@ import { ContactEventListener } from './listeners/contact-event.listener';
     ContactTagService,
     ContactEventListener,
   ],
-  exports: [ContactService],
+  exports: [ContactService, ContactFlowService, ContactTagService],
 })
 export class ContactModule {}

@@ -15,7 +15,7 @@ import { pubSub } from 'src/pubsub';
 import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
 import { ChatService } from './chat.service';
 import { CreateChatArgs } from './dto/create-chat.args';
-import { FindAllChatsForUserArgs } from './dto/find-chats.args';
+import { FindAllChatsForUserArgs } from './dto/find-all-chats.args';
 import { Chat } from './entities/chat.entity';
 import { ChatsCount } from './entities/chats-count.entity';
 
