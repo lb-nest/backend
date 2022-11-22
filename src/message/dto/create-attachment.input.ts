@@ -1,8 +1,7 @@
-import { ArgsType, Field, InputType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { AttachmentType } from '../enums/attachment-type.enum';
 
-@ArgsType()
 @InputType()
 export class CreateAttachmentInput {
   @Field(() => AttachmentType)

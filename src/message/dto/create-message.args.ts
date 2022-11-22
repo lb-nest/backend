@@ -7,14 +7,20 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import GraphQLJSON from 'graphql-type-json';
-import { CreateAttachmentInput } from './create-attachment.args';
+import { GraphQLJSONObject } from 'graphql-type-json';
+import { CreateAttachmentInput } from './create-attachment.input';
+import { CreateButtonInput } from './create-button.input';
 
 @ArgsType()
 export class CreateMessageArgs {
   @Field(() => Int)
   @IsInt()
   chatId: number;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  hsmId?: number;
 
   @Field(() => String, { nullable: true })
   @IsOptional()
@@ -27,8 +33,14 @@ export class CreateMessageArgs {
   @ValidateNested({ each: true })
   attachments?: CreateAttachmentInput[];
 
-  @Field(() => [GraphQLJSON], { nullable: true })
+  @Field(() => [CreateButtonInput], { nullable: true })
+  @Type(() => CreateButtonInput)
   @IsOptional()
-  @IsObject({ each: true })
-  buttons?: any[];
+  @ValidateNested({ each: true })
+  buttons?: CreateButtonInput[];
+
+  @Field(() => GraphQLJSONObject, { nullable: true })
+  @IsOptional()
+  @IsObject()
+  variables?: Record<string, string>;
 }
