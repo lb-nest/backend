@@ -18,9 +18,6 @@ export class Chatbot {
   @Field(() => Boolean)
   enabled: boolean;
 
-  @Field(() => String, { nullable: true })
-  error?: string;
-
   @Field(() => String)
   createdAt: string;
 
