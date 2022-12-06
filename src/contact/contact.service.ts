@@ -5,15 +5,15 @@ import { FileUpload } from 'graphql-upload';
 import { lastValueFrom, mergeMap, Observable } from 'rxjs';
 import { ChatService } from 'src/chat/chat.service';
 import { FindAllChatsForUserArgs } from 'src/chat/dto/find-all-chats.args';
-import { ProjectService } from 'src/project/project.service';
+import { ChatEventType } from 'src/chat/enums/chat-event-type.enum';
 import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
 import * as xlsx from 'xlsx';
+import { ContactAssignedToService } from './contact-assigned-to.service';
 import { CreateContactArgs } from './dto/create-contact.args';
 import { FindAllContactsArgs } from './dto/find-all-contacts.args';
 import { UpdateContactArgs } from './dto/update-contact.args';
 import { Contact } from './entities/contact.entity';
 import { ContactsCount } from './entities/contacts-count.entity';
-import { ContactEventType } from './enums/contact-event-type.enum';
 
 @Injectable()
 export class ContactService {
@@ -21,7 +21,7 @@ export class ContactService {
     @Inject(CONTACTS_SERVICE) private readonly client: ClientProxy,
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
-    private readonly projectService: ProjectService,
+    private readonly contactAssignedToService: ContactAssignedToService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
@@ -63,22 +63,17 @@ export class ContactService {
     authorization: string,
     createContactArgs: CreateContactArgs,
   ): Promise<Contact> {
-    const contact = await lastValueFrom(
-      this.client.send<Contact>('contacts.create', {
-        headers: {
-          authorization,
-        },
-        payload: createContactArgs,
-      }),
+    const [contact] = await this.contactAssignedToService.forContact(
+      authorization,
+      await lastValueFrom(
+        this.client.send<Contact>('contacts.create', {
+          headers: {
+            authorization,
+          },
+          payload: createContactArgs,
+        }),
+      ),
     );
-
-    if (typeof contact.assignedTo?.id === 'number') {
-      const [assignedTo] = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
-      );
-
-      contact.assignedTo = assignedTo;
-    }
 
     return contact;
   }
@@ -88,27 +83,38 @@ export class ContactService {
     chatId: number,
     createContactArgs: CreateContactArgs,
   ): Promise<Contact> {
-    const contact = await lastValueFrom(
-      this.client.send<Contact>('contacts.createForChat', {
-        headers: {
-          authorization,
-        },
-        payload: {
-          chatId,
-          ...createContactArgs,
-        },
-      }),
+    const [contact] = await this.contactAssignedToService.forContact(
+      authorization,
+      await lastValueFrom(
+        this.client.send<Contact>('contacts.createForChat', {
+          headers: {
+            authorization,
+          },
+          payload: {
+            chatId,
+            ...createContactArgs,
+          },
+        }),
+      ),
     );
 
-    if (typeof contact.assignedTo?.id === 'number') {
-      const [assignedTo] = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
-      );
-
-      contact.assignedTo = assignedTo;
-    }
-
     return contact;
+  }
+
+  createChatFor(
+    authorization: string,
+    id: number,
+    chatId: number,
+  ): Observable<boolean> {
+    return this.client.send<boolean>('contacts.createChatFor', {
+      headers: {
+        authorization,
+      },
+      payload: {
+        id,
+        chatId,
+      },
+    });
   }
 
   async findAll(
@@ -124,23 +130,7 @@ export class ContactService {
       }),
     );
 
-    const assignedTo = contacts
-      .map((contact) => contact.assignedTo?.id)
-      .filter(Boolean);
-
-    if (assignedTo.length > 0) {
-      const users = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, ...assignedTo),
-      );
-
-      for (const contact of contacts) {
-        contact.assignedTo = users.find(
-          (user) => user.id === contact.assignedTo?.id,
-        );
-      }
-    }
-
-    return contacts;
+    return this.contactAssignedToService.forContact(authorization, ...contacts);
   }
 
   async findAllForUser(
@@ -156,23 +146,7 @@ export class ContactService {
       }),
     );
 
-    const assignedTo = contacts
-      .map((contact) => contact.assignedTo?.id)
-      .filter(Boolean);
-
-    if (assignedTo.length > 0) {
-      const users = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, ...assignedTo),
-      );
-
-      for (const contact of contacts) {
-        contact.assignedTo = users.find(
-          (user) => user.id === contact.assignedTo?.id,
-        );
-      }
-    }
-
-    return contacts;
+    return this.contactAssignedToService.forContact(authorization, ...contacts);
   }
 
   async findOneForChat(
@@ -190,51 +164,21 @@ export class ContactService {
       }),
     );
 
-    const assignedTo = contacts
-      .map((contact) => contact.assignedTo?.id)
-      .filter(Boolean);
-
-    if (assignedTo.length > 0) {
-      const users = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, ...assignedTo),
-      );
-
-      for (const contact of contacts) {
-        contact.assignedTo = users.find(
-          (user) => user.id === contact.assignedTo?.id,
-        );
-      }
-    }
-
-    return contacts;
-  }
-
-  countAll(authorization: string): Observable<ContactsCount> {
-    return this.client.send<ContactsCount>('contacts.countAll', {
-      headers: {
-        authorization,
-      },
-      payload: null,
-    });
+    return this.contactAssignedToService.forContact(authorization, ...contacts);
   }
 
   async findOne(authorization: string, id: number): Promise<Contact> {
-    const contact = await lastValueFrom(
-      this.client.send<Contact>('contacts.findOne', {
-        headers: {
-          authorization,
-        },
-        payload: id,
-      }),
+    const [contact] = await this.contactAssignedToService.forContact(
+      authorization,
+      await lastValueFrom(
+        this.client.send<Contact>('contacts.findOne', {
+          headers: {
+            authorization,
+          },
+          payload: id,
+        }),
+      ),
     );
-
-    if (typeof contact.assignedTo?.id === 'number') {
-      const [assignedTo] = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
-      );
-
-      contact.assignedTo = assignedTo;
-    }
 
     return contact;
   }
@@ -243,47 +187,39 @@ export class ContactService {
     authorization: string,
     updateContactArgs: UpdateContactArgs,
   ): Promise<Contact> {
-    const contact = await lastValueFrom(
-      this.client.send<Contact>('contacts.update', {
-        headers: {
-          authorization,
-        },
-        payload: updateContactArgs,
-      }),
-    );
-
-    await Promise.allSettled(
-      contact.chats.map((chat) =>
-        lastValueFrom(
-          this.chatService.update(authorization, {
-            id: chat.id,
-            name: contact.name,
-            avatarUrl: contact.avatarUrl,
-          }),
-        ),
+    const [contact] = await this.contactAssignedToService.forContact(
+      authorization,
+      await lastValueFrom(
+        this.client.send<Contact>('contacts.update', {
+          headers: {
+            authorization,
+          },
+          payload: updateContactArgs,
+        }),
       ),
     );
 
-    if (typeof contact.assignedTo?.id === 'number') {
-      const [assignedTo] = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
-      );
+    this.eventEmitter.emit(
+      ChatEventType.ContactUpdated,
+      authorization,
+      contact.chats[0]?.id,
+      contact,
+    );
 
-      contact.assignedTo = assignedTo;
-    }
-
-    this.eventEmitter.emit(ContactEventType.Update, authorization, contact);
     return contact;
   }
 
   async remove(authorization: string, id: number): Promise<Contact> {
-    const contact = await lastValueFrom(
-      this.client.send<Contact>('contacts.remove', {
-        headers: {
-          authorization,
-        },
-        payload: id,
-      }),
+    const [contact] = await this.contactAssignedToService.forContact(
+      authorization,
+      await lastValueFrom(
+        this.client.send<Contact>('contacts.remove', {
+          headers: {
+            authorization,
+          },
+          payload: id,
+        }),
+      ),
     );
 
     await Promise.allSettled(
@@ -292,31 +228,16 @@ export class ContactService {
       ),
     );
 
-    if (typeof contact.assignedTo?.id === 'number') {
-      const [assignedTo] = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, contact.assignedTo.id),
-      );
-
-      contact.assignedTo = assignedTo;
-    }
-
-    // TODO: оповещать вебсокеты
+    // TODO: websockets
     return contact;
   }
 
-  createChatForContact(
-    authorization: string,
-    id: number,
-    chatId: number,
-  ): Observable<boolean> {
-    return this.client.send<boolean>('contacts.connectChat', {
+  countAll(authorization: string): Observable<ContactsCount> {
+    return this.client.send<ContactsCount>('contacts.countAll', {
       headers: {
         authorization,
       },
-      payload: {
-        id,
-        chatId,
-      },
+      payload: null,
     });
   }
 }

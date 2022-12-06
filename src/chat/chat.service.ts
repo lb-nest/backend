@@ -17,7 +17,6 @@ import { pubSub } from 'src/pubsub';
 import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
 import { CreateChatArgs } from './dto/create-chat.args';
 import { FindAllChatsForUserArgs } from './dto/find-all-chats.args';
-import { UpdateChatArgs } from './dto/update-chat.args';
 import { Chat } from './entities/chat.entity';
 import { ChatsCount } from './entities/chats-count.entity';
 
@@ -67,7 +66,7 @@ export class ChatService {
     );
 
     await lastValueFrom(
-      this.contactService.createChatForContact(
+      this.contactService.createChatFor(
         authorization,
         createChatArgs.contactId,
         chat.id,
@@ -93,7 +92,7 @@ export class ChatService {
       return [];
     }
 
-    const chatIds = contacts.map(({ chats }) => chats[0].id);
+    const chatIds = contacts.map(({ chats }) => chats[0]?.id).filter(Boolean);
     const chats = await lastValueFrom(
       this.client.send<Array<Omit<Chat, 'contact'>>>('chats.findAll', {
         headers: {
@@ -140,18 +139,6 @@ export class ChatService {
       ...chat,
       contact,
     };
-  }
-
-  update(
-    authorization: string,
-    input: UpdateChatArgs,
-  ): Observable<Omit<Chat, 'contact'>> {
-    return this.client.send<Omit<Chat, 'contact'>>('chats.update', {
-      headers: {
-        authorization,
-      },
-      payload: input,
-    });
   }
 
   remove(authorization: string, id: number): Observable<Omit<Chat, 'contact'>> {

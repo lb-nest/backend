@@ -1,5 +1,14 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { IsInt, IsOptional, IsString, IsUrl } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  ValidateNested,
+} from 'class-validator';
+import { ContactStatus } from '../enums/contact-status.enum';
+import { CreateAssignedToInput } from './create-assigned-to.input';
 
 @ArgsType()
 export class CreateContactArgs {
@@ -37,4 +46,13 @@ export class CreateContactArgs {
   @IsOptional()
   @IsInt({ each: true })
   tags?: number[];
+
+  // @Field(() => [CreateAssignedToInput], { nullable: true })
+  @IsOptional()
+  @ValidateNested()
+  assignedTo?: CreateAssignedToInput | null;
+
+  // @Field(() => ContactStatus, { nullable: true })
+  @IsEnum(ContactStatus)
+  status?: ContactStatus;
 }
