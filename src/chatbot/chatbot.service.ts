@@ -101,8 +101,10 @@ export class ChatbotService {
   }
 
   handleDisconnect(socket: Socket): void {
-    this.emitter.off(...this.sockets.get(socket));
-    this.sockets.delete(socket);
+    try {
+      this.emitter.off(...this.sockets.get(socket));
+      this.sockets.delete(socket);
+    } catch {}
   }
 
   emit(event: any): void {
@@ -114,7 +116,7 @@ export class ChatbotService {
     handleSendMessageDto: HandleSendMessageDto,
   ): Promise<void> {
     await this.messageService.create(
-      await this.authorize(socket),
+      `Bearer ${socket.handshake.auth.token}`,
       handleSendMessageDto,
     );
 
@@ -134,7 +136,7 @@ export class ChatbotService {
     handleTransferDto: HandleTransferDto,
   ): Promise<void> {
     await this.contactFlowService.transfer(
-      await this.authorize(socket),
+      `Bearer ${socket.handshake.auth.token}`,
       handleTransferDto,
     );
 
@@ -149,7 +151,7 @@ export class ChatbotService {
   ): Promise<void> {
     await lastValueFrom(
       this.contactTagService.create(
-        await this.authorize(socket),
+        `Bearer ${socket.handshake.auth.token}`,
         handleAssignTagDto.id,
         handleAssignTagDto.tagId,
       ),
@@ -165,7 +167,7 @@ export class ChatbotService {
     handleCloseDto: HandleCloseDto,
   ): Promise<void> {
     await this.contactFlowService.close(
-      await this.authorize(socket),
+      `Bearer ${socket.handshake.auth.token}`,
       handleCloseDto.id,
     );
 
@@ -193,11 +195,5 @@ export class ChatbotService {
         contact: chat.contact,
       });
     } catch {}
-  }
-
-  private async authorize(socket: Socket): Promise<string> {
-    const [projectId] = this.sockets.get(socket);
-    const { token } = await this.projectTokenService.get(projectId);
-    return `Bearer ${token}`;
   }
 }
