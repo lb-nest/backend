@@ -53,6 +53,7 @@ export class CreateContactArgs {
   assignedTo?: CreateAssignedToInput | null;
 
   // @Field(() => ContactStatus, { nullable: true })
+  @IsOptional()
   @IsEnum(ContactStatus)
   status?: ContactStatus;
 }

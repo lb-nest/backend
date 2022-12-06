@@ -149,6 +149,22 @@ export class ContactService {
     return this.contactAssignedToService.forContact(authorization, ...contacts);
   }
 
+  async findOne(authorization: string, id: number): Promise<Contact> {
+    const [contact] = await this.contactAssignedToService.forContact(
+      authorization,
+      await lastValueFrom(
+        this.client.send<Contact>('contacts.findOne', {
+          headers: {
+            authorization,
+          },
+          payload: id,
+        }),
+      ),
+    );
+
+    return contact;
+  }
+
   async findOneForChat(
     authorization: string,
     ...ids: number[]
@@ -165,22 +181,6 @@ export class ContactService {
     );
 
     return this.contactAssignedToService.forContact(authorization, ...contacts);
-  }
-
-  async findOne(authorization: string, id: number): Promise<Contact> {
-    const [contact] = await this.contactAssignedToService.forContact(
-      authorization,
-      await lastValueFrom(
-        this.client.send<Contact>('contacts.findOne', {
-          headers: {
-            authorization,
-          },
-          payload: id,
-        }),
-      ),
-    );
-
-    return contact;
   }
 
   async update(
