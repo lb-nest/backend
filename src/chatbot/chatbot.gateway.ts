@@ -1,6 +1,8 @@
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
@@ -15,7 +17,9 @@ import { ChatbotEventType } from './enums/chatbot-event-type.enum';
 
 // TODO: https://stackoverflow.com/questions/69435506/how-to-pass-a-dynamic-port-to-the-websockets-gateway-in-nestjs
 @WebSocketGateway(10100)
-export class ChatbotGateway {
+export class ChatbotGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   constructor(private readonly chatbotService: ChatbotService) {}
 
   handleConnection(socket: Socket): void {
