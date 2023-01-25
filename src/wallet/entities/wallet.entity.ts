@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { MesagingQuota } from './messaging-quota.entity';
+import { SubscriptionEntity } from './subscription.entity';
 
 @ObjectType()
 export class Wallet {
@@ -14,4 +15,7 @@ export class Wallet {
 
   @Field(() => [MesagingQuota])
   messagingQuota: MesagingQuota[];
+
+  @Field(() => SubscriptionEntity, { nullable: true })
+  subscription: SubscriptionEntity | null;
 }

@@ -10,42 +10,30 @@ import { User } from './entities/user.entity';
 export class UserService {
   constructor(@Inject(AUTH_SERVICE) private readonly client: ClientProxy) {}
 
-  findMe(authorization: string): Observable<User> {
-    return this.client.send<User>('users.@me', {
-      headers: {
-        authorization,
-      },
-      payload: null,
+  findAll(): Observable<User[]> {
+    return this.client.send<User[]>('findAllUsers', undefined);
+  }
+
+  findOne(id: number): Observable<User> {
+    return this.client.send<User>('findOneUser', id);
+  }
+
+  update(id: number, updateUserArgs: UpdateUserArgs): Observable<User> {
+    return this.client.send<User>('updateUser', {
+      id,
+      ...updateUserArgs,
     });
   }
 
-  findAllProjects(authorization: string): Observable<Project[]> {
-    return this.client.send<Project[]>('users.@me.findAllProjects', {
-      headers: {
-        authorization,
-      },
-      payload: null,
-    });
+  remove(id: number): Observable<User> {
+    return this.client.send<User>('removeUser', id);
   }
 
-  update(
-    authorization: string,
-    updateUserArgs: UpdateUserArgs,
-  ): Observable<User> {
-    return this.client.send<User>('users.@me.update', {
-      headers: {
-        authorization,
-      },
-      payload: updateUserArgs,
-    });
+  confirm(code: string): Observable<boolean> {
+    return this.client.send<boolean>('confirmUser', code);
   }
 
-  remove(authorization: string): Observable<User> {
-    return this.client.send<User>('users.@me.remove', {
-      headers: {
-        authorization,
-      },
-      payload: null,
-    });
+  findAllProjects(id: number): Observable<Project[]> {
+    return this.client.send<Project[]>('findAllUserProjects', id);
   }
 }

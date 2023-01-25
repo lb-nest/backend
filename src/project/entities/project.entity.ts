@@ -1,6 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { Billing } from './billing.entity';
-import { Role } from './role.entity';
+import { ProjectUser } from './project-user.entity';
 
 @ObjectType()
 export class Project {
@@ -13,11 +12,8 @@ export class Project {
   @Field(() => String)
   slug: string;
 
-  @Field(() => Billing)
-  billing: Billing;
-
-  @Field(() => [Role])
-  roles: Role[];
+  @Field(() => [ProjectUser])
+  users: ProjectUser[];
 
   @Field(() => String)
   createdAt: string;

@@ -1,7 +1,8 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
-import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { BearerAuth } from 'src/auth/decorators/bearer-auth.decorator';
+import { BearerAuthGuard } from 'src/auth/guargs/bearer-auth.guard';
+import { Auth } from 'src/auth/interfaces/auth.interface';
 import { CreateWalletArgs } from './dto/create-wallet.args';
 import { UpdateWalletArgs } from './dto/update-wallet.args';
 import { Wallet } from './entities/wallet.entity';
@@ -14,30 +15,30 @@ export class WalletResolver {
   @UseGuards(BearerAuthGuard)
   @Mutation(() => Wallet)
   createWallet(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args() createWalletArgs: CreateWalletArgs,
   ) {
-    return this.walletService.create(authorization, createWalletArgs);
+    return this.walletService.create(auth.project.id, createWalletArgs);
   }
 
   @UseGuards(BearerAuthGuard)
   @Query(() => Wallet)
-  wallet(@GqlHeaders('authorization') authorization: string) {
-    return this.walletService.findOne(authorization);
+  wallet(@BearerAuth() auth: Required<Auth>) {
+    return this.walletService.findOne(auth.project.id);
   }
 
   @UseGuards(BearerAuthGuard)
   @Mutation(() => Wallet)
   updateWallet(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args() updateWalletArgs: UpdateWalletArgs,
   ) {
-    return this.walletService.update(authorization, updateWalletArgs);
+    return this.walletService.update(auth.project.id, updateWalletArgs);
   }
 
   @UseGuards(BearerAuthGuard)
   @Mutation(() => Wallet)
-  removeWallet(@GqlHeaders('authorization') authorization: string) {
-    return this.walletService.remove(authorization);
+  removeWallet(@BearerAuth() auth: Required<Auth>) {
+    return this.walletService.remove(auth.project.id);
   }
 }

@@ -11,44 +11,40 @@ export class WalletService {
   constructor(@Inject(BILLING_SERVICE) private readonly client: ClientProxy) {}
 
   create(
-    authorization: string,
+    projectId: number,
     createWalletArgs: CreateWalletArgs,
   ): Observable<Wallet> {
-    return this.client.send<Wallet>('wallet.create', {
-      headers: {
-        authorization,
-      },
-      payload: createWalletArgs,
+    return this.client.send<Wallet>('createWallet', {
+      projectId,
+      ...createWalletArgs,
     });
   }
 
-  findOne(authorization: string): Observable<Wallet> {
-    return this.client.send<Wallet>('wallet.findOne', {
-      headers: {
-        authorization,
-      },
-      payload: null,
+  findAll(...projectIds: number[]): Observable<Wallet[]> {
+    return this.client.send<Wallet[]>('findAllWallets', {
+      projectIds,
+    });
+  }
+
+  findOne(projectId: number): Observable<Wallet> {
+    return this.client.send<Wallet>('findOneWallet', {
+      projectId,
     });
   }
 
   update(
-    authorization: string,
+    projectId: number,
     updateWalletArgs: UpdateWalletArgs,
   ): Observable<Wallet> {
-    return this.client.send<Wallet>('wallet.update', {
-      headers: {
-        authorization,
-      },
-      payload: updateWalletArgs,
+    return this.client.send<Wallet>('updateWallet', {
+      projectId,
+      ...updateWalletArgs,
     });
   }
 
-  remove(authorization: string): Observable<Wallet> {
-    return this.client.send<Wallet>('wallet.remove', {
-      headers: {
-        authorization,
-      },
-      payload: null,
+  remove(projectId: number): Observable<Wallet> {
+    return this.client.send<Wallet>('removeWallet', {
+      projectId,
     });
   }
 }

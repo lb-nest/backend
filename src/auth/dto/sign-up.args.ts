@@ -2,7 +2,7 @@ import { ArgsType, Field } from '@nestjs/graphql';
 import { IsOptional, IsString } from 'class-validator';
 
 @ArgsType()
-export class SignupArgs {
+export class SignUpArgs {
   @Field(() => String)
   @IsString()
   name: string;

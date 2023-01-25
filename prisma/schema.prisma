@@ -10,9 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Project {
-  id           Int     @id
-  token        String
-  integrations Boolean @default(false)
-  mailings     Boolean @default(false)
+model Example {
+  id Int @id @default(autoincrement())
 }

@@ -7,7 +7,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma.service';
 import { BACKEND } from './shared/constants/broker';
-// import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
+import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,8 +29,8 @@ async function bootstrap() {
     }),
   );
 
-  // app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.connectMicroservice<MicroserviceOptions>(
     {

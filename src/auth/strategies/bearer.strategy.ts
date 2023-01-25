@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-http-bearer';
 import { lastValueFrom } from 'rxjs';
 import { AUTH_SERVICE } from 'src/shared/constants/broker';
-import { TokenPayload } from './entities/token-payload.entity';
+import { Auth } from '../interfaces/auth.interface';
 
 @Injectable()
 export class BearerStrategy extends PassportStrategy(Strategy) {
@@ -12,14 +12,13 @@ export class BearerStrategy extends PassportStrategy(Strategy) {
     super();
   }
 
-  async validate(token: string): Promise<TokenPayload> {
+  async validate(token: string): Promise<Auth> {
     try {
       return await lastValueFrom(
-        this.client.send('auth.validateToken', {
+        this.client.send('validateToken', {
           headers: {
             authorization: `Bearer ${token}`,
           },
-          payload: null,
         }),
       );
     } catch {

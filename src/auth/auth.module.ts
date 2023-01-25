@@ -3,7 +3,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AppModule } from 'src/app.module';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
-import { BearerStrategy } from './bearer.strategy';
+import { BearerStrategy } from './strategies/bearer.strategy';
 
 @Module({
   imports: [forwardRef(() => AppModule), PassportModule],

@@ -4,99 +4,97 @@ import { lastValueFrom, Observable } from 'rxjs';
 import { Token } from 'src/auth/entities/token.entity';
 import { AUTH_SERVICE } from 'src/shared/constants/broker';
 import { User } from 'src/user/entities/user.entity';
+import { WalletService } from 'src/wallet/wallet.service';
 import { CreateProjectArgs } from './dto/create-project.args';
 import { InviteUserArgs } from './dto/invite-user.args';
 import { UpdateProjectArgs } from './dto/update-project.args';
 import { ProjectWithToken } from './entities/project-with-token.entity';
 import { Project } from './entities/project.entity';
-import { ProjectTokenService } from './project-token.service';
 
 @Injectable()
 export class ProjectService {
   constructor(
     @Inject(AUTH_SERVICE) private readonly client: ClientProxy,
-    private readonly projectTokenService: ProjectTokenService,
+    private readonly walletService: WalletService,
   ) {}
 
   async create(
-    authorization: string,
+    userId: number,
     createProjectArgs: CreateProjectArgs,
   ): Promise<ProjectWithToken> {
     const project = await lastValueFrom(
-      this.client.send<Project>('projects.create', {
-        headers: {
-          authorization,
-        },
-        payload: createProjectArgs,
+      this.client.send<Project>('createProject', {
+        userId,
+        ...createProjectArgs,
       }),
     );
 
+    await Promise.allSettled([
+      lastValueFrom(
+        this.walletService.create(project.id, {
+          country: 'RU',
+          currency: 'RUB',
+        }),
+      ),
+    ]);
+
     return {
       ...project,
-      token: await this.projectTokenService.save(
-        project.id,
-        await lastValueFrom(this.signIn(authorization, project.id)),
-      ),
+      token: await lastValueFrom(this.createToken(userId, project.id)),
     };
   }
 
-  signIn(authorization: string, id: number): Observable<Token> {
-    return this.client.send<Token>('projects.createToken', {
-      headers: {
-        authorization,
-      },
-      payload: id,
+  findAll(): Observable<Project[]> {
+    return this.client.send<Project[]>('findAllProjects', undefined);
+  }
+
+  findOne(userId: number, id: number): Observable<Project> {
+    return this.client.send<Project>('findOneProject', {
+      userId,
+      id,
     });
   }
 
-  findMe(authorization: string): Observable<Project> {
-    return this.client.send<Project>('projects.@me', {
-      headers: {
-        authorization,
-      },
-      payload: null,
-    });
-  }
-
-  updateMe(
-    authorization: string,
+  update(
+    userId: number,
+    id: number,
     updateProjectArgs: UpdateProjectArgs,
   ): Observable<Project> {
-    return this.client.send<Project>('projects.@me.update', {
-      headers: {
-        authorization,
-      },
-      payload: updateProjectArgs,
+    return this.client.send<Project>('updateProject', {
+      userId,
+      id,
+      ...updateProjectArgs,
     });
   }
 
-  removeMe(authorization: string): Observable<Project> {
-    return this.client.send<Project>('projects.@me.remove', {
-      headers: {
-        authorization,
-      },
-      payload: null,
+  remove(userId: number, id: number): Observable<Project> {
+    return this.client.send<Project>('removeProject', {
+      userId,
+      id,
     });
   }
 
-  inviteUser(
-    authorization: string,
+  createToken(userId: number, id: number): Observable<Token> {
+    return this.client.send<Token>('createProjectToken', {
+      userId,
+      id,
+    });
+  }
+
+  createUser(
+    projectId: number,
     inviteUserArgs: InviteUserArgs,
   ): Observable<boolean> {
-    return this.client.send<boolean>('projects.@me.inviteUser', {
-      headers: {
-        authorization,
-      },
-      payload: inviteUserArgs,
+    return this.client.send<boolean>('createProjectUser', {
+      projectId,
+      ...inviteUserArgs,
     });
   }
 
-  findAllUsers(authorization: string, ...ids: number[]): Observable<User[]> {
-    return this.client.send<User[]>('projects.@me.findAllUsers', {
-      headers: {
-        authorization,
-      },
-      payload: ids,
+  findAllUsers(projectId: number, ...ids: number[]): Observable<User[]> {
+    return this.client.send<User[]>('findAllProjectUsers', {
+      projectId,
+      ids: ids.length > 0 ? ids : undefined,
     });
   }
 }
