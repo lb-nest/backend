@@ -13,7 +13,6 @@ import { ChannelModule } from './channel/channel.module';
 import { ChatModule } from './chat/chat.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
 import { ContactModule } from './contact/contact.module';
-import { FeatureModule } from './feature/feature.module';
 import { FileModule } from './file/file.module';
 import { HsmModule } from './hsm/hsm.module';
 import { IntegrationModule } from './integration/integration.module';
@@ -184,7 +183,6 @@ import { WebhookModule } from './webhook/webhook.module';
     ChatModule,
     ChatbotModule,
     ContactModule,
-    FeatureModule,
     FileModule,
     HsmModule,
     IntegrationModule,
