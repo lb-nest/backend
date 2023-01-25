@@ -1,7 +1,7 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { FileUpload, GraphQLUpload } from 'graphql-upload';
-import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
+import { BearerAuthGuard } from 'src/auth/guargs/bearer-auth.guard';
 import { FileService } from './file.service';
 
 @Resolver()
