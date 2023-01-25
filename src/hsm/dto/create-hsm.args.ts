@@ -1,5 +1,5 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsNotEmpty,
@@ -22,12 +22,14 @@ export class CreateHsmArgs {
   text: string;
 
   @Field(() => [CreateAttachmentInput], { nullable: true })
+  @Type(() => CreateAttachmentInput)
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   attachments?: CreateAttachmentInput[];
 
   @Field(() => [CreateButtonInput], { nullable: true })
+  @Type(() => CreateButtonInput)
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

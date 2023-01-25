@@ -1,7 +1,9 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 export enum ChannelType {
+  Instagram = 'Instagram',
   Telegram = 'Telegram',
+  Vkontakte = 'Vkontakte',
   Webchat = 'Webchat',
   Whatsapp = 'Whatsapp',
 }

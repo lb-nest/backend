@@ -6,6 +6,5 @@ import { HsmService } from './hsm.service';
 @Module({
   imports: [forwardRef(() => AppModule)],
   providers: [HsmResolver, HsmService],
-  exports: [HsmService],
 })
 export class HsmModule {}

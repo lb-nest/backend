@@ -12,48 +12,37 @@ export class HsmService {
     @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
   ) {}
 
-  create(authorization: string, createHsmArgs: CreateHsmArgs): Observable<Hsm> {
-    return this.client.send<Hsm>('hsm.create', {
-      headers: {
-        authorization,
-      },
-      payload: createHsmArgs,
+  create(projectId: number, createHsmArgs: CreateHsmArgs): Observable<Hsm> {
+    return this.client.send<Hsm>('createHsm', {
+      projectId,
+      ...createHsmArgs,
     });
   }
 
-  findAll(authorization: string): Observable<Hsm[]> {
-    return this.client.send<Hsm[]>('hsm.findAll', {
-      headers: {
-        authorization,
-      },
-      payload: null,
+  findAll(projectId: number): Observable<Hsm[]> {
+    return this.client.send<Hsm[]>('findAllHsm', {
+      projectId,
     });
   }
 
-  findOne(authorization: string, id: number): Observable<Hsm> {
-    return this.client.send<Hsm>('hsm.findOne', {
-      headers: {
-        authorization,
-      },
-      payload: id,
+  findOne(projectId: number, id: number): Observable<Hsm> {
+    return this.client.send<Hsm>('findOneHsm', {
+      projectId,
+      id,
     });
   }
 
-  update(authorization: string, updateHsmArgs: UpdateHsmArgs): Observable<Hsm> {
-    return this.client.send<Hsm>('hsm.update', {
-      headers: {
-        authorization,
-      },
-      payload: updateHsmArgs,
+  update(projectId: number, updateHsmArgs: UpdateHsmArgs): Observable<Hsm> {
+    return this.client.send<Hsm>('updateHsm', {
+      projectId,
+      ...updateHsmArgs,
     });
   }
 
-  remove(authorization: string, id: number): Observable<Hsm> {
-    return this.client.send<Hsm>('hsm.remove', {
-      headers: {
-        authorization,
-      },
-      payload: id,
+  remove(projectId: number, id: number): Observable<Hsm> {
+    return this.client.send<Hsm>('removeHsm', {
+      projectId,
+      id,
     });
   }
 }

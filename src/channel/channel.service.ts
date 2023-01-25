@@ -12,48 +12,43 @@ export class ChannelService {
     @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
   ) {}
 
-  create(authorization: string, args: CreateChannelArgs): Observable<Channel> {
-    return this.client.send<Channel>('channels.create', {
-      headers: {
-        authorization,
-      },
-      payload: args,
+  create(
+    projectId: number,
+    createChannelArgs: CreateChannelArgs,
+  ): Observable<Channel> {
+    return this.client.send<Channel>('createChannel', {
+      projectId,
+      ...createChannelArgs,
     });
   }
 
-  findAll(authorization: string): Observable<Channel[]> {
-    return this.client.send<Channel[]>('channels.findAll', {
-      headers: {
-        authorization,
-      },
-      payload: null,
+  findAll(projectId: number): Observable<Channel[]> {
+    return this.client.send<Channel[]>('findAllChannels', {
+      projectId,
     });
   }
 
-  findOne(authorization: string, id: number): Observable<Channel> {
-    return this.client.send<Channel>('channels.findOne', {
-      headers: {
-        authorization,
-      },
-      payload: id,
+  findOne(projectId: number, id: number): Observable<Channel> {
+    return this.client.send<Channel>('findOneChannel', {
+      projectId,
+      id,
     });
   }
 
-  update(authorization: string, args: UpdateChannelArgs): Observable<Channel> {
-    return this.client.send<Channel>('channels.update', {
-      headers: {
-        authorization,
-      },
-      payload: args,
+  update(
+    projectId: number,
+    updateChannelArgs: UpdateChannelArgs,
+  ): Observable<Channel> {
+    return this.client.send<Channel>('updateChannel', {
+      projectId,
+      ...updateChannelArgs,
     });
   }
 
-  remove(authorization: string, id: number): Observable<Channel> {
-    return this.client.send<Channel>('channels.remove', {
-      headers: {
-        authorization,
-      },
-      payload: id,
+  remove(projectId: number, id: number): Observable<Channel> {
+    return this.client.send<Channel>('removeChannel', {
+      projectId,
+      id,
     });
   }
 }

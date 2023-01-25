@@ -1,5 +1,5 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { IsEnum, IsString, ValidateIf } from 'class-validator';
+import { IsEnum, IsString } from 'class-validator';
 import { ChannelType } from '../enums/channel-type.enum';
 
 @ArgsType()
@@ -12,12 +12,9 @@ export class CreateChannelArgs {
   @IsEnum(ChannelType)
   type: ChannelType;
 
-  @Field(() => String, { nullable: true })
-  @ValidateIf(
-    (object: CreateChannelArgs) => object.type === ChannelType.Whatsapp,
-  )
+  @Field(() => String)
   @IsString()
-  accountId?: string;
+  accountId: string;
 
   @Field(() => String)
   @IsString()
