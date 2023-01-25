@@ -1,3 +1,3 @@
 import { CreateMessageArgs } from 'src/message/dto/create-message.args';
 
-export class HandleSendMessageDto extends CreateMessageArgs {}
+export class HandleCreateMessageDto extends CreateMessageArgs {}

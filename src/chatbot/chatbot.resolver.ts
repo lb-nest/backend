@@ -1,6 +1,9 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
-import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { BearerAuth } from 'src/auth/decorators/bearer-auth.decorator';
+import { BearerAuthGuard } from 'src/auth/guargs/bearer-auth.guard';
+import { Auth } from 'src/auth/interfaces/auth.interface';
 import { ChatbotService } from './chatbot.service';
 import { CreateChatbotArgs } from './dto/create-chatbot.args';
 import { UpdateChatbotArgs } from './dto/update-chatbot.args';
@@ -10,42 +13,45 @@ import { Chatbot } from './entities/chatbot.entity';
 export class ChatbotResolver {
   constructor(private readonly chatbotService: ChatbotService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   createChatbot(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args() createChatbotArgs: CreateChatbotArgs,
   ): Observable<Chatbot> {
-    return this.chatbotService.create(authorization, createChatbotArgs);
+    return this.chatbotService.create(auth.project.id, createChatbotArgs);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Chatbot])
-  chatbots(
-    @GqlHeaders('authorization') authorization: string,
-  ): Observable<Chatbot[]> {
-    return this.chatbotService.findAll(authorization);
+  chatbots(@BearerAuth() auth: Required<Auth>): Observable<Chatbot[]> {
+    return this.chatbotService.findAll(auth.project.id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Chatbot)
   chatbotById(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args('id', { type: () => Int }) id: number,
   ): Observable<Chatbot> {
-    return this.chatbotService.findOne(authorization, id);
+    return this.chatbotService.findOne(auth.project.id, id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   updateChatbot(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args() updateChatbotArgs: UpdateChatbotArgs,
   ): Observable<Chatbot> {
-    return this.chatbotService.update(authorization, updateChatbotArgs);
+    return this.chatbotService.update(auth.project.id, updateChatbotArgs);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chatbot)
   removeChatbot(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args('id', { type: () => Int }) id: number,
   ): Observable<Chatbot> {
-    return this.chatbotService.remove(authorization, id);
+    return this.chatbotService.remove(auth.project.id, id);
   }
 }

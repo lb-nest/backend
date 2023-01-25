@@ -1,5 +1,5 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import GraphQLJSON from 'graphql-type-json';
+import { GraphQLJSONObject } from 'graphql-type-json';
 
 @ObjectType()
 export class Chatbot {
@@ -12,7 +12,7 @@ export class Chatbot {
   @Field(() => String)
   version: string;
 
-  @Field(() => GraphQLJSON)
+  @Field(() => GraphQLJSONObject)
   flow: any;
 
   @Field(() => Boolean)
