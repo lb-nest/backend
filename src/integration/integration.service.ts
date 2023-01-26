@@ -1,8 +1,9 @@
-import { Inject, Injectable, NotImplementedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
 import { INTEGRATIONS_SERVICE } from 'src/shared/constants/broker';
 import { CreateIntegrationArgs } from './dto/create-integration.args';
+import { UpdateIntegrationArgs } from './dto/update-integration.args';
 import { Integration } from './entities/integration.entity';
 
 @Injectable()
@@ -11,30 +12,43 @@ export class IntegrationService {
     @Inject(INTEGRATIONS_SERVICE) private readonly client: ClientProxy,
   ) {}
 
-  initialize(authorization: string): Observable<boolean> {
-    return this.client.send('integrations.initialize', {
-      headers: {
-        authorization,
-      },
+  create(
+    projectId: number,
+    createIntegrationArgs: CreateIntegrationArgs,
+  ): Observable<Integration> {
+    return this.client.send<Integration>('createIntegration', {
+      projectId,
+      ...createIntegrationArgs,
     });
   }
 
-  create(
-    authorization: string,
-    createIntegrationInput: CreateIntegrationArgs,
+  findAll(projectId: number): Observable<Integration[]> {
+    return this.client.send<Integration[]>('findAllIntegrations', {
+      projectId,
+    });
+  }
+
+  findOne(projectId: number, id: string): Observable<Integration> {
+    return this.client.send<Integration>('findOneIntegration', {
+      projectId,
+      id,
+    });
+  }
+
+  update(
+    projectId: number,
+    updateIntegrationArgs: UpdateIntegrationArgs,
   ): Observable<Integration> {
-    throw new NotImplementedException();
+    return this.client.send<Integration>('updateIntegration', {
+      projectId,
+      ...updateIntegrationArgs,
+    });
   }
 
-  findAll(authorization: string): Observable<Integration[]> {
-    throw new NotImplementedException();
-  }
-
-  findOne(authorization: string, id: string): Observable<Integration> {
-    throw new NotImplementedException();
-  }
-
-  remove(authorization: string, id: string): Observable<Integration> {
-    throw new NotImplementedException();
+  remove(projectId: number, id: string): Observable<Integration> {
+    return this.client.send<Integration>('removeIntegration', {
+      projectId,
+      id,
+    });
   }
 }

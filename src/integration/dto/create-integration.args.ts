@@ -1,5 +1,5 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { IsEnum, IsString, IsUrl, ValidateIf } from 'class-validator';
+import { IsEnum, IsString, ValidateIf } from 'class-validator';
 import { IntegrationType } from '../enums/integration-type.enum';
 
 @ArgsType()
@@ -8,19 +8,9 @@ export class CreateIntegrationArgs {
   @IsEnum(IntegrationType)
   type: IntegrationType;
 
-  @Field(() => String, { nullable: true })
-  @ValidateIf(
-    (object: CreateIntegrationArgs) => object.type === IntegrationType.Amocrm,
-  )
-  @IsUrl()
-  url?: string;
-
-  @Field(() => String, { nullable: true })
-  @ValidateIf(
-    (object: CreateIntegrationArgs) => object.type === IntegrationType.Bitrix,
-  )
+  @Field(() => String)
   @IsString()
-  accountId?: string;
+  accountId: string;
 
   @Field(() => String, { nullable: true })
   @ValidateIf(
