@@ -6,6 +6,5 @@ import { TagService } from './tag.service';
 @Module({
   imports: [forwardRef(() => AppModule)],
   providers: [TagResolver, TagService],
-  exports: [TagService],
 })
 export class TagModule {}

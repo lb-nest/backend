@@ -10,48 +10,37 @@ import { Tag } from './entities/tag.entity';
 export class TagService {
   constructor(@Inject(CONTACTS_SERVICE) private readonly client: ClientProxy) {}
 
-  create(authorization: string, createTagArgs: CreateTagArgs): Observable<Tag> {
-    return this.client.send<Tag>('tags.create', {
-      headers: {
-        authorization,
-      },
-      payload: createTagArgs,
+  create(projectId: number, createTagArgs: CreateTagArgs): Observable<Tag> {
+    return this.client.send<Tag>('createTag', {
+      projectId,
+      ...createTagArgs,
     });
   }
 
-  findAll(authorization: string): Observable<Tag[]> {
-    return this.client.send<Tag[]>('tags.findAll', {
-      headers: {
-        authorization,
-      },
-      payload: null,
+  findAll(projectId: number): Observable<Tag[]> {
+    return this.client.send<Tag[]>('findAllTags', {
+      projectId,
     });
   }
 
-  findOne(authorization: string, id: number): Observable<Tag> {
-    return this.client.send<Tag>('tags.findOne', {
-      headers: {
-        authorization,
-      },
-      payload: id,
+  findOne(projectId: number, id: number): Observable<Tag> {
+    return this.client.send<Tag>('findOneTag', {
+      projectId,
+      id,
     });
   }
 
-  update(authorization: string, updateTagArgs: UpdateTagArgs): Observable<Tag> {
-    return this.client.send<Tag>('tags.update', {
-      headers: {
-        authorization,
-      },
-      payload: updateTagArgs,
+  update(projectId: number, updateTagArgs: UpdateTagArgs): Observable<Tag> {
+    return this.client.send<Tag>('updateTag', {
+      projectId,
+      ...updateTagArgs,
     });
   }
 
-  remove(authorization: string, id: number): Observable<Tag> {
-    return this.client.send<Tag>('tags.remove', {
-      headers: {
-        authorization,
-      },
-      payload: id,
+  remove(projectId: number, id: number): Observable<Tag> {
+    return this.client.send<Tag>('removeTag', {
+      projectId,
+      id,
     });
   }
 }

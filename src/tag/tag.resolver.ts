@@ -1,6 +1,9 @@
+import { UseGuards } from '@nestjs/common';
 import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
-import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
+import { BearerAuth } from 'src/auth/decorators/bearer-auth.decorator';
+import { BearerAuthGuard } from 'src/auth/guargs/bearer-auth.guard';
+import { Auth } from 'src/auth/interfaces/auth.interface';
 import { CreateTagArgs } from './dto/create-tag.args';
 import { UpdateTagArgs } from './dto/update-tag.args';
 import { Tag } from './entities/tag.entity';
@@ -10,40 +13,45 @@ import { TagService } from './tag.service';
 export class TagResolver {
   constructor(private readonly tagService: TagService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Tag)
   createTag(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args() createTagArgs: CreateTagArgs,
   ): Observable<Tag> {
-    return this.tagService.create(authorization, createTagArgs);
+    return this.tagService.create(auth.project.id, createTagArgs);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Tag])
-  tags(@GqlHeaders('authorization') authorization: string): Observable<Tag[]> {
-    return this.tagService.findAll(authorization);
+  tags(@BearerAuth() auth: Required<Auth>): Observable<Tag[]> {
+    return this.tagService.findAll(auth.project.id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Tag)
   tagById(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args('id', { type: () => Int }) id: number,
   ): Observable<Tag> {
-    return this.tagService.findOne(authorization, id);
+    return this.tagService.findOne(auth.project.id, id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Tag)
   updateTag(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args() updateTagArgs: UpdateTagArgs,
   ): Observable<Tag> {
-    return this.tagService.update(authorization, updateTagArgs);
+    return this.tagService.update(auth.project.id, updateTagArgs);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Tag)
   removeTag(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args('id', { type: () => Int }) id: number,
   ): Observable<Tag> {
-    return this.tagService.remove(authorization, id);
+    return this.tagService.remove(auth.project.id, id);
   }
 }
