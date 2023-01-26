@@ -102,7 +102,7 @@ export class ChatbotService {
 
   handleCallback(socket: Socket, handleCallbackDto: HandleCallbackDto): void {
     socket.emit(ChatbotEventType.Callback, {
-      id: handleCallbackDto.chatId,
+      id: handleCallbackDto.contactId,
     });
   }
 
@@ -114,7 +114,7 @@ export class ChatbotService {
     await this.messageService.create(auth.project.id, handleCreateMessageDto);
 
     socket.emit(ChatbotEventType.Callback, {
-      id: handleCreateMessageDto.chatId,
+      id: handleCreateMessageDto.contactId,
     });
   }
 
@@ -126,7 +126,7 @@ export class ChatbotService {
     await this.contactService.update(auth.project.id, handleUpdateContactDto);
 
     socket.emit(ChatbotEventType.Callback, {
-      id: handleUpdateContactDto.chatId,
+      id: handleUpdateContactDto.id,
     });
   }
 
