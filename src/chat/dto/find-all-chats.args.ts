@@ -1,5 +1,5 @@
 import { ArgsType } from '@nestjs/graphql';
-import { FindAllContactsForUserArgs } from 'src/contact/dto/find-all-contacts-for-user.args';
+import { FindAllContactsAssignedToArgs } from 'src/contact/dto/find-all-contacts-assigned-to.args';
 
 @ArgsType()
-export class FindAllChatsForUserArgs extends FindAllContactsForUserArgs {}
+export class FindAllChatsArgs extends FindAllContactsAssignedToArgs {}

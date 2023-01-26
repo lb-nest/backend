@@ -1,5 +1,4 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { ChatId } from 'src/chat/entities/chat-id.entity';
 import { User } from 'src/user/entities/user.entity';
 import { AssigneeType } from '../enums/assignee-type.enum';
 import { ContactStatus } from '../enums/contact-status.enum';
@@ -20,17 +19,11 @@ export class Contact {
   @Field(() => String)
   notes: string;
 
+  @Field(() => [ContactTag])
+  tags: ContactTag[];
+
   @Field(() => ContactStatus)
   status: ContactStatus;
-
-  @Field(() => String, { nullable: true })
-  telegramId: string | null;
-
-  @Field(() => String, { nullable: true })
-  whatsappId: string | null;
-
-  @Field(() => String, { nullable: true })
-  webchatId: string | null;
 
   @Field(() => User, { nullable: true })
   assignedTo:
@@ -38,6 +31,11 @@ export class Contact {
         type?: AssigneeType;
       })
     | null;
+
+  chats: Array<{
+    channelId: number;
+    accountId: string;
+  }>;
 
   @Field(() => Int)
   priority: number;
@@ -47,10 +45,4 @@ export class Contact {
 
   @Field(() => [CustomField])
   customFields: CustomField[];
-
-  @Field(() => [ChatId])
-  chats: ChatId[];
-
-  @Field(() => [ContactTag])
-  tags: ContactTag[];
 }

@@ -8,14 +8,14 @@ import {
   Subscription,
 } from '@nestjs/graphql';
 import { Observable } from 'rxjs';
-import { Auth } from 'src/auth/auth.decorator';
-import { BearerAuthGuard } from 'src/auth/bearer-auth.guard';
-import { TokenPayload } from 'src/auth/entities/token-payload.entity';
+import { BearerAuth } from 'src/auth/decorators/bearer-auth.decorator';
+import { BearerAuthGuard } from 'src/auth/guargs/bearer-auth.guard';
+import { Auth } from 'src/auth/interfaces/auth.interface';
 import { pubSub } from 'src/pubsub';
-import { GqlHeaders } from 'src/shared/decorators/gql-headers.decorator';
 import { ChatService } from './chat.service';
 import { CreateChatArgs } from './dto/create-chat.args';
-import { FindAllChatsForUserArgs } from './dto/find-all-chats.args';
+import { FindAllChatsWithQueryArgs } from './dto/find-all-chats-with-query.args';
+import { FindAllChatsArgs } from './dto/find-all-chats.args';
 import { Chat } from './entities/chat.entity';
 import { ChatsCount } from './entities/chats-count.entity';
 
@@ -23,54 +23,61 @@ import { ChatsCount } from './entities/chats-count.entity';
 export class ChatResolver {
   constructor(private readonly chatService: ChatService) {}
 
+  @UseGuards(BearerAuthGuard)
   @Mutation(() => Chat)
   createChat(
-    @GqlHeaders('authorization') authorization: string,
+    @BearerAuth() auth: Required<Auth>,
     @Args() args: CreateChatArgs,
   ): Promise<Chat> {
-    return this.chatService.create(authorization, args);
+    return this.chatService.create(auth.project.id, args);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Chat])
   chats(
-    @GqlHeaders('authorization') authorization: string,
-    @Args() args: FindAllChatsForUserArgs,
+    @BearerAuth() auth: Required<Auth>,
+    @Args() args: FindAllChatsArgs,
   ): Promise<Chat[]> {
-    return this.chatService.findAll(authorization, args);
+    return this.chatService.findAll(auth.project.id, args);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => [Chat])
   chatsByQuery(
-    @GqlHeaders('authorization') authorization: string,
-    @Args('query', { type: () => String }) query: string,
+    @BearerAuth() auth: Required<Auth>,
+    @Args() findAllChatsWithQueryArgs: FindAllChatsWithQueryArgs,
   ): Promise<Chat[]> {
-    return this.chatService.findWithQuery(authorization, query);
+    return this.chatService.findAllWithQuery(
+      auth.project.id,
+      findAllChatsWithQueryArgs,
+    );
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => ChatsCount)
-  chatsCount(
-    @GqlHeaders('authorization') authorization: string,
-  ): Observable<ChatsCount> {
-    return this.chatService.countAll(authorization);
+  chatsCount(@BearerAuth() auth: Required<Auth>): Observable<ChatsCount> {
+    return this.chatService.countAll(auth.project.id, auth.id);
   }
 
+  @UseGuards(BearerAuthGuard)
   @Query(() => Chat)
   chatById(
-    @GqlHeaders('authorization') authorization: string,
-    @Args('id', { type: () => Int }) id: number,
+    @BearerAuth() auth: Required<Auth>,
+    @Args('channelId', { type: () => Int }) channelId: number,
+    @Args('accountId', { type: () => String }) accountId: string,
   ): Promise<Chat> {
-    return this.chatService.findOne(authorization, id);
+    return this.chatService.findOne(auth.project.id, channelId, accountId);
   }
 
   @UseGuards(BearerAuthGuard)
   @Subscription(() => Chat, {
     filter: (payload, _variables, context) =>
       [context.req.user.id, undefined].includes(
-        payload.chatsReceived.contact.assignedTo?.id,
-      ) || payload.chatsReceived.isFlow,
+        payload.chatReceived.contact.assignedTo?.id,
+      ) || payload.chatReceived.isFlow,
   })
-  async chatsReceived(@Auth() auth: Required<TokenPayload>) {
+  async chatReceived(@BearerAuth() auth: Required<Auth>) {
     const projectId = auth.project.id;
-    return pubSub.asyncIterator(`chatsReceived:${projectId}`);
+    return pubSub.asyncIterator(`chatReceived:${projectId}`);
   }
 }

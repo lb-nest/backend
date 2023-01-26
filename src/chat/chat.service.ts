@@ -1,5 +1,4 @@
 import {
-  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -8,69 +7,43 @@ import {
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom, Observable } from 'rxjs';
-import { ChannelService } from 'src/channel/channel.service';
-import { ChannelType } from 'src/channel/enums/channel-type.enum';
 import { ChatbotEventType } from 'src/chatbot/enums/chatbot-event-type.enum';
-import { ContactService } from 'src/contact/contact.service';
-import { ProjectTokenService } from 'src/project/project-token.service';
+import { ContactAssignedToService } from 'src/contact/contact-assigned-to.service';
+import { ContactChatService } from 'src/contact/contact-chat.service';
 import { pubSub } from 'src/pubsub';
 import { MESSAGING_SERVICE } from 'src/shared/constants/broker';
 import { CreateChatArgs } from './dto/create-chat.args';
-import { FindAllChatsForUserArgs } from './dto/find-all-chats.args';
+import { FindAllChatsWithQueryArgs } from './dto/find-all-chats-with-query.args';
+import { FindAllChatsArgs } from './dto/find-all-chats.args';
 import { Chat } from './entities/chat.entity';
 import { ChatsCount } from './entities/chats-count.entity';
 
 @Injectable()
 export class ChatService {
   constructor(
-    @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
-    @Inject(forwardRef(() => ContactService))
-    private readonly contactService: ContactService,
-    @Inject(forwardRef(() => ChannelService))
-    private readonly channelService: ChannelService,
-    private readonly projectTokenService: ProjectTokenService,
     private readonly eventEmitter: EventEmitter2,
+    @Inject(MESSAGING_SERVICE) private readonly client: ClientProxy,
+    private readonly contactAssignedToService: ContactAssignedToService,
+    private readonly contactChatService: ContactChatService,
   ) {}
 
   async create(
-    authorization: string,
+    projectId: number,
     createChatArgs: CreateChatArgs,
   ): Promise<Chat> {
-    const contact = await this.contactService.findOne(
-      authorization,
-      createChatArgs.contactId,
-    );
-
-    const channel = await lastValueFrom(
-      this.channelService.findOne(authorization, createChatArgs.channelId),
-    );
-
-    const accountId = {
-      [ChannelType.Telegram]: contact.telegramId,
-      [ChannelType.Webchat]: contact.webchatId,
-      [ChannelType.Whatsapp]: contact.whatsappId,
-    }[channel.type];
-
     const chat = await lastValueFrom(
-      this.client.send<Omit<Chat, 'contact'>>('chats.create', {
-        headers: {
-          authorization,
-        },
-        payload: {
-          channelId: createChatArgs.channelId,
-          accountId,
-          name: contact.name,
-          avatarUrl: contact.avatarUrl,
-        },
+      this.client.send<any>('createChat', {
+        projectId,
+        channelId: createChatArgs.channelId,
+        accountId: createChatArgs.accountId,
       }),
     );
 
-    await lastValueFrom(
-      this.contactService.createChatFor(
-        authorization,
-        createChatArgs.contactId,
-        chat.id,
-      ),
+    const contact = await this.contactChatService.createChatFor(
+      projectId,
+      createChatArgs.contactId,
+      createChatArgs.channelId,
+      createChatArgs.accountId,
     );
 
     return {
@@ -80,46 +53,51 @@ export class ChatService {
   }
 
   async findAll(
-    authorization: string,
-    args: FindAllChatsForUserArgs,
+    projectId: number,
+    findAllChatsArgs: FindAllChatsArgs,
   ): Promise<Chat[]> {
-    const contacts = await this.contactService.findAllForUser(
-      authorization,
-      args,
+    const contacts = await this.contactAssignedToService.findAll(
+      projectId,
+      findAllChatsArgs,
     );
 
     if (contacts.length === 0) {
       return [];
     }
 
-    const chatIds = contacts.map(({ chats }) => chats[0]?.id).filter(Boolean);
     const chats = await lastValueFrom(
-      this.client.send<Array<Omit<Chat, 'contact'>>>('chats.findAll', {
-        headers: {
-          authorization,
-        },
-        payload: {
-          ids: chatIds,
-        },
+      this.client.send<Array<Omit<Chat, 'contact'>>>('findAllChats', {
+        projectId,
+        accountIds: contacts
+          .map(({ chats }) => chats[0]?.accountId)
+          .filter(Boolean),
       }),
     );
 
-    return chats
-      .sort((a, b) => chatIds.indexOf(a.id) - chatIds.indexOf(b.id))
-      .map((chat) => ({
-        ...chat,
-        contact: contacts.find(({ chats }) => chats[0].id === chat.id),
-      }));
+    return chats.map((chat) => ({
+      ...chat,
+      contact: contacts.find(
+        ({ chats }) => chats[0].accountId === chat.accountId,
+      ),
+    }));
   }
 
-  async findWithQuery(authorization: string, query: string): Promise<Chat[]> {
+  async findAllWithQuery(
+    projectId: number,
+    findAllChatsWithQueryArgs: FindAllChatsWithQueryArgs,
+  ): Promise<Chat[]> {
     throw new NotImplementedException();
   }
 
-  async findOne(authorization: string, id: number): Promise<Chat> {
-    const [contact] = await this.contactService.findOneForChat(
-      authorization,
-      id,
+  async findOne(
+    projectId: number,
+    channelId: number,
+    accountId: string,
+  ): Promise<Chat> {
+    const contact = await this.contactChatService.findOne(
+      projectId,
+      channelId,
+      accountId,
     );
 
     if (!contact) {
@@ -127,11 +105,10 @@ export class ChatService {
     }
 
     const chat = await lastValueFrom(
-      this.client.send<Omit<Chat, 'contact'>>('chats.findOne', {
-        headers: {
-          authorization,
-        },
-        payload: id,
+      this.client.send<Omit<Chat, 'contact'>>('findOneChat', {
+        projectId,
+        channelId,
+        accountId,
       }),
     );
 
@@ -141,25 +118,27 @@ export class ChatService {
     };
   }
 
-  remove(authorization: string, id: number): Observable<Omit<Chat, 'contact'>> {
-    return this.client.send<Omit<Chat, 'contact'>>('chats.remove', {
-      headers: {
-        authorization,
-      },
-      payload: id,
+  remove(
+    projectId: number,
+    channelId: number,
+    accountId: string,
+  ): Observable<Omit<Chat, 'contact'>> {
+    return this.client.send<Omit<Chat, 'contact'>>('removeChat', {
+      projectId,
+      channelId,
+      accountId,
     });
   }
 
-  countAll(authorization: string): Observable<ChatsCount> {
-    return this.contactService.countAll(authorization);
+  countAll(projectId: number, id: number): Observable<ChatsCount> {
+    return this.contactAssignedToService.countAll(projectId, id);
   }
 
   async received(projectId: number, chat: any): Promise<void> {
-    const contact = await this.contactService.createForChat(
-      `Bearer ${await this.projectTokenService
-        .get(projectId)
-        .then(({ token }) => token)}`,
-      chat.id,
+    const contact = await this.contactChatService.createForChat(
+      projectId,
+      chat.channelId,
+      chat.accountId,
       chat.contact,
     );
 
@@ -168,8 +147,8 @@ export class ChatService {
       contact,
     });
 
-    pubSub.publish(`chatsReceived:${projectId}`, {
-      chatsReceived: {
+    pubSub.publish(`chatReceived:${projectId}`, {
+      chatReceived: {
         ...chat,
         contact,
       },

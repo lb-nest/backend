@@ -1,5 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
-import { ContactsCount } from 'src/contact/entities/contacts-count.entity';
+import { CountAllContactsAssignedTo } from 'src/contact/entities/count-all-contacts-assigned-to.entity';
 
 @ObjectType()
-export class ChatsCount extends ContactsCount {}
+export class ChatsCount extends CountAllContactsAssignedTo {}

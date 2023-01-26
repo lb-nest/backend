@@ -1,7 +1,7 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class ContactsCount {
+export class CountAllContactsAssignedTo {
   @Field(() => Int)
   assigned: number;
 

@@ -10,29 +10,23 @@ export class ContactHistoryService {
   constructor(@Inject(CONTACTS_SERVICE) private readonly client: ClientProxy) {}
 
   create(
-    authorization: string,
+    projectId: number,
     contactId: number,
     eventType: HistoryEventType,
     payload?: any,
   ): Observable<History> {
-    return this.client.send<History>('contacts.createHistory', {
-      headers: {
-        authorization,
-      },
-      payload: {
-        contactId,
-        eventType,
-        payload,
-      },
+    return this.client.send<History>('createContactHistory', {
+      projectId,
+      contactId,
+      eventType,
+      payload,
     });
   }
 
-  findAll(authorization: string, contactId: number): Observable<History[]> {
-    return this.client.send<History[]>('contacts.findAllHistory', {
-      headers: {
-        authorization,
-      },
-      payload: contactId,
+  findAll(projectId: number, contactId: number): Observable<History[]> {
+    return this.client.send<History[]>('findAllContactHistory', {
+      projectId,
+      contactId,
     });
   }
 }

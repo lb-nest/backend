@@ -1,3 +1,3 @@
 export enum ChatEventType {
-  ContactUpdated = 'ContactUpdated',
+  UpdateContact = 'UpdateContact',
 }

@@ -1,13 +1,17 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { IsInt } from 'class-validator';
+import { IsInt, IsString } from 'class-validator';
 
 @ArgsType()
 export class CreateChatArgs {
   @Field(() => Int)
   @IsInt()
-  channelId: number;
+  contactId: number;
 
   @Field(() => Int)
   @IsInt()
-  contactId: number;
+  channelId: number;
+
+  @Field(() => String)
+  @IsString()
+  accountId: string;
 }

@@ -9,40 +9,39 @@ export class ContactTagService {
   constructor(@Inject(CONTACTS_SERVICE) private readonly client: ClientProxy) {}
 
   create(
-    authorization: string,
+    projectId: number,
     contactId: number,
     tagId: number,
   ): Observable<TagWithoutParentAndChildren> {
-    return this.client.send<TagWithoutParentAndChildren>(
-      'contacts.tags.create',
+    return this.client.send<TagWithoutParentAndChildren>('createContactTag', {
+      projectId,
+      contactId,
+      tagId,
+    });
+  }
+
+  findAll(
+    projectId: number,
+    contactId: number,
+  ): Observable<TagWithoutParentAndChildren[]> {
+    return this.client.send<TagWithoutParentAndChildren[]>(
+      'findAllContactTags',
       {
-        headers: {
-          authorization,
-        },
-        payload: {
-          contactId,
-          tagId,
-        },
+        projectId,
+        contactId,
       },
     );
   }
 
   remove(
-    authorization: string,
+    projectId: number,
     contactId: number,
     tagId: number,
   ): Observable<TagWithoutParentAndChildren> {
-    return this.client.send<TagWithoutParentAndChildren>(
-      'contacts.tags.remove',
-      {
-        headers: {
-          authorization,
-        },
-        payload: {
-          contactId,
-          tagId,
-        },
-      },
-    );
+    return this.client.send<TagWithoutParentAndChildren>('removeContactTag', {
+      projectId,
+      contactId,
+      tagId,
+    });
   }
 }

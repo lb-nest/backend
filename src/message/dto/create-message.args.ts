@@ -15,7 +15,11 @@ import { CreateButtonInput } from './create-button.input';
 export class CreateMessageArgs {
   @Field(() => Int)
   @IsInt()
-  chatId: number;
+  channelId: number;
+
+  @Field(() => String)
+  @IsString()
+  accountId: string;
 
   @Field(() => Int, { nullable: true })
   @IsOptional()

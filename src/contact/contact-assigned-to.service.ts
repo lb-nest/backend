@@ -1,15 +1,53 @@
-import { Injectable } from '@nestjs/common';
-import { lastValueFrom } from 'rxjs';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { lastValueFrom, Observable } from 'rxjs';
 import { ProjectService } from 'src/project/project.service';
+import { CONTACTS_SERVICE } from 'src/shared/constants/broker';
+import { FindAllContactsAssignedToArgs } from './dto/find-all-contacts-assigned-to.args';
 import { Contact } from './entities/contact.entity';
+import { CountAllContactsAssignedTo } from './entities/count-all-contacts-assigned-to.entity';
 import { AssigneeType } from './enums/assignee-type.enum';
 
 @Injectable()
 export class ContactAssignedToService {
-  constructor(private readonly projectService: ProjectService) {}
+  constructor(
+    @Inject(CONTACTS_SERVICE) private readonly client: ClientProxy,
+    private readonly projectService: ProjectService,
+  ) {}
+
+  async findAll(
+    projectId: number,
+    findAllContactsAssignedToArgs: FindAllContactsAssignedToArgs,
+  ): Promise<Contact[]> {
+    const contacts = await lastValueFrom(
+      this.client.send<Contact[]>('findAllContactsAssignedTo', {
+        projectId,
+        ...findAllContactsAssignedToArgs,
+      }),
+    );
+
+    return this.forContact(projectId, ...contacts);
+  }
+
+  countAll(
+    projectId: number,
+    id: number,
+    type: AssigneeType = AssigneeType.User,
+  ): Observable<CountAllContactsAssignedTo> {
+    return this.client.send<CountAllContactsAssignedTo>(
+      'countAllContactsAssignedTo',
+      {
+        projectId,
+        assignedTo: {
+          id,
+          type,
+        },
+      },
+    );
+  }
 
   async forContact(
-    authorization: string,
+    projectId: number,
     ...contacts: Contact[]
   ): Promise<Contact[]> {
     const assignedTo = contacts
@@ -18,7 +56,7 @@ export class ContactAssignedToService {
 
     if (assignedTo.length > 0) {
       const users = await lastValueFrom(
-        this.projectService.findAllUsers(authorization, ...assignedTo),
+        this.projectService.findAllUsers(projectId, ...assignedTo),
       );
 
       for (const contact of contacts) {

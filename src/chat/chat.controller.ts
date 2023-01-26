@@ -6,8 +6,8 @@ import { ChatService } from './chat.service';
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @MessagePattern('chats.received')
+  @MessagePattern('receiveChat')
   received(@Payload() payload: any): Promise<void> {
-    return this.chatService.received(payload.projectId, payload.payload);
+    return this.chatService.received(payload.projectId, payload.chat);
   }
 }

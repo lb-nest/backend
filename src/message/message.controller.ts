@@ -6,8 +6,8 @@ import { MessageService } from './message.service';
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
-  @MessagePattern('messages.received')
+  @MessagePattern('receiveMessage')
   received(@Payload() payload: any): Promise<void> {
-    return this.messageService.received(payload.projectId, payload.payload);
+    return this.messageService.received(payload.projectId, payload.message);
   }
 }
