@@ -61,7 +61,7 @@ export class ChatResolver {
 
   @UseGuards(BearerAuthGuard)
   @Query(() => Chat)
-  chatById(
+  chat(
     @BearerAuth() auth: Required<Auth>,
     @Args('channelId', { type: () => Int }) channelId: number,
     @Args('accountId', { type: () => String }) accountId: string,

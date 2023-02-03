@@ -1,7 +1,6 @@
 import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { User } from 'src/user/entities/user.entity';
-import { AssigneeType } from '../enums/assignee-type.enum';
 import { ContactStatus } from '../enums/contact-status.enum';
+import { AssignedTo } from './assigned-to.entity';
 import { ContactTag } from './contact-tag.entity';
 import { CustomField } from './custom-field.entity';
 
@@ -25,12 +24,8 @@ export class Contact {
   @Field(() => ContactStatus)
   status: ContactStatus;
 
-  @Field(() => User, { nullable: true })
-  assignedTo:
-    | (User & {
-        type?: AssigneeType;
-      })
-    | null;
+  @Field(() => AssignedTo, { nullable: true })
+  assignedTo: AssignedTo | null;
 
   chats: Array<{
     channelId: number;

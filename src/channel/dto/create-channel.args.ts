@@ -1,5 +1,6 @@
 import { ArgsType, Field } from '@nestjs/graphql';
-import { IsEnum, IsString } from 'class-validator';
+import { IsEnum, IsString, ValidateIf } from 'class-validator';
+import GraphQLJSON from 'graphql-type-json';
 import { ChannelType } from '../enums/channel-type.enum';
 
 @ArgsType()
@@ -16,7 +17,7 @@ export class CreateChannelArgs {
   @IsString()
   accountId: string;
 
-  @Field(() => String)
-  @IsString()
-  token: string;
+  @Field(() => GraphQLJSON)
+  @ValidateIf((_, value) => ['string', 'object'].includes(typeof value))
+  token: any;
 }

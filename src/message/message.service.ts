@@ -27,11 +27,16 @@ export class MessageService {
     );
   }
 
-  async findAll(projectId: number, chatId: number): Promise<Message[]> {
+  async findAll(
+    projectId: number,
+    channelId: number,
+    accountId: string,
+  ): Promise<Message[]> {
     return lastValueFrom(
       this.client.send<Message[]>('findAllMessages', {
         projectId,
-        chatId,
+        channelId,
+        accountId,
       }),
     );
   }

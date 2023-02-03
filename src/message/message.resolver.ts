@@ -32,9 +32,10 @@ export class MessageResolver {
   @Query(() => [Message])
   messages(
     @BearerAuth() auth: Required<Auth>,
-    @Args('chatId', { type: () => Int }) chatId: number,
+    @Args('channelId', { type: () => Int }) channelId: number,
+    @Args('accountId', { type: () => String }) accountId: string,
   ): Promise<Message[]> {
-    return this.messageService.findAll(auth.project.id, chatId);
+    return this.messageService.findAll(auth.project.id, channelId, accountId);
   }
 
   @UseGuards(BearerAuthGuard)
