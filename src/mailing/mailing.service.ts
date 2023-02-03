@@ -1,46 +1,64 @@
-import { Inject, Injectable, NotImplementedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
 import { MAILINGS_SERVICE } from 'src/shared/constants/broker';
 import { CreateMailingArgs } from './dto/create-mailing.args';
+import { FindAllMailingWorkersDto } from './dto/find-all-mailing-workers.args';
 import { UpdateMailingArgs } from './dto/update-mailing.args';
+import { MailingWorker } from './entities/mailing-worker.entity';
 import { Mailing } from './entities/mailing.entity';
 
 @Injectable()
 export class MailingService {
   constructor(@Inject(MAILINGS_SERVICE) private readonly client: ClientProxy) {}
 
-  initialize(authorization: string): Observable<boolean> {
-    return this.client.send('mailings.initialize', {
-      headers: {
-        authorization,
-      },
+  create(
+    projectId: number,
+    createMailingArgs: CreateMailingArgs,
+  ): Observable<Mailing> {
+    return this.client.send<Mailing>('createMailing', {
+      projectId,
+      ...createMailingArgs,
     });
   }
 
-  create(
-    authorization: string,
-    createMailingArgs: CreateMailingArgs,
-  ): Observable<Mailing> {
-    throw new NotImplementedException();
+  findAll(projectId: number): Observable<Mailing[]> {
+    return this.client.send<Mailing[]>('findAllMailings', {
+      projectId,
+    });
   }
 
-  findAll(authorization: string): Observable<Mailing[]> {
-    throw new NotImplementedException();
-  }
-
-  findOne(authorization: string, id: number): Observable<Mailing> {
-    throw new NotImplementedException();
+  findOne(projectId: number, id: number): Observable<Mailing> {
+    return this.client.send<Mailing>('findOneMailing', {
+      projectId,
+      id,
+    });
   }
 
   update(
-    authorization: string,
+    projectId: number,
     updateMailingArgs: UpdateMailingArgs,
   ): Observable<Mailing> {
-    throw new NotImplementedException();
+    return this.client.send<Mailing>('updateMailing', {
+      projectId,
+      ...updateMailingArgs,
+    });
   }
 
-  remove(authorization: string, id: number): Observable<Mailing> {
-    throw new NotImplementedException();
+  remove(projectId: number, id: number): Observable<Mailing> {
+    return this.client.send<Mailing>('removeMailing', {
+      projectId,
+      id,
+    });
+  }
+
+  findAllWorkers(
+    projectId: number,
+    findAllMailingWorkers: FindAllMailingWorkersDto,
+  ): Observable<MailingWorker[]> {
+    return this.client.send<MailingWorker[]>('findAllMailingWorkers', {
+      projectId,
+      ...findAllMailingWorkers,
+    });
   }
 }

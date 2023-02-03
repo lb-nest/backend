@@ -15,6 +15,9 @@ export class Mailing {
   @Field(() => String)
   color: string;
 
+  @Field(() => Int)
+  channelId: number;
+
   @Field(() => [Int])
   tagIds: number[];
 
@@ -24,12 +27,12 @@ export class Mailing {
   @Field(() => MailingStatus)
   status: MailingStatus;
 
-  @Field(() => Date, { nullable: true })
-  scheduledAt: Date | null;
+  @Field(() => String, { nullable: true })
+  scheduledAt: string | null;
 
-  @Field(() => Date)
-  createdAt: Date;
+  @Field(() => String)
+  createdAt: string;
 
-  @Field(() => Date)
-  updatedAt: Date;
+  @Field(() => String)
+  updatedAt: string;
 }

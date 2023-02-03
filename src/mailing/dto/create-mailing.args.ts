@@ -1,5 +1,6 @@
 import { ArgsType, Field, Int } from '@nestjs/graphql';
-import { IsDate, IsInt, IsOptional, IsString } from 'class-validator';
+import { IsDate, IsIn, IsInt, IsOptional, IsString } from 'class-validator';
+import { MailingStatus } from '../enums/mailing-status.enum';
 
 @ArgsType()
 export class CreateMailingArgs {
@@ -16,6 +17,10 @@ export class CreateMailingArgs {
   @IsString()
   color: string;
 
+  @Field(() => Int)
+  @IsInt()
+  channelId: number;
+
   @Field(() => [Int])
   @IsInt({ each: true })
   tagIds: number[];
@@ -23,6 +28,10 @@ export class CreateMailingArgs {
   @Field(() => [Int])
   @IsInt({ each: true })
   hsmIds: number[];
+
+  @Field(() => MailingStatus, { nullable: true })
+  @IsIn([MailingStatus.Disabled, MailingStatus.Scheduled])
+  status?: MailingStatus;
 
   @Field(() => Date)
   @IsOptional()
