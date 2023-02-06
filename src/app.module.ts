@@ -18,6 +18,7 @@ import { HsmModule } from './hsm/hsm.module';
 import { IntegrationModule } from './integration/integration.module';
 import { MailingModule } from './mailing/mailing.module';
 import { MessageModule } from './message/message.module';
+import { PaymentModule } from './payment/payment.module';
 import { PrismaService } from './prisma.service';
 import { ProjectModule } from './project/project.module';
 import {
@@ -188,6 +189,7 @@ import { WebhookModule } from './webhook/webhook.module';
     IntegrationModule,
     MailingModule,
     MessageModule,
+    PaymentModule,
     ProjectModule,
     TagModule,
     UserModule,
