@@ -35,6 +35,8 @@ import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
 import { WalletModule } from './wallet/wallet.module';
 import { WebhookModule } from './webhook/webhook.module';
+import { SubscriptionModule } from './subscription/subscription.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -195,6 +197,8 @@ import { WebhookModule } from './webhook/webhook.module';
     UserModule,
     WalletModule,
     WebhookModule,
+    SubscriptionModule,
+    TransactionModule,
   ],
   providers: [PrismaService],
   exports: [

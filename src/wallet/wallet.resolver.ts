@@ -1,5 +1,6 @@
 import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Observable } from 'rxjs';
 import { BearerAuth } from 'src/auth/decorators/bearer-auth.decorator';
 import { BearerAuthGuard } from 'src/auth/guargs/bearer-auth.guard';
 import { Auth } from 'src/auth/interfaces/auth.interface';
@@ -17,13 +18,14 @@ export class WalletResolver {
   createWallet(
     @BearerAuth() auth: Required<Auth>,
     @Args() createWalletArgs: CreateWalletArgs,
-  ) {
+  ): Observable<Wallet> {
     return this.walletService.create(auth.project.id, createWalletArgs);
   }
 
   @UseGuards(BearerAuthGuard)
   @Query(() => Wallet)
-  wallet(@BearerAuth() auth: Required<Auth>) {
+  wallet(@BearerAuth() auth: Required<Auth>): Observable<Wallet> {
+    this.walletService.findOne(auth.project.id).subscribe(console.log);
     return this.walletService.findOne(auth.project.id);
   }
 
@@ -32,13 +34,13 @@ export class WalletResolver {
   updateWallet(
     @BearerAuth() auth: Required<Auth>,
     @Args() updateWalletArgs: UpdateWalletArgs,
-  ) {
+  ): Observable<Wallet> {
     return this.walletService.update(auth.project.id, updateWalletArgs);
   }
 
   @UseGuards(BearerAuthGuard)
   @Mutation(() => Wallet)
-  removeWallet(@BearerAuth() auth: Required<Auth>) {
+  removeWallet(@BearerAuth() auth: Required<Auth>): Observable<Wallet> {
     return this.walletService.remove(auth.project.id);
   }
 }
