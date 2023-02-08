@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ClientProxy } from '@nestjs/microservices';
-import { FileUpload } from 'graphql-upload';
+import { FileUpload } from 'graphql-upload-minimal';
 import { lastValueFrom, mergeMap, Observable } from 'rxjs';
 import { ChatService } from 'src/chat/chat.service';
 import { ChatEventType } from 'src/chat/enums/chat-event-type.enum';
