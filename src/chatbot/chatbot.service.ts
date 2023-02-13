@@ -7,10 +7,11 @@ import { Observable } from 'rxjs';
 import { Socket } from 'socket.io';
 import { Auth } from 'src/auth/interfaces/auth.interface';
 import { ContactService } from 'src/contact/contact.service';
+import { Contact } from 'src/contact/entities/contact.entity';
+import { Message } from 'src/message/entities/message.entity';
 import { MessageService } from 'src/message/message.service';
 import { CHATBOTS_SERVICE } from 'src/shared/constants/broker';
 import { CreateChatbotArgs } from './dto/create-chatbot.args';
-import { HandleCallbackDto } from './dto/handle-callback.dto';
 import { HandleCreateMessageDto } from './dto/handle-create-message.dto';
 import { HandleUpdateContactDto } from './dto/handle-update-contact.dto';
 import { HandleWebhookDto } from './dto/handle-webhook.dto';
@@ -100,34 +101,20 @@ export class ChatbotService {
     this.emitter.emit(event.projectId, event.type, event);
   }
 
-  handleCallback(socket: Socket, handleCallbackDto: HandleCallbackDto): void {
-    socket.emit(ChatbotEventType.Callback, {
-      id: handleCallbackDto.contactId,
-    });
-  }
-
   async handleCreateMessage(
     socket: Socket,
     handleCreateMessageDto: HandleCreateMessageDto,
-  ): Promise<void> {
+  ): Promise<Message[]> {
     const [auth] = this.sockets.get(socket);
-    await this.messageService.create(auth.project.id, handleCreateMessageDto);
-
-    socket.emit(ChatbotEventType.Callback, {
-      id: handleCreateMessageDto.contactId,
-    });
+    return this.messageService.create(auth.project.id, handleCreateMessageDto);
   }
 
   async handleUpdateContact(
     socket: Socket,
     handleUpdateContactDto: HandleUpdateContactDto,
-  ): Promise<void> {
+  ): Promise<Contact> {
     const [auth] = this.sockets.get(socket);
-    await this.contactService.update(auth.project.id, handleUpdateContactDto);
-
-    socket.emit(ChatbotEventType.Callback, {
-      id: handleUpdateContactDto.id,
-    });
+    return this.contactService.update(auth.project.id, handleUpdateContactDto);
   }
 
   handleWebhook(token: string, handleWebhookDto: HandleWebhookDto): void {

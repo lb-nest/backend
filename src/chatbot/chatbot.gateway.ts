@@ -7,8 +7,9 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
+import { Contact } from 'src/contact/entities/contact.entity';
+import { Message } from 'src/message/entities/message.entity';
 import { ChatbotService } from './chatbot.service';
-import { HandleCallbackDto } from './dto/handle-callback.dto';
 import { HandleCreateMessageDto } from './dto/handle-create-message.dto';
 import { HandleUpdateContactDto } from './dto/handle-update-contact.dto';
 import { ChatbotEventType } from './enums/chatbot-event-type.enum';
@@ -28,19 +29,11 @@ export class ChatbotGateway
     return this.chatbotService.handleDisconnect(socket);
   }
 
-  @SubscribeMessage(ChatbotEventType.Callback)
-  handleCallback(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() handleCallbackDto: HandleCallbackDto,
-  ): void {
-    return this.chatbotService.handleCallback(socket, handleCallbackDto);
-  }
-
   @SubscribeMessage(ChatbotEventType.CreateMessage)
   handleCreateMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() handleCreateMessageDto: HandleCreateMessageDto,
-  ): Promise<void> {
+  ): Promise<Message[]> {
     return this.chatbotService.handleCreateMessage(
       socket,
       handleCreateMessageDto,
@@ -51,7 +44,7 @@ export class ChatbotGateway
   handleUpdateContact(
     @ConnectedSocket() socket: Socket,
     @MessageBody() handleUpdateContactDto: HandleUpdateContactDto,
-  ): Promise<void> {
+  ): Promise<Contact> {
     return this.chatbotService.handleUpdateContact(
       socket,
       handleUpdateContactDto,
